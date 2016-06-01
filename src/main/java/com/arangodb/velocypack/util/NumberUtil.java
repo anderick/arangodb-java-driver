@@ -63,6 +63,9 @@ public class NumberUtil {
 		return result;
 	}
 
+	/**
+	 * read a variable length integer in unsigned LEB128 format
+	 */
 	public static long readVariableValueLength(final byte[] array, final int offset, final boolean reverse) {
 		long len = 0;
 		long v;
@@ -78,6 +81,20 @@ public class NumberUtil {
 				++i;
 			}
 		} while (v >= 0x80);
+		return len;
+	}
+
+	/**
+	 * calculate the length of a variable length integer in unsigned LEB128
+	 * format
+	 */
+	public static long getVariableValueLength(final long value) {
+		long len = 1;
+		long val = value;
+		while (val >= 0x80) {
+			val >>= 7;
+			++len;
+		}
 		return len;
 	}
 }
