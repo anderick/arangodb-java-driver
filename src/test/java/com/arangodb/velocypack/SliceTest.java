@@ -793,4 +793,20 @@ public class SliceTest {
 		Assert.assertEquals(expected, slice.getLength());
 	}
 
+	@Test
+	public void objectEmptyGet() {
+		final Slice slice = new Slice(new byte[] { 0x0a });
+		final Slice slice2 = slice.get("abc");
+		Assert.assertTrue(slice2.isNone());
+	}
+
+	@Test
+	public void objectSingleMemberString() {
+		// {"a":"b"}
+		final Slice slice = new Slice(new byte[] { 0x0b, 0x07, 0x01, 0x41, 0x61, 0x41, 0x62 });
+		final Slice sliceNone = slice.get("abc");
+		Assert.assertTrue(sliceNone.isNone());
+		final Slice sliceA = slice.get("a");
+		Assert.assertTrue(sliceA.isString());
+	}
 }

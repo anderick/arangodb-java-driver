@@ -22,6 +22,10 @@ public class Slice {
 	private final byte[] vpack;
 	private final int start;
 
+	private Slice() {
+		this(new byte[] { 0x00 }, 0);
+	}
+
 	public Slice(final byte[] vpack) {
 		this(vpack, 0);
 	}
@@ -350,6 +354,77 @@ public class Slice {
 		return getNth(index);
 	}
 
+	public Slice get(final String attribute) {
+		if (!isObject()) {
+			throw new VPackValueTypeException(ValueType.Object);
+		}
+		final byte head = head();
+		Slice result = new Slice();
+		if (head == 0x0a) {
+			// special case, empty object
+			result = new Slice();
+		} else if (head == 0x14) {
+			// compact Object
+			result = getFromCompactObject(attribute);
+		} else {
+			final int offsetsize = ObjectArrayUtil.getOffsetSize(head);
+			final long end = NumberUtil.toLongReversed(vpack, start + 1, offsetsize);
+			final long n;
+			if (offsetsize < 8) {
+				n = NumberUtil.toLongReversed(vpack, start + 1 + offsetsize, offsetsize);
+			} else {
+				n = NumberUtil.toLongReversed(vpack, (int) (start + end - offsetsize), offsetsize);
+			}
+			if (n == 1) {
+				// Just one attribute, there is no index table!
+				final Slice key = new Slice(vpack, start + findDataOffset());
+
+				if (key.isString()) {
+					if (key.isEqualString(attribute)) {
+						result = new Slice(vpack, (int) (key.start + key.getByteSize()));
+					}
+					// fall through to returning None Slice below
+				} else if (key.isSmallInt() || key.isUInt()) {
+					// translate key
+					throw new UnsupportedOperationException();
+					// TODO
+				}
+			} else {
+				final long ieBase = end - n * offsetsize - (offsetsize == 8 ? 8 : 0);
+
+				// only use binary search for attributes if we have at least
+				// this many entries
+				// otherwise we'll always use the linear search
+				final long sortedSearchEntriesThreshold = 4;
+
+				final boolean sorted = head >= 0x0b && head <= 0x0e;
+				if (sorted && n >= sortedSearchEntriesThreshold) {
+					// This means, we have to handle the special case n == 1
+					// only in the linear search!
+					return searchObjectKeyBinary(attribute, ieBase, offsetsize, n);
+				}
+
+				return searchObjectKeyLinear(attribute, ieBase, offsetsize, n);
+			}
+		}
+		return result;
+	}
+
+	private Slice getFromCompactObject(final String attribute) {
+		// TODO
+		return null;
+	}
+
+	private Slice searchObjectKeyBinary(final String attribute, final long ieBase, final int offsetsize, final long n) {
+		// TODO
+		return null;
+	}
+
+	private Slice searchObjectKeyLinear(final String attribute, final long ieBase, final int offsetsize, final long n) {
+		// TODO
+		return null;
+	}
+
 	private Slice getNth(final int index) {
 		return new Slice(vpack, start + getNthOffset(index));
 	}
@@ -422,4 +497,15 @@ public class Slice {
 		}
 		return (int) offset;
 	}
+
+	private boolean isEqualString(final String s) {
+		final String string = getString();
+		return string.equals(s);
+	}
+	/*
+	 * bool Slice:: isEqualString(std::string const& attribute) const {
+	 * ValueLength keyLength; char const* k = getString(keyLength); if
+	 * (static_cast<size_t>(keyLength) != attribute.size()) { return false; }
+	 * return (memcmp(k, attribute.c_str(), attribute.size()) == 0); }
+	 */
 }
