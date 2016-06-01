@@ -271,7 +271,7 @@ public class ValueLengthUtil {
 		MAP.put((byte) 0xff, 0);
 	}
 
-	public static Integer get(final byte key) {
+	public static int get(final byte key) {
 		return MAP.get(key);
 	}
 

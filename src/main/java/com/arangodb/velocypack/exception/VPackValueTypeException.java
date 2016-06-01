@@ -8,8 +8,20 @@ import com.arangodb.velocypack.util.ValueType;
  */
 public class VPackValueTypeException extends RuntimeException {
 
-	public VPackValueTypeException(final ValueType type) {
-		super(String.format("Expecting type %s", type));
+	public VPackValueTypeException(final ValueType... types) {
+		super(createMessage(types));
+	}
+
+	private static String createMessage(final ValueType... types) {
+		final StringBuilder sb = new StringBuilder();
+		sb.append("Expecting type ");
+		for (int i = 0; i < types.length; i++) {
+			if (i > 0) {
+				sb.append(" or ");
+			}
+			sb.append(types[i].name());
+		}
+		return sb.toString();
 	}
 
 }

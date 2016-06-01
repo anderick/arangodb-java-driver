@@ -4,8 +4,10 @@ import java.math.BigInteger;
 import java.util.Date;
 
 import com.arangodb.velocypack.exception.VPackValueTypeException;
+import com.arangodb.velocypack.util.BinaryUtil;
 import com.arangodb.velocypack.util.DateUtil;
 import com.arangodb.velocypack.util.NumberUtil;
+import com.arangodb.velocypack.util.ObjectArrayUtil;
 import com.arangodb.velocypack.util.StringUtil;
 import com.arangodb.velocypack.util.ValueLengthUtil;
 import com.arangodb.velocypack.util.ValueType;
@@ -39,12 +41,7 @@ public class Slice {
 	}
 
 	private int length() {
-		// TODO if 0 = calc
-		return ValueLengthUtil.get(head());
-	}
-
-	private int valueLength() {
-		return length() - 1;
+		return ValueLengthUtil.get(head()) - 1;
 	}
 
 	private boolean isType(final ValueType type) {
@@ -150,7 +147,7 @@ public class Slice {
 		if (!isDouble()) {
 			throw new VPackValueTypeException(ValueType.Double);
 		}
-		return NumberUtil.toDouble(vpack, start + 1, valueLength());
+		return NumberUtil.toDouble(vpack, start + 1, length());
 	}
 
 	public long getSmallInt() {
@@ -171,38 +168,129 @@ public class Slice {
 		if (!isInt()) {
 			throw new VPackValueTypeException(ValueType.Int);
 		}
-		return NumberUtil.toLong(vpack, start + 1, valueLength());
+		return NumberUtil.toLong(vpack, start + 1, length());
 	}
 
 	public BigInteger getUInt() {
 		if (!isUInt()) {
 			throw new VPackValueTypeException(ValueType.UInt);
 		}
-		return NumberUtil.toBigInteger(vpack, start + 1, valueLength());
+		return NumberUtil.toBigInteger(vpack, start + 1, length());
 	}
 
 	public Date getUTCDate() {
 		if (!isUTCDate()) {
 			throw new VPackValueTypeException(ValueType.UTCDate);
 		}
-		return DateUtil.toDate(vpack, start + 1, valueLength());
+		return DateUtil.toDate(vpack, start + 1, length());
 	}
 
 	public String getString() {
 		if (!isString()) {
 			throw new VPackValueTypeException(ValueType.String);
 		}
-		final String string = (head() == ((byte) 0xbf)) ? getLongString() : getShortString();
+		final String string = isLongString() ? getLongString() : getShortString();
 		return string;
 	}
 
+	private boolean isLongString() {
+		return head() == ((byte) 0xbf);
+	}
+
 	private String getShortString() {
-		return StringUtil.toString(vpack, start + 1, valueLength());
+		return StringUtil.toString(vpack, start + 1, length());
 	}
 
 	private String getLongString() {
-		final long length = NumberUtil.toLong(vpack, start + 1, 8);
-		return StringUtil.toString(vpack, start + 9, (int) length);
+		return StringUtil.toString(vpack, start + 9, getLongStringLength());
 	}
 
+	private int getLongStringLength() {
+		return (int) NumberUtil.toLong(vpack, start + 1, 8);
+	}
+
+	public int getStringLength() {
+		if (!isString()) {
+			throw new VPackValueTypeException(ValueType.String);
+		}
+		return isLongString() ? getLongStringLength() : head() - 0x40;
+	}
+
+	public byte[] getBinary() {
+		if (!isBinary()) {
+			throw new VPackValueTypeException(ValueType.Binary);
+		}
+		final byte[] binary = BinaryUtil.toBinary(vpack, start + 1 + head() - ((byte) 0xbf), getBinaryLength());
+		return binary;
+	}
+
+	public int getBinaryLength() {
+		if (!isBinary()) {
+			throw new VPackValueTypeException(ValueType.Binary);
+		}
+		return (int) NumberUtil.toLong(vpack, start + 1, head() - ((byte) 0xbf));
+	}
+
+	/**
+	 * @return the number of members for an Array or Object object
+	 */
+	public long getLength() {
+		if (!isArray() && !isObject()) {
+			throw new VPackValueTypeException(ValueType.Array, ValueType.Object);
+		}
+		final long length;
+		final byte head = head();
+		if (head == 0x01 || head == 0x0a) {
+			// empty
+			length = 0;
+		} else if (head == 0x13 || head == 0x14) {
+			// compact array or object
+			final long end = NumberUtil.readVariableValueLength(vpack, start + 1, false);
+			length = NumberUtil.readVariableValueLength(vpack, (int) (start + end - 1), true);
+		} else {
+			final int offsetsize = ObjectArrayUtil.getOffsetSize(head);
+			final long end = NumberUtil.toLongReversed(vpack, start + 1, offsetsize);
+			if (head <= 0x05) {
+				// no offset table or length
+				final int firstSubOffset = findDataOffset();
+				final Slice first = new Slice(vpack, start + firstSubOffset);
+				length = (end - firstSubOffset) / first.getByteSize();
+			} else if (offsetsize < 8) {
+				length = NumberUtil.toLongReversed(vpack, start + 1 + offsetsize, offsetsize);
+			} else {
+				length = NumberUtil.toLong(vpack, (int) (start + end - offsetsize), offsetsize);
+			}
+		}
+		return length;
+	}
+
+	/**
+	 * Must be called for a nonempty array or object at start():
+	 */
+	private int findDataOffset() {
+		final int fsm = ObjectArrayUtil.getFirstSubMap(head());
+		final int offset;
+		if (fsm <= 2 && vpack[start + 2] != 0) {
+			offset = 2;
+		} else if (fsm <= 3 && vpack[start + 3] != 0) {
+			offset = 3;
+		} else if (fsm <= 5 && vpack[start + 6] != 0) {
+			offset = 5;
+		} else {
+			offset = 9;
+		}
+		return offset;
+	}
+
+	private long getByteSize() {
+		long size = 0;
+		final int valueLength = ValueLengthUtil.get(head());
+		if (valueLength != 0) {
+			size = valueLength;
+		} else {
+			// TODO
+			size = 0;
+		}
+		return size;
+	}
 }

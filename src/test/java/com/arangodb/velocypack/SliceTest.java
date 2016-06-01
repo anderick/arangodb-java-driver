@@ -484,8 +484,8 @@ public class SliceTest {
 		checkString("Hallo Welt!", new byte[] { 0x4b, 72, 97, 108, 108, 111, 32, 87, 101, 108, 116, 33 });
 		checkString("Hello World!", new byte[] { 0x4c, 72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33 });
 		checkString(
-			"Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc,",
-			new byte[] { (byte) 0xbf, 0, 0, 0, 0, 0, 0, 5, 88, 76, 111, 114, 101, 109, 32, 105, 112, 115, 117, 109, 32,
+			"Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus.",
+			new byte[] { (byte) 0xbf, 0, 0, 0, 0, 0, 0, 2, 55, 76, 111, 114, 101, 109, 32, 105, 112, 115, 117, 109, 32,
 					100, 111, 108, 111, 114, 32, 115, 105, 116, 32, 97, 109, 101, 116, 44, 32, 99, 111, 110, 115, 101,
 					99, 116, 101, 116, 117, 101, 114, 32, 97, 100, 105, 112, 105, 115, 99, 105, 110, 103, 32, 101, 108,
 					105, 116, 46, 32, 65, 101, 110, 101, 97, 110, 32, 99, 111, 109, 109, 111, 100, 111, 32, 108, 105,
@@ -512,50 +512,153 @@ public class SliceTest {
 					117, 115, 46, 32, 86, 105, 118, 97, 109, 117, 115, 32, 101, 108, 101, 109, 101, 110, 116, 117, 109,
 					32, 115, 101, 109, 112, 101, 114, 32, 110, 105, 115, 105, 46, 32, 65, 101, 110, 101, 97, 110, 32,
 					118, 117, 108, 112, 117, 116, 97, 116, 101, 32, 101, 108, 101, 105, 102, 101, 110, 100, 32, 116,
-					101, 108, 108, 117, 115, 46, 32, 65, 101, 110, 101, 97, 110, 32, 108, 101, 111, 32, 108, 105, 103,
-					117, 108, 97, 44, 32, 112, 111, 114, 116, 116, 105, 116, 111, 114, 32, 101, 117, 44, 32, 99, 111,
-					110, 115, 101, 113, 117, 97, 116, 32, 118, 105, 116, 97, 101, 44, 32, 101, 108, 101, 105, 102, 101,
-					110, 100, 32, 97, 99, 44, 32, 101, 110, 105, 109, 46, 32, 65, 108, 105, 113, 117, 97, 109, 32, 108,
-					111, 114, 101, 109, 32, 97, 110, 116, 101, 44, 32, 100, 97, 112, 105, 98, 117, 115, 32, 105, 110,
-					44, 32, 118, 105, 118, 101, 114, 114, 97, 32, 113, 117, 105, 115, 44, 32, 102, 101, 117, 103, 105,
-					97, 116, 32, 97, 44, 32, 116, 101, 108, 108, 117, 115, 46, 32, 80, 104, 97, 115, 101, 108, 108, 117,
-					115, 32, 118, 105, 118, 101, 114, 114, 97, 32, 110, 117, 108, 108, 97, 32, 117, 116, 32, 109, 101,
-					116, 117, 115, 32, 118, 97, 114, 105, 117, 115, 32, 108, 97, 111, 114, 101, 101, 116, 46, 32, 81,
-					117, 105, 115, 113, 117, 101, 32, 114, 117, 116, 114, 117, 109, 46, 32, 65, 101, 110, 101, 97, 110,
-					32, 105, 109, 112, 101, 114, 100, 105, 101, 116, 46, 32, 69, 116, 105, 97, 109, 32, 117, 108, 116,
-					114, 105, 99, 105, 101, 115, 32, 110, 105, 115, 105, 32, 118, 101, 108, 32, 97, 117, 103, 117, 101,
-					46, 32, 67, 117, 114, 97, 98, 105, 116, 117, 114, 32, 117, 108, 108, 97, 109, 99, 111, 114, 112,
-					101, 114, 32, 117, 108, 116, 114, 105, 99, 105, 101, 115, 32, 110, 105, 115, 105, 46, 32, 78, 97,
-					109, 32, 101, 103, 101, 116, 32, 100, 117, 105, 46, 32, 69, 116, 105, 97, 109, 32, 114, 104, 111,
-					110, 99, 117, 115, 46, 32, 77, 97, 101, 99, 101, 110, 97, 115, 32, 116, 101, 109, 112, 117, 115, 44,
-					32, 116, 101, 108, 108, 117, 115, 32, 101, 103, 101, 116, 32, 99, 111, 110, 100, 105, 109, 101, 110,
-					116, 117, 109, 32, 114, 104, 111, 110, 99, 117, 115, 44, 32, 115, 101, 109, 32, 113, 117, 97, 109,
-					32, 115, 101, 109, 112, 101, 114, 32, 108, 105, 98, 101, 114, 111, 44, 32, 115, 105, 116, 32, 97,
-					109, 101, 116, 32, 97, 100, 105, 112, 105, 115, 99, 105, 110, 103, 32, 115, 101, 109, 32, 110, 101,
-					113, 117, 101, 32, 115, 101, 100, 32, 105, 112, 115, 117, 109, 46, 32, 78, 97, 109, 32, 113, 117,
-					97, 109, 32, 110, 117, 110, 99, 44, 32, 98, 108, 97, 110, 100, 105, 116, 32, 118, 101, 108, 44, 32,
-					108, 117, 99, 116, 117, 115, 32, 112, 117, 108, 118, 105, 110, 97, 114, 44, 32, 104, 101, 110, 100,
-					114, 101, 114, 105, 116, 32, 105, 100, 44, 32, 108, 111, 114, 101, 109, 46, 32, 77, 97, 101, 99,
-					101, 110, 97, 115, 32, 110, 101, 99, 32, 111, 100, 105, 111, 32, 101, 116, 32, 97, 110, 116, 101,
-					32, 116, 105, 110, 99, 105, 100, 117, 110, 116, 32, 116, 101, 109, 112, 117, 115, 46, 32, 68, 111,
-					110, 101, 99, 32, 118, 105, 116, 97, 101, 32, 115, 97, 112, 105, 101, 110, 32, 117, 116, 32, 108,
-					105, 98, 101, 114, 111, 32, 118, 101, 110, 101, 110, 97, 116, 105, 115, 32, 102, 97, 117, 99, 105,
-					98, 117, 115, 46, 32, 78, 117, 108, 108, 97, 109, 32, 113, 117, 105, 115, 32, 97, 110, 116, 101, 46,
-					32, 69, 116, 105, 97, 109, 32, 115, 105, 116, 32, 97, 109, 101, 116, 32, 111, 114, 99, 105, 32, 101,
-					103, 101, 116, 32, 101, 114, 111, 115, 32, 102, 97, 117, 99, 105, 98, 117, 115, 32, 116, 105, 110,
-					99, 105, 100, 117, 110, 116, 46, 32, 68, 117, 105, 115, 32, 108, 101, 111, 46, 32, 83, 101, 100, 32,
-					102, 114, 105, 110, 103, 105, 108, 108, 97, 32, 109, 97, 117, 114, 105, 115, 32, 115, 105, 116, 32,
-					97, 109, 101, 116, 32, 110, 105, 98, 104, 46, 32, 68, 111, 110, 101, 99, 32, 115, 111, 100, 97, 108,
-					101, 115, 32, 115, 97, 103, 105, 116, 116, 105, 115, 32, 109, 97, 103, 110, 97, 46, 32, 83, 101,
-					100, 32, 99, 111, 110, 115, 101, 113, 117, 97, 116, 44, 32, 108, 101, 111, 32, 101, 103, 101, 116,
-					32, 98, 105, 98, 101, 110, 100, 117, 109, 32, 115, 111, 100, 97, 108, 101, 115, 44, 32, 97, 117,
-					103, 117, 101, 32, 118, 101, 108, 105, 116, 32, 99, 117, 114, 115, 117, 115, 32, 110, 117, 110, 99,
-					44 });
+					101, 108, 108, 117, 115, 46 });
 	}
 
 	private void checkString(final String expecteds, final byte[] vpack) {
 		final Slice slice = new Slice(vpack);
 		Assert.assertEquals(expecteds, slice.getString());
+	}
+
+	@Test
+	public void getStringLength() {
+		checkStringLength(11, new byte[] { 0x4b, 72, 97, 108, 108, 111, 32, 87, 101, 108, 116, 33 });
+		checkStringLength(12, new byte[] { 0x4c, 72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33 });
+		checkStringLength(567,
+			new byte[] { (byte) 0xbf, 0, 0, 0, 0, 0, 0, 2, 55, 76, 111, 114, 101, 109, 32, 105, 112, 115, 117, 109, 32,
+					100, 111, 108, 111, 114, 32, 115, 105, 116, 32, 97, 109, 101, 116, 44, 32, 99, 111, 110, 115, 101,
+					99, 116, 101, 116, 117, 101, 114, 32, 97, 100, 105, 112, 105, 115, 99, 105, 110, 103, 32, 101, 108,
+					105, 116, 46, 32, 65, 101, 110, 101, 97, 110, 32, 99, 111, 109, 109, 111, 100, 111, 32, 108, 105,
+					103, 117, 108, 97, 32, 101, 103, 101, 116, 32, 100, 111, 108, 111, 114, 46, 32, 65, 101, 110, 101,
+					97, 110, 32, 109, 97, 115, 115, 97, 46, 32, 67, 117, 109, 32, 115, 111, 99, 105, 105, 115, 32, 110,
+					97, 116, 111, 113, 117, 101, 32, 112, 101, 110, 97, 116, 105, 98, 117, 115, 32, 101, 116, 32, 109,
+					97, 103, 110, 105, 115, 32, 100, 105, 115, 32, 112, 97, 114, 116, 117, 114, 105, 101, 110, 116, 32,
+					109, 111, 110, 116, 101, 115, 44, 32, 110, 97, 115, 99, 101, 116, 117, 114, 32, 114, 105, 100, 105,
+					99, 117, 108, 117, 115, 32, 109, 117, 115, 46, 32, 68, 111, 110, 101, 99, 32, 113, 117, 97, 109, 32,
+					102, 101, 108, 105, 115, 44, 32, 117, 108, 116, 114, 105, 99, 105, 101, 115, 32, 110, 101, 99, 44,
+					32, 112, 101, 108, 108, 101, 110, 116, 101, 115, 113, 117, 101, 32, 101, 117, 44, 32, 112, 114, 101,
+					116, 105, 117, 109, 32, 113, 117, 105, 115, 44, 32, 115, 101, 109, 46, 32, 78, 117, 108, 108, 97,
+					32, 99, 111, 110, 115, 101, 113, 117, 97, 116, 32, 109, 97, 115, 115, 97, 32, 113, 117, 105, 115,
+					32, 101, 110, 105, 109, 46, 32, 68, 111, 110, 101, 99, 32, 112, 101, 100, 101, 32, 106, 117, 115,
+					116, 111, 44, 32, 102, 114, 105, 110, 103, 105, 108, 108, 97, 32, 118, 101, 108, 44, 32, 97, 108,
+					105, 113, 117, 101, 116, 32, 110, 101, 99, 44, 32, 118, 117, 108, 112, 117, 116, 97, 116, 101, 32,
+					101, 103, 101, 116, 44, 32, 97, 114, 99, 117, 46, 32, 73, 110, 32, 101, 110, 105, 109, 32, 106, 117,
+					115, 116, 111, 44, 32, 114, 104, 111, 110, 99, 117, 115, 32, 117, 116, 44, 32, 105, 109, 112, 101,
+					114, 100, 105, 101, 116, 32, 97, 44, 32, 118, 101, 110, 101, 110, 97, 116, 105, 115, 32, 118, 105,
+					116, 97, 101, 44, 32, 106, 117, 115, 116, 111, 46, 32, 78, 117, 108, 108, 97, 109, 32, 100, 105, 99,
+					116, 117, 109, 32, 102, 101, 108, 105, 115, 32, 101, 117, 32, 112, 101, 100, 101, 32, 109, 111, 108,
+					108, 105, 115, 32, 112, 114, 101, 116, 105, 117, 109, 46, 32, 73, 110, 116, 101, 103, 101, 114, 32,
+					116, 105, 110, 99, 105, 100, 117, 110, 116, 46, 32, 67, 114, 97, 115, 32, 100, 97, 112, 105, 98,
+					117, 115, 46, 32, 86, 105, 118, 97, 109, 117, 115, 32, 101, 108, 101, 109, 101, 110, 116, 117, 109,
+					32, 115, 101, 109, 112, 101, 114, 32, 110, 105, 115, 105, 46, 32, 65, 101, 110, 101, 97, 110, 32,
+					118, 117, 108, 112, 117, 116, 97, 116, 101, 32, 101, 108, 101, 105, 102, 101, 110, 100, 32, 116,
+					101, 108, 108, 117, 115, 46 });
+	}
+
+	private void checkStringLength(final int expected, final byte[] vpack) {
+		final Slice slice = new Slice(vpack);
+		Assert.assertEquals(expected, slice.getStringLength());
+	}
+
+	@Test
+	public void getBinary() {
+		final byte[] expected = new byte[] { 49, 50, 51, 52, 53, 54, 55, 56, 57 };
+		checkBinary(expected, new byte[] { (byte) 0xc0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc1, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc2, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc3, 0, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc4, 0, 0, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc5, 0, 0, 0, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc6, 0, 0, 0, 0, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc7, 0, 0, 0, 0, 0, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+	}
+
+	private void checkBinary(final byte[] expected, final byte[] vpack) {
+		final Slice slice = new Slice(vpack);
+		Assert.assertArrayEquals(expected, slice.getBinary());
+	}
+
+	@Test
+	public void getBinaryLength() {
+		final int expected = 9;
+		checkBinary(expected, new byte[] { (byte) 0xc0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc1, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc2, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc3, 0, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc4, 0, 0, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc5, 0, 0, 0, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc6, 0, 0, 0, 0, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+		checkBinary(expected, new byte[] { (byte) 0xc7, 0, 0, 0, 0, 0, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
+	}
+
+	private void checkBinary(final int expected, final byte[] vpack) {
+		final Slice slice = new Slice(vpack);
+		Assert.assertEquals(expected, slice.getBinaryLength());
+	}
+
+	@Test
+	public void arrayWithoutIndexTable() {
+		final long[] expected = new long[] { 1, 2, 3 };
+		checkArray(expected, new byte[] { 0x02, 0x05, 0x31, 0x32, 0x33 });
+		checkArray(expected, new byte[] { 0x03, 0x06, 0x00, 0x31, 0x32, 0x33 });
+		checkArray(expected, new byte[] { 0x04, 0x08, 0x00, 0x00, 0x00, 0x31, 0x32, 0x33 });
+		checkArray(expected, new byte[] { 0x05, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x31, 0x32, 0x33 });
+	}
+
+	@Test
+	public void arrayWithIndexTable() {
+		final long[] expected = new long[] { 1, 2, 3 };
+		checkArray(expected, new byte[] { 0x06, 0x09, 0x03, 0x31, 0x32, 0x33, 0x03, 0x04, 0x05 });
+		checkArray(expected,
+			new byte[] { 0x07, 0x0e, 0x00, 0x03, 0x00, 0x31, 0x32, 0x33, 0x07, 0x00, 0x09, 0x00, 0x0b, 0x00 });
+		checkArray(expected, new byte[] { 0x08, 0x18, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x31, 0x32, 0x33, 0x05,
+				0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00 });
+	}
+
+	@Test
+	public void arrayWithIndexTable8bytes() {
+		final long[] expected = new long[] { 1, 2, 3 };
+		checkArray(expected,
+			new byte[] { 0x09, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x31, 0x32, 0x33, 0x09, 0x00, 0x00,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0x00 });
+	}
+
+	@Test
+	public void arrayCompact() {
+		final long[] expected = { 1, 16 };
+		checkArray(expected, new byte[] { 0x13, 0x06, 0x31, 0x28, 0x10, 0x02 });
+	}
+
+	private void checkArray(final long[] expected, final byte[] vpack) {
+		checkLength(expected.length, vpack);
+		// TODO value check
+	}
+
+	@Test
+	public void objectLength() {
+		// {"a": 12, "b": true, "c": "xyz"}
+		final int expected = 3;
+		checkLength(expected, new byte[] { 0x0b, 0x13, 0x03, 0x41, 0x62, 0x1a, 0x41, 0x61, 0x28, 0x0c, 0x41, 0x63, 0x43,
+				0x78, 0x79, 0x7a, 0x06, 0x03, 0x0a });
+		checkLength(expected,
+			new byte[] { 0x0d, 0x22, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x41, 0x62, 0x03, 0x41, 0x61, 0x28, 0x0c,
+					0x41, 0x63, 0x43, 0x78, 0x79, 0x7a, 0x0c, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x10, 0x00,
+					0x00, 0x00 });
+		checkLength(expected, new byte[] { 0x0f, 0x13, 0x03, 0x41, 0x62, 0x03, 0x41, 0x61, 0x28, 0x0c, 0x41, 0x63, 0x43,
+				0x78, 0x79, 0x7a, 0x03, 0x06, 0x0a });
+	}
+
+	@Test
+	public void objectCompactLength() {
+		// {"a":1, "b":16}
+		checkLength(2, new byte[] { 0x14, 0x0a, 0x41, 0x61, 0x31, 0x42, 0x62, 0x28, 0x10, 0x02 });
+	}
+
+	private void checkLength(final int expected, final byte[] vpack) {
+		final Slice slice = new Slice(vpack);
+		Assert.assertEquals(expected, slice.getLength());
 	}
 
 }
