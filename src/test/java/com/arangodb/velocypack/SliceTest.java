@@ -399,21 +399,21 @@ public class SliceTest {
 	}
 
 	@Test
-	public void getBooleanTrue() {
+	public void getBooleanTrue() throws VPackValueTypeException {
 		final byte[] vpack = { 0x1a };
 		final Slice slice = new Slice(vpack);
 		Assert.assertTrue(slice.getBoolean());
 	}
 
 	@Test
-	public void getBooleanFalse() {
+	public void getBooleanFalse() throws VPackValueTypeException {
 		final byte[] vpack = { 0x19 };
 		final Slice slice = new Slice(vpack);
 		Assert.assertFalse(slice.getBoolean());
 	}
 
 	@Test
-	public void getDouble() {
+	public void getDouble() throws VPackValueTypeException {
 		{
 			final byte[] vpack = { 0x1b, 64, 96, -74, 102, 102, 102, 102, 102 };
 			final Slice slice = new Slice(vpack);
@@ -427,7 +427,7 @@ public class SliceTest {
 	}
 
 	@Test
-	public void getSmallInt() {
+	public void getSmallInt() throws VPackValueTypeException {
 		checkSmallInt(0, new byte[] { 0x30 });
 		checkSmallInt(1, new byte[] { 0x31 });
 		checkSmallInt(2, new byte[] { 0x32 });
@@ -446,32 +446,32 @@ public class SliceTest {
 		checkSmallInt(-1, new byte[] { 0x3f });
 	}
 
-	private void checkSmallInt(final int expecteds, final byte[] vpack) {
+	private void checkSmallInt(final int expecteds, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
 		Assert.assertEquals(expecteds, slice.getSmallInt());
 	}
 
 	@Test
-	public void getInt() {
+	public void getInt() throws VPackValueTypeException {
 		checkInt(Short.MAX_VALUE, new byte[] { 0x21, 127, -1 });
 		checkInt(Integer.MAX_VALUE, new byte[] { 0x23, 127, -1, -1, -1 });
 		checkInt(Long.MAX_VALUE, new byte[] { 0x27, 127, -1, -1, -1, -1, -1, -1, -1 });
 	}
 
-	private void checkInt(final long expextedValue, final byte[] vpack) {
+	private void checkInt(final long expextedValue, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
 		Assert.assertEquals(expextedValue, slice.getInt());
 	}
 
 	@Test
-	public void getUInt() {
+	public void getUInt() throws VPackValueTypeException {
 		checkUInt(Short.MAX_VALUE, new byte[] { 0x29, 127, -1 });
 		checkUInt(Integer.MAX_VALUE, new byte[] { 0x2b, 127, -1, -1, -1 });
 		checkUInt(Long.MAX_VALUE, new byte[] { 0x2f, 127, -1, -1, -1, -1, -1, -1, -1 });
 	}
 
 	@Test
-	public void getUIntAsBigInteger() {
+	public void getUIntAsBigInteger() throws VPackValueTypeException {
 		checkUIntAsBigInteger(new BigInteger(String.valueOf(Short.MAX_VALUE)), new byte[] { 0x29, 127, -1 });
 		checkUIntAsBigInteger(new BigInteger(String.valueOf(Integer.MAX_VALUE)), new byte[] { 0x2b, 127, -1, -1, -1 });
 		final BigInteger longMax = new BigInteger(String.valueOf(Long.MAX_VALUE));
@@ -479,25 +479,25 @@ public class SliceTest {
 		checkUIntAsBigInteger(longMax.add(longMax), new byte[] { 0x2f, -1, -1, -1, -1, -1, -1, -1, -2 });
 	}
 
-	private void checkUInt(final long expecteds, final byte[] vpack) {
+	private void checkUInt(final long expecteds, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
 		Assert.assertEquals(expecteds, slice.getUInt());
 	}
 
-	private void checkUIntAsBigInteger(final BigInteger expecteds, final byte[] vpack) {
+	private void checkUIntAsBigInteger(final BigInteger expecteds, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
 		Assert.assertEquals(expecteds, slice.getUIntAsBigInteger());
 	}
 
 	@Test
-	public void getUTCDate() {
+	public void getUTCDate() throws VPackValueTypeException {
 		final byte[] vpack = { 0x1c, 0, 0, 0, -114, 5, 115, 83, 0 };
 		final Slice slice = new Slice(vpack);
 		Assert.assertEquals(new Date(609976800000l), slice.getUTCDate());
 	}
 
 	@Test
-	public void getString() {
+	public void getString() throws VPackValueTypeException {
 		checkString("Hallo Welt!", new byte[] { 0x4b, 72, 97, 108, 108, 111, 32, 87, 101, 108, 116, 33 });
 		checkString("Hello World!", new byte[] { 0x4c, 72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33 });
 		checkString(
@@ -541,13 +541,13 @@ public class SliceTest {
 					0x73, 0x2e });
 	}
 
-	private void checkString(final String expecteds, final byte[] vpack) {
+	private void checkString(final String expecteds, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
 		Assert.assertEquals(expecteds, slice.getString());
 	}
 
 	@Test
-	public void getStringLength() {
+	public void getStringLength() throws VPackValueTypeException {
 		checkStringLength(11, new byte[] { 0x4b, 72, 97, 108, 108, 111, 32, 87, 101, 108, 116, 33 });
 		checkStringLength(12, new byte[] { 0x4c, 72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33 });
 		checkStringLength(567, new byte[] { (byte) 0xbf, 0x37, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4c, 0x6f,
@@ -587,13 +587,13 @@ public class SliceTest {
 				0x6c, 0x75, 0x73, 0x2e });
 	}
 
-	private void checkStringLength(final int expected, final byte[] vpack) {
+	private void checkStringLength(final int expected, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
 		Assert.assertEquals(expected, slice.getStringLength());
 	}
 
 	@Test
-	public void getBinary() {
+	public void getBinary() throws VPackValueTypeException {
 		final byte[] expected = new byte[] { 49, 50, 51, 52, 53, 54, 55, 56, 57 };
 		checkBinary(expected, new byte[] { (byte) 0xc0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
 		checkBinary(expected, new byte[] { (byte) 0xc1, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
@@ -605,13 +605,13 @@ public class SliceTest {
 		checkBinary(expected, new byte[] { (byte) 0xc7, 0, 0, 0, 0, 0, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
 	}
 
-	private void checkBinary(final byte[] expected, final byte[] vpack) {
+	private void checkBinary(final byte[] expected, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
 		Assert.assertArrayEquals(expected, slice.getBinary());
 	}
 
 	@Test
-	public void getBinaryLength() {
+	public void getBinaryLength() throws VPackValueTypeException {
 		final int expected = 9;
 		checkBinary(expected, new byte[] { (byte) 0xc0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
 		checkBinary(expected, new byte[] { (byte) 0xc1, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
@@ -623,30 +623,30 @@ public class SliceTest {
 		checkBinary(expected, new byte[] { (byte) 0xc7, 0, 0, 0, 0, 0, 0, 0, 9, 49, 50, 51, 52, 53, 54, 55, 56, 57 });
 	}
 
-	private void checkBinary(final int expected, final byte[] vpack) {
+	private void checkBinary(final int expected, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
 		Assert.assertEquals(expected, slice.getBinaryLength());
 	}
 
 	@Test(expected = VPackValueTypeException.class)
-	public void notArrayAt() {
+	public void notArrayAt() throws VPackValueTypeException {
 		final Slice slice = new Slice(new byte[] { 0x1a });
 		slice.at(1);
 	}
 
 	@Test
-	public void arrayEmpty() {
+	public void arrayEmpty() throws VPackValueTypeException {
 		checkArray(new long[] {}, new byte[] { 0x01 });
 	}
 
 	@Test(expected = IndexOutOfBoundsException.class)
-	public void arrayEmptyAt() {
+	public void arrayEmptyAt() throws VPackValueTypeException {
 		final Slice slice = new Slice(new byte[] { 0x01 });
 		slice.at(1);
 	}
 
 	@Test
-	public void arrayWithoutIndexTable() {
+	public void arrayWithoutIndexTable() throws VPackValueTypeException {
 		final long[] expected = new long[] { 1, 2, 3 };
 		checkArray(expected, new byte[] { 0x02, 0x05, 0x31, 0x32, 0x33 });
 		checkArray(expected, new byte[] { 0x03, 0x06, 0x00, 0x31, 0x32, 0x33 });
@@ -655,7 +655,7 @@ public class SliceTest {
 	}
 
 	@Test
-	public void arrayWithIndexTable() {
+	public void arrayWithIndexTable() throws VPackValueTypeException {
 		final long[] expected = new long[] { 1, 2, 3 };
 		checkArray(expected, new byte[] { 0x06, 0x09, 0x03, 0x31, 0x32, 0x33, 0x03, 0x04, 0x05 });
 		checkArray(expected,
@@ -665,7 +665,7 @@ public class SliceTest {
 	}
 
 	@Test
-	public void arrayWithIndexTable8bytes() {
+	public void arrayWithIndexTable8bytes() throws VPackValueTypeException {
 		final long[] expected = new long[] { 1, 2, 3 };
 		checkArray(expected,
 			new byte[] { 0x09, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x31, 0x32, 0x33, 0x09, 0x00, 0x00, 0x00,
@@ -674,26 +674,26 @@ public class SliceTest {
 	}
 
 	@Test
-	public void arrayCompact() {
+	public void arrayCompact() throws VPackValueTypeException {
 		final long[] expected = { 1, 16 };
 		checkArray(expected, new byte[] { 0x13, 0x06, 0x31, 0x28, 0x10, 0x02 });
 	}
 
 	@Test
-	public void arrayIncludesArray() {
+	public void arrayIncludesArray() throws VPackValueTypeException {
 		final long[][] expected = { { 1, 2, 3 }, { 1, 2, 3 } };
 		checkArray(expected, new byte[] { 0x02, 0x0c, 0x02, 0x05, 0x31, 0x32, 0x33, 0x02, 0x05, 0x31, 0x32, 0x33 });
 	}
 
 	@Test
-	public void arrayIncludesArrayCompact() {
+	public void arrayIncludesArrayCompact() throws VPackValueTypeException {
 		final long[][] expected = { { 1, 2, 3 }, { 1, 2, 3 } };
 		checkArray(expected,
 			new byte[] { 0x02, 0x0e, 0x13, 0x06, 0x31, 0x32, 0x33, 0x03, 0x13, 0x06, 0x31, 0x32, 0x33, 0x03 });
 	}
 
 	@Test
-	public void arrayIncludesObject() {
+	public void arrayIncludesObject() throws VPackValueTypeException {
 		// [{"a": 12, "b": true, "c": "xyz"},{"a": 12, "b": true, "c": "xyz"}]
 		checkLength(2,
 			new byte[] { 0x13, 0x23, 0x14, 0x10, 0x41, 0x61, 0x28, 0x0c, 0x41, 0x62, 0x1a, 0x41, 0x63, 0x43, 0x78, 0x79,
@@ -702,7 +702,7 @@ public class SliceTest {
 	}
 
 	@Test
-	public void arrayIncludesLongString() {
+	public void arrayIncludesLongString() throws VPackValueTypeException {
 		checkLength(1, new byte[] { 0x03, 0x49, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, (byte) 0xbf, 0x37, 0x02, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x4c, 0x6f, 0x72, 0x65, 0x6d, 0x20, 0x69, 0x70, 0x73, 0x75, 0x6d, 0x20,
 				0x64, 0x6f, 0x6c, 0x6f, 0x72, 0x20, 0x73, 0x69, 0x74, 0x20, 0x61, 0x6d, 0x65, 0x74, 0x2c, 0x20, 0x63,
@@ -740,7 +740,7 @@ public class SliceTest {
 				0x65, 0x6e, 0x64, 0x20, 0x74, 0x65, 0x6c, 0x6c, 0x75, 0x73, 0x2e });
 	}
 
-	private void checkArray(final long[][] expected, final byte[] vpack) {
+	private void checkArray(final long[][] expected, final byte[] vpack) throws VPackValueTypeException {
 		checkLength(expected.length, vpack);
 		final Slice slice = new Slice(vpack);
 		for (int i = 0; i < expected.length; i++) {
@@ -756,7 +756,7 @@ public class SliceTest {
 		}
 	}
 
-	private void checkArray(final long[] expected, final byte[] vpack) {
+	private void checkArray(final long[] expected, final byte[] vpack) throws VPackValueTypeException {
 		checkLength(expected.length, vpack);
 		final Slice slice = new Slice(vpack);
 		for (int i = 0; i < expected.length; i++) {
@@ -767,7 +767,7 @@ public class SliceTest {
 	}
 
 	@Test
-	public void arrayIterator() {
+	public void arrayIterator() throws VPackValueTypeException {
 		final Collection<String> expected = Arrays.asList("a", "b", "c", "d", "e", "f");
 		final Slice slice = new Slice(new byte[] { 0x13, 0x0f, 0x41, 0x61, 0x41, 0x62, 0x41, 0x63, 0x41, 0x64, 0x41,
 				0x65, 0x41, 0x66, 0x06 });
@@ -781,12 +781,12 @@ public class SliceTest {
 	}
 
 	@Test
-	public void objectEmpty() {
+	public void objectEmpty() throws VPackValueTypeException {
 		checkLength(0, new byte[] { 0x0a });
 	}
 
 	@Test
-	public void objectLength() {
+	public void objectLength() throws VPackValueTypeException {
 		// {"a": 12, "b": true, "c": "xyz"}
 		final int expected = 3;
 		checkLength(expected, new byte[] { 0x0b, 0x13, 0x03, 0x41, 0x62, 0x1a, 0x41, 0x61, 0x28, 0x0c, 0x41, 0x63, 0x43,
@@ -800,25 +800,25 @@ public class SliceTest {
 	}
 
 	@Test
-	public void objectCompactLength() {
+	public void objectCompactLength() throws VPackValueTypeException {
 		// {"a":1, "b":16}
 		checkLength(2, new byte[] { 0x14, 0x0a, 0x41, 0x61, 0x31, 0x42, 0x62, 0x28, 0x10, 0x02 });
 	}
 
-	private void checkLength(final int expected, final byte[] vpack) {
+	private void checkLength(final int expected, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
 		Assert.assertEquals(expected, slice.getLength());
 	}
 
 	@Test
-	public void objectEmptyGet() {
+	public void objectEmptyGet() throws VPackValueTypeException {
 		final Slice slice = new Slice(new byte[] { 0x0a });
 		final Slice slice2 = slice.get("abc");
 		Assert.assertTrue(slice2.isNone());
 	}
 
 	@Test
-	public void objectSingleEntryString() {
+	public void objectSingleEntryString() throws VPackValueTypeException {
 		// {"a":"b"}
 		final Slice slice = new Slice(new byte[] { 0x0b, 0x07, 0x01, 0x41, 0x61, 0x41, 0x62 });
 		final Slice sliceNone = slice.get("abc");
@@ -828,7 +828,7 @@ public class SliceTest {
 	}
 
 	@Test
-	public void objectSorted4Entries() {
+	public void objectSorted4Entries() throws VPackValueTypeException {
 		// {"a":"b","c":"d","e":"f","g":"h"}
 		final Slice slice = new Slice(new byte[] { 0x0b, 0x17, 0x04, 0x41, 0x61, 0x41, 0x62, 0x41, 0x63, 0x41, 0x64,
 				0x41, 0x65, 0x41, 0x66, 0x41, 0x67, 0x41, 0x68, 0x03, 0x07, 0x0b, 0x0f });
@@ -839,7 +839,7 @@ public class SliceTest {
 	}
 
 	@Test
-	public void objectSortedUnder4Entries() {
+	public void objectSortedUnder4Entries() throws VPackValueTypeException {
 		// {"a":"b","c":"d","e":"f"}
 		final Slice slice = new Slice(new byte[] { 0x0b, 0x12, 0x03, 0x41, 0x61, 0x41, 0x62, 0x41, 0x63, 0x41, 0x64,
 				0x41, 0x65, 0x41, 0x66, 0x03, 0x07, 0x0b });
@@ -849,7 +849,7 @@ public class SliceTest {
 	}
 
 	@Test
-	public void objectCompact() {
+	public void objectCompact() throws VPackValueTypeException {
 		// {"a":"b","c":"d","e":"f"}
 		final Slice slice = new Slice(new byte[] { 0x14, 0x0f, 0x41, 0x61, 0x41, 0x62, 0x41, 0x63, 0x41, 0x64, 0x41,
 				0x65, 0x41, 0x66, 0x03 });
@@ -858,13 +858,13 @@ public class SliceTest {
 		checkString("f", slice.get("e"));
 	}
 
-	private void checkString(final String expected, final Slice slice) {
+	private void checkString(final String expected, final Slice slice) throws VPackValueTypeException {
 		Assert.assertTrue(slice.isString());
 		Assert.assertEquals(expected, slice.getString());
 	}
 
 	@Test
-	public void objectKeyValueAtIndex() {
+	public void objectKeyValueAtIndex() throws VPackValueTypeException {
 		// {"a":"b","c":"d","e":"f"}
 		final String[] keys = { "a", "c", "e" };
 		final String[] values = { "b", "d", "f" };

@@ -11,8 +11,9 @@ public class ArrayIterator extends SliceIterator {
 
 	/**
 	 * @param slice
+	 * @throws VPackValueTypeException
 	 */
-	public ArrayIterator(final Slice slice) {
+	public ArrayIterator(final Slice slice) throws VPackValueTypeException {
 		super(slice);
 		if (!slice.isArray()) {
 			throw new VPackValueTypeException(ValueType.Array);
@@ -26,7 +27,11 @@ public class ArrayIterator extends SliceIterator {
 	 */
 	@Override
 	public Slice next() {
-		return slice.at((int) position++);
+		try {
+			return slice.at((int) position++);
+		} catch (final VPackValueTypeException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 }

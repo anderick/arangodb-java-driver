@@ -3,6 +3,7 @@ package com.arangodb.velocypack.util;
 import java.util.Iterator;
 
 import com.arangodb.velocypack.Slice;
+import com.arangodb.velocypack.exception.VPackValueTypeException;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -15,7 +16,7 @@ public abstract class SliceIterator implements Iterator<Slice> {
 	protected long position;
 	protected long current;
 
-	protected SliceIterator(final Slice slice) {
+	protected SliceIterator(final Slice slice) throws VPackValueTypeException {
 		super();
 		this.slice = slice;
 		size = slice.getLength();

@@ -11,8 +11,9 @@ public class ObjectIterator extends SliceIterator {
 
 	/**
 	 * @param slice
+	 * @throws VPackValueTypeException
 	 */
-	public ObjectIterator(final Slice slice) {
+	public ObjectIterator(final Slice slice) throws VPackValueTypeException {
 		super(slice);
 		if (!slice.isObject()) {
 			throw new VPackValueTypeException(ValueType.Object);

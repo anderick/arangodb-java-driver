@@ -151,21 +151,21 @@ public class Slice {
 		return isType(ValueType.Custom);
 	}
 
-	public boolean getBoolean() {
+	public boolean getBoolean() throws VPackValueTypeException {
 		if (!isBoolean()) {
 			throw new VPackValueTypeException(ValueType.Bool);
 		}
 		return isTrue();
 	}
 
-	public double getDouble() {
+	public double getDouble() throws VPackValueTypeException {
 		if (!isDouble()) {
 			throw new VPackValueTypeException(ValueType.Double);
 		}
 		return NumberUtil.toDouble(vpack, start + 1, length());
 	}
 
-	public long getSmallInt() {
+	public long getSmallInt() throws VPackValueTypeException {
 		if (!isSmallInt()) {
 			throw new VPackValueTypeException(ValueType.SmallInt);
 		}
@@ -179,21 +179,21 @@ public class Slice {
 		return smallInt;
 	}
 
-	public long getInt() {
+	public long getInt() throws VPackValueTypeException {
 		if (!isInt()) {
 			throw new VPackValueTypeException(ValueType.Int);
 		}
 		return NumberUtil.toLong(vpack, start + 1, length());
 	}
 
-	public long getUInt() {
+	public long getUInt() throws VPackValueTypeException {
 		if (!isUInt()) {
 			throw new VPackValueTypeException(ValueType.UInt);
 		}
 		return NumberUtil.toLong(vpack, start + 1, length());
 	}
 
-	public BigInteger getUIntAsBigInteger() {
+	public BigInteger getUIntAsBigInteger() throws VPackValueTypeException {
 		if (!isUInt()) {
 			throw new VPackValueTypeException(ValueType.UInt);
 		}
@@ -216,7 +216,7 @@ public class Slice {
 		return uint;
 	}
 
-	public long getInteger() {
+	public long getInteger() throws VPackValueTypeException {
 		final long result;
 		if (isSmallInt()) {
 			result = getSmallInt();
@@ -230,14 +230,14 @@ public class Slice {
 		return result;
 	}
 
-	public Date getUTCDate() {
+	public Date getUTCDate() throws VPackValueTypeException {
 		if (!isUTCDate()) {
 			throw new VPackValueTypeException(ValueType.UTCDate);
 		}
 		return DateUtil.toDate(vpack, start + 1, length());
 	}
 
-	public String getString() {
+	public String getString() throws VPackValueTypeException {
 		if (!isString()) {
 			throw new VPackValueTypeException(ValueType.String);
 		}
@@ -261,14 +261,14 @@ public class Slice {
 		return (int) NumberUtil.toLongReversed(vpack, start + 1, 8);
 	}
 
-	public int getStringLength() {
+	public int getStringLength() throws VPackValueTypeException {
 		if (!isString()) {
 			throw new VPackValueTypeException(ValueType.String);
 		}
 		return isLongString() ? getLongStringLength() : head() - 0x40;
 	}
 
-	public byte[] getBinary() {
+	public byte[] getBinary() throws VPackValueTypeException {
 		if (!isBinary()) {
 			throw new VPackValueTypeException(ValueType.Binary);
 		}
@@ -276,7 +276,7 @@ public class Slice {
 		return binary;
 	}
 
-	public int getBinaryLength() {
+	public int getBinaryLength() throws VPackValueTypeException {
 		if (!isBinary()) {
 			throw new VPackValueTypeException(ValueType.Binary);
 		}
@@ -285,8 +285,9 @@ public class Slice {
 
 	/**
 	 * @return the number of members for an Array or Object object
+	 * @throws VPackValueTypeException
 	 */
-	public long getLength() {
+	public long getLength() throws VPackValueTypeException {
 		if (!isArray() && !isObject()) {
 			throw new VPackValueTypeException(ValueType.Array, ValueType.Object);
 		}
@@ -373,15 +374,16 @@ public class Slice {
 
 	/**
 	 * @return array value at the specified index
+	 * @throws VPackValueTypeException
 	 */
-	public Slice at(final int index) {
+	public Slice at(final int index) throws VPackValueTypeException {
 		if (!isArray()) {
 			throw new VPackValueTypeException(ValueType.Array);
 		}
 		return getNth(index);
 	}
 
-	public Slice get(final String attribute) {
+	public Slice get(final String attribute) throws VPackValueTypeException {
 		if (!isObject()) {
 			throw new VPackValueTypeException(ValueType.Object);
 		}
@@ -430,7 +432,7 @@ public class Slice {
 		return result;
 	}
 
-	private Slice getFromCompactObject(final String attribute) {
+	private Slice getFromCompactObject(final String attribute) throws VPackValueTypeException {
 		Slice result = new Slice();
 		for (final Iterator<Slice> iterator = iterator(); iterator.hasNext();) {
 			final Slice key = iterator.next();
@@ -442,7 +444,8 @@ public class Slice {
 		return result;
 	}
 
-	private Slice searchObjectKeyBinary(final String attribute, final long ieBase, final int offsetsize, final long n) {
+	private Slice searchObjectKeyBinary(final String attribute, final long ieBase, final int offsetsize, final long n)
+			throws VPackValueTypeException {
 		Slice result;
 		long l = 0;
 		long r = n - 1;
@@ -483,7 +486,8 @@ public class Slice {
 		return result;
 	}
 
-	private Slice searchObjectKeyLinear(final String attribute, final long ieBase, final int offsetsize, final long n) {
+	private Slice searchObjectKeyLinear(final String attribute, final long ieBase, final int offsetsize, final long n)
+			throws VPackValueTypeException {
 		Slice result = new Slice();
 		for (long index = 0; index < n; index++) {
 			final long offset = ieBase + index * offsetsize;
@@ -506,14 +510,14 @@ public class Slice {
 
 	}
 
-	public Slice keyAt(final int index) {
+	public Slice keyAt(final int index) throws VPackValueTypeException {
 		if (!isObject()) {
 			throw new VPackValueTypeException(ValueType.Object);
 		}
 		return getNthKey(index);
 	}
 
-	public Slice valueAt(final int index) {
+	public Slice valueAt(final int index) throws VPackValueTypeException {
 		if (!isObject()) {
 			throw new VPackValueTypeException(ValueType.Object);
 		}
@@ -599,17 +603,17 @@ public class Slice {
 		return (int) offset;
 	}
 
-	private boolean isEqualString(final String s) {
+	private boolean isEqualString(final String s) throws VPackValueTypeException {
 		final String string = getString();
 		return string.equals(s);
 	}
 
-	private int compareString(final String s) {
+	private int compareString(final String s) throws VPackValueTypeException {
 		final String string = getString();
 		return string.compareTo(s);
 	}
 
-	public Iterator<Slice> iterator() {
+	public Iterator<Slice> iterator() throws VPackValueTypeException {
 		final Iterator<Slice> iterator;
 		if (isObject()) {
 			iterator = new ObjectIterator(this);
