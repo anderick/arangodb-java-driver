@@ -1,7 +1,10 @@
 package com.arangodb.velocypack;
 
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -764,6 +767,20 @@ public class SliceTest {
 	}
 
 	@Test
+	public void arrayIterator() {
+		final Collection<String> expected = Arrays.asList("a", "b", "c", "d", "e", "f");
+		final Slice slice = new Slice(new byte[] { 0x13, 0x0f, 0x41, 0x61, 0x41, 0x62, 0x41, 0x63, 0x41, 0x64, 0x41,
+				0x65, 0x41, 0x66, 0x06 });
+		final Iterator<Slice> iteratorSlice = slice.iterator();
+		for (final Iterator<String> iterator = expected.iterator(); iterator.hasNext();) {
+			final String string = iterator.next();
+			final Slice next = iteratorSlice.next();
+			Assert.assertTrue(next.isString());
+			Assert.assertEquals(string, next.getString());
+		}
+	}
+
+	@Test
 	public void objectEmpty() {
 		checkLength(0, new byte[] { 0x0a });
 	}
@@ -801,12 +818,61 @@ public class SliceTest {
 	}
 
 	@Test
-	public void objectSingleMemberString() {
+	public void objectSingleEntryString() {
 		// {"a":"b"}
 		final Slice slice = new Slice(new byte[] { 0x0b, 0x07, 0x01, 0x41, 0x61, 0x41, 0x62 });
 		final Slice sliceNone = slice.get("abc");
 		Assert.assertTrue(sliceNone.isNone());
 		final Slice sliceA = slice.get("a");
 		Assert.assertTrue(sliceA.isString());
+	}
+
+	@Test
+	public void objectSorted4Entries() {
+		// {"a":"b","c":"d","e":"f","g":"h"}
+		final Slice slice = new Slice(new byte[] { 0x0b, 0x17, 0x04, 0x41, 0x61, 0x41, 0x62, 0x41, 0x63, 0x41, 0x64,
+				0x41, 0x65, 0x41, 0x66, 0x41, 0x67, 0x41, 0x68, 0x03, 0x07, 0x0b, 0x0f });
+		checkString("b", slice.get("a"));
+		checkString("d", slice.get("c"));
+		checkString("f", slice.get("e"));
+		checkString("h", slice.get("g"));
+	}
+
+	@Test
+	public void objectSortedUnder4Entries() {
+		// {"a":"b","c":"d","e":"f"}
+		final Slice slice = new Slice(new byte[] { 0x0b, 0x12, 0x03, 0x41, 0x61, 0x41, 0x62, 0x41, 0x63, 0x41, 0x64,
+				0x41, 0x65, 0x41, 0x66, 0x03, 0x07, 0x0b });
+		checkString("b", slice.get("a"));
+		checkString("d", slice.get("c"));
+		checkString("f", slice.get("e"));
+	}
+
+	@Test
+	public void objectCompact() {
+		// {"a":"b","c":"d","e":"f"}
+		final Slice slice = new Slice(new byte[] { 0x14, 0x0f, 0x41, 0x61, 0x41, 0x62, 0x41, 0x63, 0x41, 0x64, 0x41,
+				0x65, 0x41, 0x66, 0x03 });
+		checkString("b", slice.get("a"));
+		checkString("d", slice.get("c"));
+		checkString("f", slice.get("e"));
+	}
+
+	private void checkString(final String expected, final Slice slice) {
+		Assert.assertTrue(slice.isString());
+		Assert.assertEquals(expected, slice.getString());
+	}
+
+	@Test
+	public void objectKeyValueAtIndex() {
+		// {"a":"b","c":"d","e":"f"}
+		final String[] keys = { "a", "c", "e" };
+		final String[] values = { "b", "d", "f" };
+		final Slice slice = new Slice(new byte[] { 0x14, 0x0f, 0x41, 0x61, 0x41, 0x62, 0x41, 0x63, 0x41, 0x64, 0x41,
+				0x65, 0x41, 0x66, 0x03 });
+		for (int i = 0; i < 3; i++) {
+			checkString(keys[i], slice.keyAt(i));
+			checkString(values[i], slice.valueAt(i));
+		}
 	}
 }

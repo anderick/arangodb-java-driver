@@ -2,12 +2,15 @@ package com.arangodb.velocypack;
 
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.Iterator;
 
 import com.arangodb.velocypack.exception.VPackValueTypeException;
+import com.arangodb.velocypack.util.ArrayIterator;
 import com.arangodb.velocypack.util.BinaryUtil;
 import com.arangodb.velocypack.util.DateUtil;
 import com.arangodb.velocypack.util.NumberUtil;
 import com.arangodb.velocypack.util.ObjectArrayUtil;
+import com.arangodb.velocypack.util.ObjectIterator;
 import com.arangodb.velocypack.util.StringUtil;
 import com.arangodb.velocypack.util.ValueLengthUtil;
 import com.arangodb.velocypack.util.ValueType;
@@ -30,14 +33,22 @@ public class Slice {
 		this(vpack, 0);
 	}
 
-	private Slice(final byte[] vpack, final int start) {
+	public Slice(final byte[] vpack, final int start) {
 		super();
 		this.vpack = vpack;
 		this.start = start;
 	}
 
-	private byte head() {
+	public byte head() {
 		return vpack[start];
+	}
+
+	public byte[] getVpack() {
+		return vpack;
+	}
+
+	public int getStart() {
+		return start;
 	}
 
 	private ValueType type() {
@@ -189,6 +200,22 @@ public class Slice {
 		return NumberUtil.toBigInteger(vpack, start + 1, length());
 	}
 
+	private long getUIntUnchecked() {
+
+		final long uint;
+		final byte head = head();
+		if (head >= 0x28 && head <= 0x2f) {
+			// UInt
+			uint = NumberUtil.toLong(vpack, start + 1, head - 0x27);
+		} else if (head >= 0x30 && head <= 0x39) {
+			// Smallint >= 0
+			uint = head - 0x30;
+		} else {
+			uint = 0;
+		}
+		return uint;
+	}
+
 	public long getInteger() {
 		final long result;
 		if (isSmallInt()) {
@@ -307,7 +334,7 @@ public class Slice {
 		return offset;
 	}
 
-	private long getByteSize() {
+	public long getByteSize() {
 		final long size;
 		final byte head = head();
 		final int valueLength = ValueLengthUtil.get(head);
@@ -379,15 +406,8 @@ public class Slice {
 				// Just one attribute, there is no index table!
 				final Slice key = new Slice(vpack, start + findDataOffset());
 
-				if (key.isString()) {
-					if (key.isEqualString(attribute)) {
-						result = new Slice(vpack, (int) (key.start + key.getByteSize()));
-					}
-					// fall through to returning None Slice below
-				} else if (key.isSmallInt() || key.isUInt()) {
-					// translate key
-					throw new UnsupportedOperationException();
-					// TODO
+				if (key.isString() && key.isEqualString(attribute)) {
+					result = new Slice(vpack, (int) (key.start + key.getByteSize()));
 				}
 			} else {
 				final long ieBase = end - n * offsetsize - (offsetsize == 8 ? 8 : 0);
@@ -401,28 +421,109 @@ public class Slice {
 				if (sorted && n >= sortedSearchEntriesThreshold) {
 					// This means, we have to handle the special case n == 1
 					// only in the linear search!
-					return searchObjectKeyBinary(attribute, ieBase, offsetsize, n);
+					result = searchObjectKeyBinary(attribute, ieBase, offsetsize, n);
+				} else {
+					result = searchObjectKeyLinear(attribute, ieBase, offsetsize, n);
 				}
-
-				return searchObjectKeyLinear(attribute, ieBase, offsetsize, n);
 			}
 		}
 		return result;
 	}
 
 	private Slice getFromCompactObject(final String attribute) {
-		// TODO
-		return null;
+		Slice result = new Slice();
+		for (final Iterator<Slice> iterator = iterator(); iterator.hasNext();) {
+			final Slice key = iterator.next();
+			if (key.isEqualString(attribute)) {
+				result = new Slice(vpack, (int) (key.start + key.getByteSize()));
+				break;
+			}
+		}
+		return result;
 	}
 
 	private Slice searchObjectKeyBinary(final String attribute, final long ieBase, final int offsetsize, final long n) {
-		// TODO
-		return null;
+		Slice result;
+		long l = 0;
+		long r = n - 1;
+
+		for (;;) {
+			// midpoint
+			final long index = l + ((r - l) / 2);
+			final long offset = ieBase + index * offsetsize;
+			final Slice key = new Slice(vpack,
+					(int) (start + NumberUtil.toLong(vpack, (int) (start + offset), offsetsize)));
+			int res = 0;
+			if (key.isString()) {
+				res = key.compareString(attribute);
+			} else {
+				// invalid key
+				result = new Slice();
+				break;
+			}
+			if (res == 0) {
+				// found
+				result = new Slice(vpack, (int) (key.start + key.getByteSize()));
+				break;
+			}
+			if (res > 0) {
+				if (index == 0) {
+					result = new Slice();
+					break;
+				}
+				r = index - 1;
+			} else {
+				l = index + 1;
+			}
+			if (r < l) {
+				result = new Slice();
+				break;
+			}
+		}
+		return result;
 	}
 
 	private Slice searchObjectKeyLinear(final String attribute, final long ieBase, final int offsetsize, final long n) {
-		// TODO
-		return null;
+		Slice result = new Slice();
+		for (long index = 0; index < n; index++) {
+			final long offset = ieBase + index * offsetsize;
+			final Slice key = new Slice(vpack,
+					(int) (start + NumberUtil.toLong(vpack, (int) (start + offset), offsetsize)));
+			if (key.isString()) {
+				if (!key.isEqualString(attribute)) {
+					continue;
+				}
+			} else {
+				// invalid key type
+				result = new Slice();
+				break;
+			}
+			// key is identical. now return value
+			result = new Slice(vpack, (int) (key.start + key.getByteSize()));
+			break;
+		}
+		return result;
+
+	}
+
+	public Slice keyAt(final int index) {
+		if (!isObject()) {
+			throw new VPackValueTypeException(ValueType.Object);
+		}
+		return getNthKey(index);
+	}
+
+	public Slice valueAt(final int index) {
+		if (!isObject()) {
+			throw new VPackValueTypeException(ValueType.Object);
+		}
+		final Slice key = getNthKey(index);
+		return new Slice(vpack, (int) (key.start + key.getByteSize()));
+	}
+
+	private Slice getNthKey(final int index) {
+		final Slice slice = new Slice(vpack, start + getNthOffset(index));
+		return slice;
 	}
 
 	private Slice getNth(final int index) {
@@ -502,10 +603,21 @@ public class Slice {
 		final String string = getString();
 		return string.equals(s);
 	}
-	/*
-	 * bool Slice:: isEqualString(std::string const& attribute) const {
-	 * ValueLength keyLength; char const* k = getString(keyLength); if
-	 * (static_cast<size_t>(keyLength) != attribute.size()) { return false; }
-	 * return (memcmp(k, attribute.c_str(), attribute.size()) == 0); }
-	 */
+
+	private int compareString(final String s) {
+		final String string = getString();
+		return string.compareTo(s);
+	}
+
+	public Iterator<Slice> iterator() {
+		final Iterator<Slice> iterator;
+		if (isObject()) {
+			iterator = new ObjectIterator(this);
+		} else if (isArray()) {
+			iterator = new ArrayIterator(this);
+		} else {
+			throw new VPackValueTypeException(ValueType.Array, ValueType.Object);
+		}
+		return iterator;
+	}
 }
