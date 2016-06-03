@@ -1,5 +1,6 @@
 package com.arangodb.velocypack.util;
 
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -8,8 +9,8 @@ import java.util.Date;
  */
 public class DateUtil {
 
-	public static byte[] toByteArray(final Date value) {
-		return NumberUtil.toByteArray(value.getTime(), 8);
+	public static void append(final Collection<Byte> buffer, final Date value) {
+		NumberUtil.append(buffer, value.getTime(), 8);
 	}
 
 	public static Date toDate(final byte[] array, final int offset, final int length) {

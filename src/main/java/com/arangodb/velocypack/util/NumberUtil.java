@@ -1,6 +1,7 @@
 package com.arangodb.velocypack.util;
 
 import java.math.BigInteger;
+import java.util.Collection;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -14,6 +15,10 @@ public class NumberUtil {
 
 	public static byte[] toByteArray(final double value) {
 		return toByteArray(Double.doubleToRawLongBits(value), Double.BYTES);
+	}
+
+	public static void append(final Collection<Byte> buffer, final double value) {
+		append(buffer, Double.doubleToRawLongBits(value), Double.BYTES);
 	}
 
 	public static long toLong(final byte[] array, final int offset, final int length) {
@@ -44,6 +49,20 @@ public class NumberUtil {
 		return result;
 	}
 
+	public static void append(final Collection<Byte> buffer, final long value, final int length) {
+		final long l = value;
+		for (int i = 0; i < length; i++) {
+			buffer.add((byte) (l >> (length - i - 1 << 3)));
+		}
+	}
+
+	public static void appendReversed(final Collection<Byte> buffer, final long value, final int length) {
+		final long l = value;
+		for (int i = length - 1; i >= 0; i--) {
+			buffer.add((byte) (l >> (length - i - 1 << 3)));
+		}
+	}
+
 	public static BigInteger toBigInteger(final byte[] array, final int offset, final int length) {
 		BigInteger result = new BigInteger(1, new byte[] {});
 		for (int i = offset; i < (offset + length); i++) {
@@ -61,6 +80,13 @@ public class NumberUtil {
 			big = big.shiftRight(8);
 		}
 		return result;
+	}
+
+	public static void append(final Collection<Byte> buffer, final BigInteger value, final int length) {
+		final BigInteger l = value;
+		for (int i = 0; i < length; ++i) {
+			buffer.add(l.shiftRight(length - i - 1 << 3).byteValue());
+		}
 	}
 
 	/**

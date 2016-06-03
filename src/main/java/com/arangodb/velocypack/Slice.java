@@ -25,7 +25,7 @@ public class Slice {
 	private final byte[] vpack;
 	private final int start;
 
-	private Slice() {
+	protected Slice() {
 		this(new byte[] { 0x00 }, 0);
 	}
 

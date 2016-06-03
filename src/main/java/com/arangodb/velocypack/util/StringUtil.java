@@ -1,5 +1,7 @@
 package com.arangodb.velocypack.util;
 
+import java.util.Collection;
+
 /**
  * @author Mark - mark@arangodb.com
  *
@@ -10,8 +12,11 @@ public class StringUtil {
 		return new String(array, offset, length);
 	}
 
-	public static byte[] toByteArray(final String value) {
-		return value.getBytes();
+	public static void append(final Collection<Byte> buffer, final String value) {
+		final byte[] bytes = value.getBytes();
+		for (final byte b : bytes) {
+			buffer.add(b);
+		}
 	}
 
 }
