@@ -283,7 +283,7 @@ public class Builder {
 
 	private void reportAdd() {
 		final Collection<Integer> depth = index.get(stack.size() - 1);
-		depth.add(buffer.size() - stack.size() - 1);
+		depth.add(buffer.size() - stack.size() + 1);
 	}
 
 	private void cleanupAdd() {
@@ -367,11 +367,7 @@ public class Builder {
 				buffer.set(tos, (byte) 0x0f); // unsorted
 			}
 			for (int i = 0; i < in.size(); i++) {
-				int x = in.get(i);
-				for (int j = 0; j < offsetSize; j++) {
-					buffer.add((byte) (x & 0xff));
-					x >>= 8;
-				}
+				NumberUtil.append(buffer, in.get(i) + offsetSize + 1, offsetSize);
 			}
 		} else { // no index table
 			if (buffer.get(tos) == 0x06) {
@@ -391,18 +387,18 @@ public class Builder {
 				}
 			}
 		}
-		// Fix the byte length in the beginning:
-		long x = buffer.size() - 1 - tos;
-		for (int i = 1; i <= offsetSize; i++) {
-			buffer.add(tos + i, (byte) (x & 0xff));
-			x >>= 8;
-		}
 		if (offsetSize < 8 && needNrSubs) {
-			x = in.size();
-			for (int i = offsetSize + 1; i <= 2 * offsetSize; i++) {
+			int x = in.size();
+			for (int i = offsetSize; i < 2 * offsetSize; i++) {
 				buffer.add(tos + i, (byte) (x & 0xff));
 				x >>= 8;
 			}
+		}
+		// Fix the byte length in the beginning:
+		long x = buffer.size() - tos + offsetSize;
+		for (int i = 1; i <= offsetSize; i++) {
+			buffer.add(tos + i, (byte) (x & 0xff));
+			x >>= 8;
 		}
 		return this;
 	}
