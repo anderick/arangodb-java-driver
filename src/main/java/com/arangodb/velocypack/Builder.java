@@ -354,10 +354,9 @@ public class Builder {
 			offsetSize = 1;
 		} else if ((buffer.size() - 1 - tos) + (needIndexTable ? 2 * in.size() : 0) <= 0xffff) {
 			offsetSize = 2;
-			// TODO
-			// } else if ((buffer.size() - 1 - tos) + (needIndexTable ? 4 *
-			// in.size() : 0) <= 0xffffffffu) {
-			// offsetSize = 4;
+		} else if ((buffer.size() - 1 - tos)
+				+ (needIndexTable ? 4 * in.size() : 0) <= Integer.MAX_VALUE/* 0xffffffffu */) {
+			offsetSize = 4;
 		} else {
 			offsetSize = 8;
 		}
@@ -390,7 +389,7 @@ public class Builder {
 		}
 		if (offsetSize < 8 && needNrSubs) {
 			int x = in.size();
-			for (int i = offsetSize; i < 2 * offsetSize; i++) {
+			for (int i = 1; i < 2 * offsetSize; i++) {
 				buffer.add(tos + i, (byte) (x & 0xff));
 				x >>= 8;
 			}

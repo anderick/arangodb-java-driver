@@ -328,6 +328,40 @@ public class BuilderTest {
 	}
 
 	@Test
+	public void indexedArray2ByteLength() throws VPackException {
+		final long valueCount = 100;
+		final Builder builder = new Builder();
+		builder.add(new Value(ValueType.Array));
+		for (long i = 0; i < valueCount; i++) {
+			builder.add(new Value(
+					"Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus."));
+		}
+		builder.close();
+
+		final Slice slice = builder.slice();
+		Assert.assertEquals(0x07, slice.head());
+		Assert.assertTrue(slice.isArray());
+		Assert.assertEquals(valueCount, slice.getLength());
+	}
+
+	@Test
+	public void indexedArray4ByteLength() throws VPackException {
+		final long valueCount = 200;
+		final Builder builder = new Builder();
+		builder.add(new Value(ValueType.Array));
+		for (long i = 0; i < valueCount; i++) {
+			builder.add(new Value(
+					"Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus."));
+		}
+		builder.close();
+
+		final Slice slice = builder.slice();
+		Assert.assertEquals(0x08, slice.head());
+		Assert.assertTrue(slice.isArray());
+		Assert.assertEquals(valueCount, slice.getLength());
+	}
+
+	@Test
 	public void arrayInArray() throws VPackException {
 		final long[][] values = { { 1, 2, 3 }, { 1, 2, 3 } };
 		final Builder builder = new Builder();
