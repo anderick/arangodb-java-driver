@@ -32,13 +32,13 @@ public class Builder {
 															// subindex
 	private boolean keyWritten; // indicates that in the current object the key
 								// has been written but the value not yet
-	private final Options options;
+	private final BuilderOptions options;
 
 	public Builder() {
-		this(new Options());
+		this(new BuilderOptions());
 	}
 
-	public Builder(final Options options) {
+	public Builder(final BuilderOptions options) {
 		super();
 		this.options = options;
 		buffer = new ArrayList<Byte>();
@@ -437,11 +437,11 @@ public class Builder {
 		return slice;
 	}
 
-	public static class Options {
+	public static class BuilderOptions {
 		private boolean buildUnindexedArrays;
 		private boolean buildUnindexedObjects;
 
-		public Options() {
+		public BuilderOptions() {
 			super();
 			buildUnindexedArrays = false;
 			buildUnindexedObjects = false;

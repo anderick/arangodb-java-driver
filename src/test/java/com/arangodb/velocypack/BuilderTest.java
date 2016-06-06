@@ -6,7 +6,7 @@ import java.util.Date;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.arangodb.velocypack.Builder.Options;
+import com.arangodb.velocypack.Builder.BuilderOptions;
 import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
 import com.arangodb.velocypack.exception.VPackException;
 import com.arangodb.velocypack.exception.VPackNumberOutOfRangeException;
@@ -293,7 +293,7 @@ public class BuilderTest {
 	@Test
 	public void unindexedArray() throws VPackException {
 		final long[] expected = { 1, 16 };
-		final Options options = new Options();
+		final BuilderOptions options = new BuilderOptions();
 		options.setBuildUnindexedArrays(true);
 		final Builder builder = new Builder(options);
 		builder.add(new Value(ValueType.Array, false));
@@ -360,7 +360,7 @@ public class BuilderTest {
 	@Test
 	public void unindexedObject() throws VPackException {
 		// {"a": 12, "b": true, "c": "xyz"}
-		final Options options = new Options();
+		final BuilderOptions options = new BuilderOptions();
 		options.setBuildUnindexedObjects(true);
 		final Builder builder = new Builder(options);
 		builder.add(new Value(ValueType.Object, false));
