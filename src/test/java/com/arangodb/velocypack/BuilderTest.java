@@ -328,6 +328,74 @@ public class BuilderTest {
 	}
 
 	@Test
+	public void arrayInArray() throws VPackException {
+		final long[][] values = { { 1, 2, 3 }, { 1, 2, 3 } };
+		final Builder builder = new Builder();
+		builder.add(new Value(ValueType.Array));
+		for (final long[] ls : values) {
+			builder.add(new Value(ValueType.Array));
+			for (final long l : ls) {
+				builder.add(new Value(l));
+			}
+			builder.close();
+		}
+		builder.close();
+
+		final Slice slice = builder.slice();
+		Assert.assertTrue(slice.isArray());
+		Assert.assertEquals(values.length, slice.getLength());
+		for (int i = 0; i < values.length; i++) {
+			final Slice ls = slice.at(i);
+			Assert.assertTrue(ls.isArray());
+			Assert.assertEquals(values[i].length, ls.getLength());
+			for (int j = 0; j < values[i].length; j++) {
+				final Slice l = ls.at(j);
+				Assert.assertTrue(l.isInteger());
+				Assert.assertEquals(values[i][j], l.getInteger());
+			}
+		}
+	}
+
+	@Test
+	public void arrayInArrayInArray() throws VPackException {
+		final long[][][] values = { { { 1, 2, 3 } } };
+		final Builder builder = new Builder();
+		builder.add(new Value(ValueType.Array));
+		for (final long[][] lss : values) {
+			builder.add(new Value(ValueType.Array));
+			for (final long[] ls : lss) {
+				builder.add(new Value(ValueType.Array));
+				for (final long l : ls) {
+					builder.add(new Value(l));
+				}
+				builder.close();
+			}
+			builder.close();
+		}
+		builder.close();
+
+		final Slice slice = builder.slice();
+		Assert.assertTrue(slice.isArray());
+		Assert.assertEquals(values.length, slice.getLength());
+		for (int i = 0; i < values.length; i++) {
+			final Slice lls = slice.at(i);
+			Assert.assertTrue(lls.isArray());
+			Assert.assertEquals(values[i].length, lls.getLength());
+			for (int j = 0; j < values[i].length; j++) {
+				final Slice ls = lls.at(i);
+				Assert.assertTrue(ls.isArray());
+				Assert.assertEquals(values[i][j].length, ls.getLength());
+				for (int k = 0; k < values[i][j].length; k++) {
+					final Slice l = ls.at(k);
+					Assert.assertTrue(l.isInteger());
+					Assert.assertEquals(values[i][j][k], l.getInteger());
+				}
+			}
+
+		}
+	}
+
+	@Test
 	public void emptyObject() throws VPackException {
 		final Builder builder = new Builder();
 		builder.add(new Value(ValueType.Object));
@@ -393,6 +461,75 @@ public class BuilderTest {
 		Assert.assertEquals(12, slice.get("a").getInteger());
 		Assert.assertEquals(true, slice.get("b").getBoolean());
 		Assert.assertEquals("xyz", slice.get("c").getString());
+	}
+
+	@Test
+	public void objectInObject() throws VPackException {
+		// {"a":{"a1":1,"a2":2},"b":{"b1":1,"b2":1}}
+		final Builder builder = new Builder();
+		builder.add(new Value(ValueType.Object));
+		{
+			builder.add("a", new Value(ValueType.Object));
+			builder.add("a1", new Value(1));
+			builder.add("a2", new Value(2));
+			builder.close();
+		}
+		{
+			builder.add("b", new Value(ValueType.Object));
+			builder.add("b1", new Value(1));
+			builder.add("b2", new Value(2));
+			builder.close();
+		}
+		builder.close();
+
+		final Slice slice = builder.slice();
+		Assert.assertTrue(slice.isObject());
+		Assert.assertEquals(2, slice.getLength());
+		{
+			final Slice a = slice.get("a");
+			Assert.assertTrue(a.isObject());
+			Assert.assertEquals(2, a.getLength());
+			Assert.assertEquals(1, a.get("a1").getInteger());
+			Assert.assertEquals(2, a.get("a2").getInteger());
+		}
+		{
+			final Slice b = slice.get("b");
+			Assert.assertTrue(b.isObject());
+			Assert.assertEquals(2, b.getLength());
+			Assert.assertEquals(1, b.get("b1").getInteger());
+			Assert.assertEquals(2, b.get("b2").getInteger());
+		}
+	}
+
+	@Test
+	public void objectInObjectInObject() throws VPackException {
+		// {"a":{"b":{"c":{"d":true}}}
+		final Builder builder = new Builder();
+		builder.add(new Value(ValueType.Object));
+		builder.add("a", new Value(ValueType.Object));
+		builder.add("b", new Value(ValueType.Object));
+		builder.add("c", new Value(ValueType.Object));
+		builder.add("d", new Value(true));
+		builder.close();
+		builder.close();
+		builder.close();
+		builder.close();
+
+		final Slice slice = builder.slice();
+		Assert.assertTrue(slice.isObject());
+		Assert.assertEquals(1, slice.getLength());
+		final Slice a = slice.get("a");
+		Assert.assertTrue(a.isObject());
+		Assert.assertEquals(1, a.getLength());
+		final Slice b = a.get("b");
+		Assert.assertTrue(b.isObject());
+		Assert.assertEquals(1, b.getLength());
+		final Slice c = b.get("c");
+		Assert.assertTrue(c.isObject());
+		Assert.assertEquals(1, c.getLength());
+		final Slice d = c.get("d");
+		Assert.assertTrue(d.isBoolean());
+		Assert.assertTrue(d.isTrue());
 	}
 
 }

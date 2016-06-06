@@ -283,7 +283,7 @@ public class Builder {
 
 	private void reportAdd() {
 		final Collection<Integer> depth = index.get(stack.size() - 1);
-		depth.add(buffer.size() - stack.size() + 1);
+		depth.add(buffer.size() - stack.get(stack.size() - 1) + 1);
 	}
 
 	private void cleanupAdd() {
@@ -323,6 +323,7 @@ public class Builder {
 				NumberUtil.storeVariableValueLength(buffer, tos + 1, byteSize, false);
 				// store number of values
 				NumberUtil.storeVariableValueLength(buffer, (int) (tos + byteSize - 1), in.size(), true);
+				stack.remove(stack.size() - 1);
 				return this;
 			}
 		}
@@ -367,7 +368,7 @@ public class Builder {
 				buffer.set(tos, (byte) 0x0f); // unsorted
 			}
 			for (int i = 0; i < in.size(); i++) {
-				NumberUtil.append(buffer, in.get(i) + offsetSize + 1, offsetSize);
+				NumberUtil.append(buffer, in.get(i) + offsetSize, offsetSize);
 			}
 		} else { // no index table
 			if (buffer.get(tos) == 0x06) {
@@ -400,6 +401,7 @@ public class Builder {
 			buffer.add(tos + i, (byte) (x & 0xff));
 			x >>= 8;
 		}
+		stack.remove(stack.size() - 1);
 		return this;
 	}
 
