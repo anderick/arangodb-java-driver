@@ -32,9 +32,15 @@ public class Builder {
 															// subindex
 	private boolean keyWritten; // indicates that in the current object the key
 								// has been written but the value not yet
+	private final Options options;
 
 	public Builder() {
+		this(new Options());
+	}
+
+	public Builder(final Options options) {
 		super();
+		this.options = options;
 		buffer = new ArrayList<Byte>();
 		stack = new ArrayList<Integer>();
 		index = new HashMap<Integer, ArrayList<Integer>>();
@@ -109,6 +115,8 @@ public class Builder {
 				cleanupAdd();
 			}
 			throw e;
+		} finally {
+			keyWritten = false;
 		}
 	}
 
@@ -267,10 +275,6 @@ public class Builder {
 		stack.add(buffer.size());
 		index.put(stack.size() - 1, new ArrayList<Integer>());
 		buffer.add(head);
-		for (int i = 0; i < 8; i++) {
-			// Will be filled later with bytelength and nr subs
-			buffer.add((byte) 0x00);
-		}
 	}
 
 	private void appendLength(final long length) {
@@ -294,20 +298,112 @@ public class Builder {
 		final byte head = head();
 		final boolean isArray = (head == 0x06 || head == 0x13);
 		final ArrayList<Integer> in = index.get(stack.size() - 1);
+		final int tos = stack.get(stack.size() - 1);
 		if (in.isEmpty()) {
 			// empty Array or Object
-			final Integer bufIndex = stack.get(stack.size() - 1);
-			buffer.set(bufIndex, (byte) (isArray ? 0x01 : 0x0a));
-			for (int i = bufIndex + 1; i < bufIndex + 1 + 8; i++) {
-				buffer.remove(bufIndex + 1);// delete bytelength and nr
-			}
+			buffer.set(tos, (byte) (isArray ? 0x01 : 0x0a));
 			stack.remove(stack.size() - 1);
-		} else if (false) {
-			// check if we can use the compact Array / Object format
-		} else {
-
+			return this;
+		} else if (in.size() > 1 && (head == 0x13 || head == 0x14 || (head == 0x06 && options.isBuildUnindexedArrays())
+				|| head == 0x0b && options.isBuildUnindexedObjects())) {
+			// use the compact Array / Object format
+			final long nLen = NumberUtil.getVariableValueLength(in.size());
+			long byteSize = buffer.size() - tos + nLen;
+			long bLen = NumberUtil.getVariableValueLength(byteSize);
+			byteSize += bLen;
+			if (NumberUtil.getVariableValueLength(byteSize) != bLen) {
+				byteSize += 1;
+				bLen += 1;
+			}
+			if (bLen < 9) {
+				// can only use compact notation if total byte length is at most
+				// 8 bytes long
+				buffer.set(tos, (byte) (isArray ? 0x13 : 0x14));
+				// store byte length
+				NumberUtil.storeVariableValueLength(buffer, tos + 1, byteSize, false);
+				// store number of values
+				NumberUtil.storeVariableValueLength(buffer, (int) (tos + byteSize - 1), in.size(), true);
+				return this;
+			}
 		}
-		// TODO
+		// fix head byte in case a compact Array / Object was originally
+		// requested
+		buffer.set(tos, (byte) (isArray ? 0x06 : 0x0b));
+
+		boolean needIndexTable = true;
+		boolean needNrSubs = true;
+		if (in.size() == 1) {
+			needIndexTable = false;
+			if (isArray) {
+				// For objects we leave needNrSubs at true here!
+				needNrSubs = false;
+			}
+		}
+		// First determine byte length and its format:
+		final int offsetSize;
+		// can be 1, 2, 4 or 8 for the byte width of the offsets,
+		// the byte length and the number of subvalues:
+		if ((buffer.size() - 1 - tos) + (needIndexTable ? in.size() : 0) - (needNrSubs ? 6 : 7) <= 0xff) {
+			// We have so far used _pos - tos bytes, including the reserved 8
+			// bytes for byte length and number of subvalues. In the 1-byte
+			// number
+			// case we would win back 6 bytes but would need one byte per
+			// subvalue
+			// for the index table
+			offsetSize = 1;
+		} else if ((buffer.size() - 1 - tos) + (needIndexTable ? 2 * in.size() : 0) <= 0xffff) {
+			offsetSize = 2;
+			// TODO
+			// } else if ((buffer.size() - 1 - tos) + (needIndexTable ? 4 *
+			// in.size() : 0) <= 0xffffffffu) {
+			// offsetSize = 4;
+		} else {
+			offsetSize = 8;
+		}
+		// Now build the table:
+		if (needIndexTable) {
+			if (buffer.get(tos) == 0x0b) {
+				// Object
+				buffer.set(tos, (byte) 0x0f); // unsorted
+			}
+			for (int i = 0; i < in.size(); i++) {
+				int x = in.get(i);
+				for (int j = 0; j < offsetSize; j++) {
+					buffer.add((byte) (x & 0xff));
+					x >>= 8;
+				}
+			}
+		} else { // no index table
+			if (buffer.get(tos) == 0x06) {
+				buffer.set(tos, (byte) 0x02);
+			}
+		}
+		// Finally fix the byte width in the type byte:
+		if (offsetSize > 1) {
+			if (offsetSize == 2) {
+				buffer.set(tos, (byte) (buffer.get(tos) + 1));
+			} else if (offsetSize == 4) {
+				buffer.set(tos, (byte) (buffer.get(tos) + 2));
+			} else { // offsetSize == 8
+				buffer.set(tos, (byte) (buffer.get(tos) + 3));
+				if (needNrSubs) {
+					appendLength(in.size());
+				}
+			}
+		}
+		// Fix the byte length in the beginning:
+		long x = buffer.size() - 1 - tos;
+		for (int i = 1; i <= offsetSize; i++) {
+			buffer.add(tos + i, (byte) (x & 0xff));
+			x >>= 8;
+		}
+		if (offsetSize < 8 && needNrSubs) {
+			x = in.size();
+			for (int i = offsetSize + 1; i <= 2 * offsetSize; i++) {
+				buffer.add(tos + i, (byte) (x & 0xff));
+				x >>= 8;
+			}
+		}
 		return this;
 	}
 
@@ -339,5 +435,32 @@ public class Builder {
 			slice = new Slice(vpack);
 		}
 		return slice;
+	}
+
+	public static class Options {
+		private boolean buildUnindexedArrays;
+		private boolean buildUnindexedObjects;
+
+		public Options() {
+			super();
+			buildUnindexedArrays = false;
+			buildUnindexedObjects = false;
+		}
+
+		public boolean isBuildUnindexedArrays() {
+			return buildUnindexedArrays;
+		}
+
+		public void setBuildUnindexedArrays(final boolean buildUnindexedArrays) {
+			this.buildUnindexedArrays = buildUnindexedArrays;
+		}
+
+		public boolean isBuildUnindexedObjects() {
+			return buildUnindexedObjects;
+		}
+
+		public void setBuildUnindexedObjects(final boolean buildUnindexedObjects) {
+			this.buildUnindexedObjects = buildUnindexedObjects;
+		}
 	}
 }

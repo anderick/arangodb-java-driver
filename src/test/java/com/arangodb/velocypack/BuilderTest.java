@@ -6,6 +6,7 @@ import java.util.Date;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.arangodb.velocypack.Builder.Options;
 import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
 import com.arangodb.velocypack.exception.VPackException;
 import com.arangodb.velocypack.exception.VPackNumberOutOfRangeException;
@@ -270,6 +271,63 @@ public class BuilderTest {
 	}
 
 	@Test
+	public void compactArray() throws VPackException {
+		final long[] expected = { 1, 16 };
+		final Builder builder = new Builder();
+		builder.add(new Value(ValueType.Array, true));
+		for (final long l : expected) {
+			builder.add(new Value(l));
+		}
+		builder.close();
+
+		final Slice slice = builder.slice();
+		Assert.assertTrue(slice.isArray());
+		Assert.assertEquals(2, slice.getLength());
+		for (int i = 0; i < expected.length; i++) {
+			final Slice at = slice.at(i);
+			Assert.assertTrue(at.isInteger());
+			Assert.assertEquals(expected[i], at.getInteger());
+		}
+	}
+
+	@Test
+	public void unindexedArray() throws VPackException {
+		final long[] expected = { 1, 16 };
+		final Options options = new Options();
+		options.setBuildUnindexedArrays(true);
+		final Builder builder = new Builder(options);
+		builder.add(new Value(ValueType.Array, false));
+		for (final long l : expected) {
+			builder.add(new Value(l));
+		}
+		builder.close();
+
+		final Slice slice = builder.slice();
+		Assert.assertTrue(slice.isArray());
+		Assert.assertEquals(2, slice.getLength());
+		for (int i = 0; i < expected.length; i++) {
+			final Slice at = slice.at(i);
+			Assert.assertTrue(at.isInteger());
+			Assert.assertEquals(expected[i], at.getInteger());
+		}
+	}
+
+	@Test
+	public void indexedArray() throws VPackException {
+		final long[] values = { 1, 2, 3 };
+		final Builder builder = new Builder();
+		builder.add(new Value(ValueType.Array));
+		for (final long l : values) {
+			builder.add(new Value(l));
+		}
+		builder.close();
+
+		final Slice slice = builder.slice();
+		Assert.assertTrue(slice.isArray());
+		Assert.assertEquals(3, slice.getLength());
+	}
+
+	@Test
 	public void emptyObject() throws VPackException {
 		final Builder builder = new Builder();
 		builder.add(new Value(ValueType.Object));
@@ -279,6 +337,62 @@ public class BuilderTest {
 		Assert.assertTrue(slice.isObject());
 		Assert.assertEquals(0, slice.getLength());
 		Assert.assertEquals(1, slice.getVpack().length);
+	}
+
+	@Test
+	public void compactObject() throws VPackException {
+		// {"a": 12, "b": true, "c": "xyz"}
+		final Builder builder = new Builder();
+		builder.add(new Value(ValueType.Object, true));
+		builder.add("a", new Value(12));
+		builder.add("b", new Value(true));
+		builder.add("c", new Value("xyz"));
+		builder.close();
+
+		final Slice slice = builder.slice();
+		Assert.assertTrue(slice.isObject());
+		Assert.assertEquals(3, slice.getLength());
+		Assert.assertEquals(12, slice.get("a").getInteger());
+		Assert.assertEquals(true, slice.get("b").getBoolean());
+		Assert.assertEquals("xyz", slice.get("c").getString());
+	}
+
+	@Test
+	public void unindexedObject() throws VPackException {
+		// {"a": 12, "b": true, "c": "xyz"}
+		final Options options = new Options();
+		options.setBuildUnindexedObjects(true);
+		final Builder builder = new Builder(options);
+		builder.add(new Value(ValueType.Object, false));
+		builder.add("a", new Value(12));
+		builder.add("b", new Value(true));
+		builder.add("c", new Value("xyz"));
+		builder.close();
+
+		final Slice slice = builder.slice();
+		Assert.assertTrue(slice.isObject());
+		Assert.assertEquals(3, slice.getLength());
+		Assert.assertEquals(12, slice.get("a").getInteger());
+		Assert.assertEquals(true, slice.get("b").getBoolean());
+		Assert.assertEquals("xyz", slice.get("c").getString());
+	}
+
+	@Test
+	public void indexedObject() throws VPackException {
+		// {"a": 12, "b": true, "c": "xyz"}
+		final Builder builder = new Builder();
+		builder.add(new Value(ValueType.Object));
+		builder.add("a", new Value(12));
+		builder.add("b", new Value(true));
+		builder.add("c", new Value("xyz"));
+		builder.close();
+
+		final Slice slice = builder.slice();
+		Assert.assertTrue(slice.isObject());
+		Assert.assertEquals(3, slice.getLength());
+		Assert.assertEquals(12, slice.get("a").getInteger());
+		Assert.assertEquals(true, slice.get("b").getBoolean());
+		Assert.assertEquals("xyz", slice.get("c").getString());
 	}
 
 }
