@@ -200,22 +200,6 @@ public class Slice {
 		return NumberUtil.toBigInteger(vpack, start + 1, length());
 	}
 
-	private long getUIntUnchecked() {
-
-		final long uint;
-		final byte head = head();
-		if (head >= 0x28 && head <= 0x2f) {
-			// UInt
-			uint = NumberUtil.toLong(vpack, start + 1, head - 0x27);
-		} else if (head >= 0x30 && head <= 0x39) {
-			// Smallint >= 0
-			uint = head - 0x30;
-		} else {
-			uint = 0;
-		}
-		return uint;
-	}
-
 	public long getInteger() throws VPackValueTypeException {
 		final long result;
 		if (isSmallInt()) {
@@ -280,6 +264,10 @@ public class Slice {
 		if (!isBinary()) {
 			throw new VPackValueTypeException(ValueType.Binary);
 		}
+		return getBinaryLengthUnchecked();
+	}
+
+	private int getBinaryLengthUnchecked() {
 		return (int) NumberUtil.toLong(vpack, start + 1, head() - ((byte) 0xbf));
 	}
 
@@ -357,14 +345,26 @@ public class Slice {
 				size = getLongStringLength() + 1 + 8;
 				break;
 			case Binary:
-				// TODO
-				throw new UnsupportedOperationException();
+				size = 1 + head - getBinaryLengthUnchecked();
+				break;
 			case BCD:
-				// TODO
-				throw new UnsupportedOperationException();
+				if (head <= 0xcf) {
+					size = 1 + head + ((byte) 0xc7) + NumberUtil.toLong(vpack, start + 1, head - ((byte) 0xc7));
+				} else {
+					size = 1 + head - ((byte) 0xcf) + NumberUtil.toLong(vpack, start + 1, head - ((byte) 0xcf));
+				}
+				break;
 			case Custom:
-				// TODO
-				throw new UnsupportedOperationException();
+				if (head == 0xf4 || head == 0xf5 || head == 0xf6) {
+					size = 2 + NumberUtil.toLong(vpack, start + 1, 1);
+				} else if (head == 0xf7 || head == 0xf8 || head == 0xf9) {
+					size = 3 + NumberUtil.toLong(vpack, start + 1, 2);
+				} else if (head == 0xfa || head == 0xfb || head == 0xfc) {
+					size = 5 + NumberUtil.toLong(vpack, start + 1, 4);
+				} else /* if (head == 0xfd || head == 0xfe || head == 0xff) */ {
+					size = 9 + NumberUtil.toLong(vpack, start + 1, 8);
+				}
+				break;
 			default:
 				throw new InternalError();
 			}

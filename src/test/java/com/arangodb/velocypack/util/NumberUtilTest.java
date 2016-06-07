@@ -16,16 +16,18 @@ public class NumberUtilTest {
 	@Test
 	public void convertDouble() {
 		final double value = Double.MAX_VALUE;
-		final byte[] byteArray = NumberUtil.toByteArray(value);
-		final double value2 = NumberUtil.toDouble(byteArray, 0, byteArray.length);
+		final Collection<Byte> buffer = new ArrayList<Byte>();
+		NumberUtil.append(buffer, value);
+		final double value2 = NumberUtil.toDouble(toArray(buffer), 0, buffer.size());
 		Assert.assertEquals(value, value2, 0);
 	}
 
 	@Test
 	public void convertLong() {
 		final long value = Long.MAX_VALUE;
-		final byte[] byteArray = NumberUtil.toByteArray(value, 8);
-		final long value2 = NumberUtil.toLong(byteArray, 0, byteArray.length);
+		final Collection<Byte> buffer = new ArrayList<Byte>();
+		NumberUtil.append(buffer, value, 8);
+		final long value2 = NumberUtil.toLong(toArray(buffer), 0, buffer.size());
 		Assert.assertEquals(value, value2, 0);
 	}
 
@@ -51,8 +53,9 @@ public class NumberUtilTest {
 	public void convertBigInteger() {
 		final BigInteger maxLong = BigInteger.valueOf(Long.MAX_VALUE);
 		final BigInteger value = maxLong.add(maxLong);
-		final byte[] byteArray = NumberUtil.toByteArray(value, 8);
-		final BigInteger value2 = NumberUtil.toBigInteger(byteArray, 0, byteArray.length);
+		final Collection<Byte> buffer = new ArrayList<Byte>();
+		NumberUtil.append(buffer, value, 8);
+		final BigInteger value2 = NumberUtil.toBigInteger(toArray(buffer), 0, buffer.size());
 		Assert.assertEquals(value, value2);
 	}
 

@@ -354,8 +354,8 @@ public class Builder {
 			offsetSize = 1;
 		} else if ((buffer.size() - 1 - tos) + (needIndexTable ? 2 * in.size() : 0) <= 0xffff) {
 			offsetSize = 2;
-		} else if ((buffer.size() - 1 - tos)
-				+ (needIndexTable ? 4 * in.size() : 0) <= Integer.MAX_VALUE/* 0xffffffffu */) {
+		} else if (((buffer.size() - 1 - tos) / 2)
+				+ ((needIndexTable ? 4 * in.size() : 0) / 2) <= Integer.MAX_VALUE/* 0xffffffffu */) {
 			offsetSize = 4;
 		} else {
 			offsetSize = 8;
