@@ -35,7 +35,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isBoolean());
-		Assert.assertTrue(slice.getBoolean());
+		Assert.assertTrue(slice.getAsBoolean());
 	}
 
 	@Test
@@ -45,7 +45,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isBoolean());
-		Assert.assertFalse(slice.getBoolean());
+		Assert.assertFalse(slice.getAsBoolean());
 	}
 
 	@Test
@@ -66,7 +66,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isDouble());
-		Assert.assertEquals(value, slice.getDouble(), 0);
+		Assert.assertEquals(value, slice.getAsDouble(), 0);
 	}
 
 	@Test
@@ -77,7 +77,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isSmallInt());
-		Assert.assertEquals(value, slice.getSmallInt());
+		Assert.assertEquals(value, slice.getAsInt());
 	}
 
 	@Test
@@ -88,7 +88,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isSmallInt());
-		Assert.assertEquals(value, slice.getSmallInt());
+		Assert.assertEquals(value, slice.getAsInt());
 	}
 
 	@Test(expected = VPackNumberOutOfRangeException.class)
@@ -106,7 +106,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isSmallInt());
-		Assert.assertEquals(value, slice.getSmallInt());
+		Assert.assertEquals(value, slice.getAsLong());
 	}
 
 	@Test
@@ -117,7 +117,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isSmallInt());
-		Assert.assertEquals(value, slice.getSmallInt());
+		Assert.assertEquals(value, slice.getAsLong());
 	}
 
 	@Test(expected = VPackNumberOutOfRangeException.class)
@@ -135,7 +135,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isSmallInt());
-		Assert.assertEquals(value, BigInteger.valueOf(slice.getSmallInt()));
+		Assert.assertEquals(value, slice.getAsBigInteger());
 	}
 
 	@Test
@@ -146,7 +146,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isSmallInt());
-		Assert.assertEquals(value, BigInteger.valueOf(slice.getSmallInt()));
+		Assert.assertEquals(value, slice.getAsBigInteger());
 	}
 
 	@Test(expected = VPackNumberOutOfRangeException.class)
@@ -164,7 +164,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isInt());
-		Assert.assertEquals(value, slice.getInt());
+		Assert.assertEquals(value, slice.getAsInt());
 	}
 
 	@Test
@@ -175,7 +175,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isInt());
-		Assert.assertEquals(value, slice.getInt());
+		Assert.assertEquals(value, slice.getAsLong());
 	}
 
 	@Test
@@ -186,7 +186,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isInt());
-		Assert.assertEquals(value, BigInteger.valueOf(slice.getInt()));
+		Assert.assertEquals(value, slice.getAsBigInteger());
 	}
 
 	@Test
@@ -197,7 +197,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isUInt());
-		Assert.assertEquals(value, slice.getUInt());
+		Assert.assertEquals(value, slice.getAsLong());
 	}
 
 	@Test
@@ -208,7 +208,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isUInt());
-		Assert.assertEquals(value, slice.getUIntAsBigInteger());
+		Assert.assertEquals(value, slice.getAsBigInteger());
 	}
 
 	@Test(expected = VPackBuilderUnexpectedValueException.class)
@@ -233,7 +233,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isUTCDate());
-		Assert.assertEquals(date, slice.getUTCDate());
+		Assert.assertEquals(date, slice.getAsDate());
 	}
 
 	@Test
@@ -244,7 +244,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isString());
-		Assert.assertEquals(s, slice.getString());
+		Assert.assertEquals(s, slice.getAsString());
 	}
 
 	@Test
@@ -255,7 +255,7 @@ public class BuilderTest {
 
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isString());
-		Assert.assertEquals(s, slice.getString());
+		Assert.assertEquals(s, slice.getAsString());
 	}
 
 	@Test
@@ -286,7 +286,7 @@ public class BuilderTest {
 		for (int i = 0; i < expected.length; i++) {
 			final Slice at = slice.at(i);
 			Assert.assertTrue(at.isInteger());
-			Assert.assertEquals(expected[i], at.getInteger());
+			Assert.assertEquals(expected[i], at.getAsLong());
 		}
 	}
 
@@ -308,7 +308,7 @@ public class BuilderTest {
 		for (int i = 0; i < expected.length; i++) {
 			final Slice at = slice.at(i);
 			Assert.assertTrue(at.isInteger());
-			Assert.assertEquals(expected[i], at.getInteger());
+			Assert.assertEquals(expected[i], at.getAsLong());
 		}
 	}
 
@@ -385,7 +385,7 @@ public class BuilderTest {
 			for (int j = 0; j < values[i].length; j++) {
 				final Slice l = ls.at(j);
 				Assert.assertTrue(l.isInteger());
-				Assert.assertEquals(values[i][j], l.getInteger());
+				Assert.assertEquals(values[i][j], l.getAsLong());
 			}
 		}
 	}
@@ -422,7 +422,7 @@ public class BuilderTest {
 				for (int k = 0; k < values[i][j].length; k++) {
 					final Slice l = ls.at(k);
 					Assert.assertTrue(l.isInteger());
-					Assert.assertEquals(values[i][j][k], l.getInteger());
+					Assert.assertEquals(values[i][j][k], l.getAsLong());
 				}
 			}
 
@@ -454,9 +454,9 @@ public class BuilderTest {
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isObject());
 		Assert.assertEquals(3, slice.getLength());
-		Assert.assertEquals(12, slice.get("a").getInteger());
-		Assert.assertEquals(true, slice.get("b").getBoolean());
-		Assert.assertEquals("xyz", slice.get("c").getString());
+		Assert.assertEquals(12, slice.get("a").getAsLong());
+		Assert.assertEquals(true, slice.get("b").getAsBoolean());
+		Assert.assertEquals("xyz", slice.get("c").getAsString());
 	}
 
 	@Test
@@ -474,9 +474,9 @@ public class BuilderTest {
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isObject());
 		Assert.assertEquals(3, slice.getLength());
-		Assert.assertEquals(12, slice.get("a").getInteger());
-		Assert.assertEquals(true, slice.get("b").getBoolean());
-		Assert.assertEquals("xyz", slice.get("c").getString());
+		Assert.assertEquals(12, slice.get("a").getAsLong());
+		Assert.assertEquals(true, slice.get("b").getAsBoolean());
+		Assert.assertEquals("xyz", slice.get("c").getAsString());
 	}
 
 	@Test
@@ -492,9 +492,9 @@ public class BuilderTest {
 		final Slice slice = builder.slice();
 		Assert.assertTrue(slice.isObject());
 		Assert.assertEquals(3, slice.getLength());
-		Assert.assertEquals(12, slice.get("a").getInteger());
-		Assert.assertEquals(true, slice.get("b").getBoolean());
-		Assert.assertEquals("xyz", slice.get("c").getString());
+		Assert.assertEquals(12, slice.get("a").getAsLong());
+		Assert.assertEquals(true, slice.get("b").getAsBoolean());
+		Assert.assertEquals("xyz", slice.get("c").getAsString());
 	}
 
 	@Test
@@ -523,15 +523,15 @@ public class BuilderTest {
 			final Slice a = slice.get("a");
 			Assert.assertTrue(a.isObject());
 			Assert.assertEquals(2, a.getLength());
-			Assert.assertEquals(1, a.get("a1").getInteger());
-			Assert.assertEquals(2, a.get("a2").getInteger());
+			Assert.assertEquals(1, a.get("a1").getAsLong());
+			Assert.assertEquals(2, a.get("a2").getAsLong());
 		}
 		{
 			final Slice b = slice.get("b");
 			Assert.assertTrue(b.isObject());
 			Assert.assertEquals(2, b.getLength());
-			Assert.assertEquals(1, b.get("b1").getInteger());
-			Assert.assertEquals(2, b.get("b2").getInteger());
+			Assert.assertEquals(1, b.get("b1").getAsLong());
+			Assert.assertEquals(2, b.get("b2").getAsLong());
 		}
 	}
 

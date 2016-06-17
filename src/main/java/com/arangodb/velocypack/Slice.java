@@ -1,5 +1,6 @@
 package com.arangodb.velocypack;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.Iterator;
@@ -151,24 +152,25 @@ public class Slice {
 		return isType(ValueType.Custom);
 	}
 
-	public boolean getBoolean() throws VPackValueTypeException {
+	public boolean getAsBoolean() {
 		if (!isBoolean()) {
 			throw new VPackValueTypeException(ValueType.Bool);
 		}
 		return isTrue();
 	}
 
-	public double getDouble() throws VPackValueTypeException {
+	public double getAsDouble() {
 		if (!isDouble()) {
 			throw new VPackValueTypeException(ValueType.Double);
 		}
 		return NumberUtil.toDouble(vpack, start + 1, length());
 	}
 
-	public long getSmallInt() throws VPackValueTypeException {
-		if (!isSmallInt()) {
-			throw new VPackValueTypeException(ValueType.SmallInt);
-		}
+	public BigDecimal getAsBigDecimal() {
+		return new BigDecimal(getAsDouble());
+	}
+
+	private long getSmallInt() {
 		final byte head = head();
 		final long smallInt;
 		if (head >= 0x30 && head <= 0x39) {
@@ -179,29 +181,16 @@ public class Slice {
 		return smallInt;
 	}
 
-	public long getInt() throws VPackValueTypeException {
-		if (!isInt()) {
-			throw new VPackValueTypeException(ValueType.Int);
-		}
+	private long getInt() {
 		return NumberUtil.toLong(vpack, start + 1, length());
 	}
 
-	public long getUInt() throws VPackValueTypeException {
-		if (!isUInt()) {
-			throw new VPackValueTypeException(ValueType.UInt);
-		}
+	private long getUInt() {
 		return NumberUtil.toLong(vpack, start + 1, length());
 	}
 
-	public BigInteger getUIntAsBigInteger() throws VPackValueTypeException {
-		if (!isUInt()) {
-			throw new VPackValueTypeException(ValueType.UInt);
-		}
-		return NumberUtil.toBigInteger(vpack, start + 1, length());
-	}
-
-	public long getInteger() throws VPackValueTypeException {
-		final long result;
+	public Number getAsNumber() {
+		final Number result;
 		if (isSmallInt()) {
 			result = getSmallInt();
 		} else if (isInt()) {
@@ -214,14 +203,40 @@ public class Slice {
 		return result;
 	}
 
-	public Date getUTCDate() throws VPackValueTypeException {
+	public long getAsLong() {
+		return getAsNumber().longValue();
+	}
+
+	public int getAsInt() {
+		return getAsNumber().intValue();
+	}
+
+	public float getAsFloat() {
+		return getAsNumber().floatValue();
+	}
+
+	public short getAsShort() {
+		return getAsNumber().shortValue();
+	}
+
+	public BigInteger getAsBigInteger() {
+		if (isSmallInt() || isInt()) {
+			return BigInteger.valueOf(getAsLong());
+		} else if (isUInt()) {
+			return NumberUtil.toBigInteger(vpack, start + 1, length());
+		} else {
+			throw new VPackValueTypeException(ValueType.Int, ValueType.UInt, ValueType.SmallInt);
+		}
+	}
+
+	public Date getAsDate() {
 		if (!isUTCDate()) {
 			throw new VPackValueTypeException(ValueType.UTCDate);
 		}
 		return DateUtil.toDate(vpack, start + 1, length());
 	}
 
-	public String getString() throws VPackValueTypeException {
+	public String getAsString() {
 		if (!isString()) {
 			throw new VPackValueTypeException(ValueType.String);
 		}
@@ -245,14 +260,11 @@ public class Slice {
 		return (int) NumberUtil.toLongReversed(vpack, start + 1, 8);
 	}
 
-	public int getStringLength() throws VPackValueTypeException {
-		if (!isString()) {
-			throw new VPackValueTypeException(ValueType.String);
-		}
+	private int getStringLength() {
 		return isLongString() ? getLongStringLength() : head() - 0x40;
 	}
 
-	public byte[] getBinary() throws VPackValueTypeException {
+	public byte[] getAsBinary() {
 		if (!isBinary()) {
 			throw new VPackValueTypeException(ValueType.Binary);
 		}
@@ -260,7 +272,7 @@ public class Slice {
 		return binary;
 	}
 
-	public int getBinaryLength() throws VPackValueTypeException {
+	public int getBinaryLength() {
 		if (!isBinary()) {
 			throw new VPackValueTypeException(ValueType.Binary);
 		}
@@ -272,34 +284,36 @@ public class Slice {
 	}
 
 	/**
-	 * @return the number of members for an Array or Object object
-	 * @throws VPackValueTypeException
+	 * @return the number of members for an Array, Object or String
 	 */
-	public long getLength() throws VPackValueTypeException {
-		if (!isArray() && !isObject()) {
-			throw new VPackValueTypeException(ValueType.Array, ValueType.Object);
-		}
+	public long getLength() {
 		final long length;
-		final byte head = head();
-		if (head == 0x01 || head == 0x0a) {
-			// empty
-			length = 0;
-		} else if (head == 0x13 || head == 0x14) {
-			// compact array or object
-			final long end = NumberUtil.readVariableValueLength(vpack, start + 1, false);
-			length = NumberUtil.readVariableValueLength(vpack, (int) (start + end - 1), true);
+		if (isString()) {
+			length = getStringLength();
+		} else if (!isArray() && !isObject()) {
+			throw new VPackValueTypeException(ValueType.Array, ValueType.Object, ValueType.String);
 		} else {
-			final int offsetsize = ObjectArrayUtil.getOffsetSize(head);
-			final long end = NumberUtil.toLongReversed(vpack, start + 1, offsetsize);
-			if (head <= 0x05) {
-				// array with no offset table or length
-				final int dataOffset = findDataOffset();
-				final Slice first = new Slice(vpack, start + dataOffset);
-				length = (end - dataOffset) / first.getByteSize();
-			} else if (offsetsize < 8) {
-				length = NumberUtil.toLongReversed(vpack, start + 1 + offsetsize, offsetsize);
+			final byte head = head();
+			if (head == 0x01 || head == 0x0a) {
+				// empty
+				length = 0;
+			} else if (head == 0x13 || head == 0x14) {
+				// compact array or object
+				final long end = NumberUtil.readVariableValueLength(vpack, start + 1, false);
+				length = NumberUtil.readVariableValueLength(vpack, (int) (start + end - 1), true);
 			} else {
-				length = NumberUtil.toLongReversed(vpack, (int) (start + end - offsetsize), offsetsize);
+				final int offsetsize = ObjectArrayUtil.getOffsetSize(head);
+				final long end = NumberUtil.toLongReversed(vpack, start + 1, offsetsize);
+				if (head <= 0x05) {
+					// array with no offset table or length
+					final int dataOffset = findDataOffset();
+					final Slice first = new Slice(vpack, start + dataOffset);
+					length = (end - dataOffset) / first.getByteSize();
+				} else if (offsetsize < 8) {
+					length = NumberUtil.toLongReversed(vpack, start + 1 + offsetsize, offsetsize);
+				} else {
+					length = NumberUtil.toLongReversed(vpack, (int) (start + end - offsetsize), offsetsize);
+				}
 			}
 		}
 		return length;
@@ -376,14 +390,14 @@ public class Slice {
 	 * @return array value at the specified index
 	 * @throws VPackValueTypeException
 	 */
-	public Slice at(final int index) throws VPackValueTypeException {
+	public Slice at(final int index) {
 		if (!isArray()) {
 			throw new VPackValueTypeException(ValueType.Array);
 		}
 		return getNth(index);
 	}
 
-	public Slice get(final String attribute) throws VPackValueTypeException {
+	public Slice get(final String attribute) {
 		if (!isObject()) {
 			throw new VPackValueTypeException(ValueType.Object);
 		}
@@ -432,7 +446,7 @@ public class Slice {
 		return result;
 	}
 
-	private Slice getFromCompactObject(final String attribute) throws VPackValueTypeException {
+	private Slice getFromCompactObject(final String attribute) {
 		Slice result = new Slice();
 		for (final Iterator<Slice> iterator = iterator(); iterator.hasNext();) {
 			final Slice key = iterator.next();
@@ -510,14 +524,14 @@ public class Slice {
 
 	}
 
-	public Slice keyAt(final int index) throws VPackValueTypeException {
+	public Slice keyAt(final int index) {
 		if (!isObject()) {
 			throw new VPackValueTypeException(ValueType.Object);
 		}
 		return getNthKey(index);
 	}
 
-	public Slice valueAt(final int index) throws VPackValueTypeException {
+	public Slice valueAt(final int index) {
 		if (!isObject()) {
 			throw new VPackValueTypeException(ValueType.Object);
 		}
@@ -603,17 +617,17 @@ public class Slice {
 		return (int) offset;
 	}
 
-	private boolean isEqualString(final String s) throws VPackValueTypeException {
-		final String string = getString();
+	private boolean isEqualString(final String s) {
+		final String string = getAsString();
 		return string.equals(s);
 	}
 
-	private int compareString(final String s) throws VPackValueTypeException {
-		final String string = getString();
+	private int compareString(final String s) {
+		final String string = getAsString();
 		return string.compareTo(s);
 	}
 
-	public Iterator<Slice> iterator() throws VPackValueTypeException {
+	public Iterator<Slice> iterator() {
 		final Iterator<Slice> iterator;
 		if (isObject()) {
 			iterator = new ObjectIterator(this);

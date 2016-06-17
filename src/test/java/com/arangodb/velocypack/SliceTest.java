@@ -402,14 +402,14 @@ public class SliceTest {
 	public void getBooleanTrue() throws VPackValueTypeException {
 		final byte[] vpack = { 0x1a };
 		final Slice slice = new Slice(vpack);
-		Assert.assertTrue(slice.getBoolean());
+		Assert.assertTrue(slice.getAsBoolean());
 	}
 
 	@Test
 	public void getBooleanFalse() throws VPackValueTypeException {
 		final byte[] vpack = { 0x19 };
 		final Slice slice = new Slice(vpack);
-		Assert.assertFalse(slice.getBoolean());
+		Assert.assertFalse(slice.getAsBoolean());
 	}
 
 	@Test
@@ -417,12 +417,12 @@ public class SliceTest {
 		{
 			final byte[] vpack = { 0x1b, 64, 96, -74, 102, 102, 102, 102, 102 };
 			final Slice slice = new Slice(vpack);
-			Assert.assertEquals(133.7, slice.getDouble(), 0.);
+			Assert.assertEquals(133.7, slice.getAsDouble(), 0.);
 		}
 		{
 			final byte[] vpack = { 0x1b, -64, 96, -74, 102, 102, 102, 102, 102 };
 			final Slice slice = new Slice(vpack);
-			Assert.assertEquals(-133.7, slice.getDouble(), 0.);
+			Assert.assertEquals(-133.7, slice.getAsDouble(), 0.);
 		}
 	}
 
@@ -448,7 +448,7 @@ public class SliceTest {
 
 	private void checkSmallInt(final int expecteds, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
-		Assert.assertEquals(expecteds, slice.getSmallInt());
+		Assert.assertEquals(expecteds, slice.getAsInt());
 	}
 
 	@Test
@@ -460,7 +460,7 @@ public class SliceTest {
 
 	private void checkInt(final long expextedValue, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
-		Assert.assertEquals(expextedValue, slice.getInt());
+		Assert.assertEquals(expextedValue, slice.getAsLong());
 	}
 
 	@Test
@@ -481,19 +481,19 @@ public class SliceTest {
 
 	private void checkUInt(final long expecteds, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
-		Assert.assertEquals(expecteds, slice.getUInt());
+		Assert.assertEquals(expecteds, slice.getAsLong());
 	}
 
 	private void checkUIntAsBigInteger(final BigInteger expecteds, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
-		Assert.assertEquals(expecteds, slice.getUIntAsBigInteger());
+		Assert.assertEquals(expecteds, slice.getAsBigInteger());
 	}
 
 	@Test
 	public void getUTCDate() throws VPackValueTypeException {
 		final byte[] vpack = { 0x1c, 0, 0, 0, -114, 5, 115, 83, 0 };
 		final Slice slice = new Slice(vpack);
-		Assert.assertEquals(new Date(609976800000l), slice.getUTCDate());
+		Assert.assertEquals(new Date(609976800000l), slice.getAsDate());
 	}
 
 	@Test
@@ -543,7 +543,7 @@ public class SliceTest {
 
 	private void checkString(final String expecteds, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
-		Assert.assertEquals(expecteds, slice.getString());
+		Assert.assertEquals(expecteds, slice.getAsString());
 	}
 
 	@Test
@@ -589,7 +589,7 @@ public class SliceTest {
 
 	private void checkStringLength(final int expected, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
-		Assert.assertEquals(expected, slice.getStringLength());
+		Assert.assertEquals(expected, slice.getLength());
 	}
 
 	@Test
@@ -607,7 +607,7 @@ public class SliceTest {
 
 	private void checkBinary(final byte[] expected, final byte[] vpack) throws VPackValueTypeException {
 		final Slice slice = new Slice(vpack);
-		Assert.assertArrayEquals(expected, slice.getBinary());
+		Assert.assertArrayEquals(expected, slice.getAsBinary());
 	}
 
 	@Test
@@ -751,7 +751,7 @@ public class SliceTest {
 			for (int j = 0; j < childArray.length; j++) {
 				final Slice atat = at.at(j);
 				Assert.assertTrue(atat.isInteger());
-				Assert.assertEquals(childArray[j], atat.getInteger());
+				Assert.assertEquals(childArray[j], atat.getAsLong());
 			}
 		}
 	}
@@ -762,7 +762,7 @@ public class SliceTest {
 		for (int i = 0; i < expected.length; i++) {
 			final Slice at = slice.at(i);
 			Assert.assertTrue(at.isInteger());
-			Assert.assertEquals(expected[i], at.getInteger());
+			Assert.assertEquals(expected[i], at.getAsLong());
 		}
 	}
 
@@ -776,7 +776,7 @@ public class SliceTest {
 			final String string = iterator.next();
 			final Slice next = iteratorSlice.next();
 			Assert.assertTrue(next.isString());
-			Assert.assertEquals(string, next.getString());
+			Assert.assertEquals(string, next.getAsString());
 		}
 	}
 
@@ -860,7 +860,7 @@ public class SliceTest {
 
 	private void checkString(final String expected, final Slice slice) throws VPackValueTypeException {
 		Assert.assertTrue(slice.isString());
-		Assert.assertEquals(expected, slice.getString());
+		Assert.assertEquals(expected, slice.getAsString());
 	}
 
 	@Test

@@ -6,7 +6,7 @@ import com.arangodb.velocypack.util.ValueType;
  * @author Mark - mark@arangodb.com
  *
  */
-public class VPackValueTypeException extends VPackException {
+public class VPackValueTypeException extends IllegalStateException {
 
 	public VPackValueTypeException(final ValueType... types) {
 		super(createMessage(types));
