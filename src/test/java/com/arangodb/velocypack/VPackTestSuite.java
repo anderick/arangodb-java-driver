@@ -11,7 +11,7 @@ import com.arangodb.velocypack.util.NumberUtilTest;
  *
  */
 @RunWith(Suite.class)
-@SuiteClasses({ BuilderTest.class, SliceTest.class, NumberUtilTest.class })
+@SuiteClasses({ BuilderTest.class, SliceTest.class, NumberUtilTest.class, ParserTest.class })
 public class VPackTestSuite {
 
 }

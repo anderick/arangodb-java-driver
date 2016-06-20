@@ -1,5 +1,6 @@
 package com.arangodb.velocypack.util;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 
@@ -15,8 +16,12 @@ public class Value {
 	private Double d;
 	private Long l;
 	private Integer i;
+	private Float f;
+	private Short sh;
 	private BigInteger bi;
+	private BigDecimal bd;
 	private String s;
+	private Character c;
 	private Date date;
 
 	private final ValueType type;
@@ -91,6 +96,16 @@ public class Value {
 		i = value;
 	}
 
+	public Value(final Float value) {
+		this(checkNull(value, ValueType.Int), Float.class);
+		f = value;
+	}
+
+	public Value(final Short value) {
+		this(checkNull(value, ValueType.Int), Short.class);
+		sh = value;
+	}
+
 	public Value(final BigInteger value) {
 		this(checkNull(value, ValueType.Int), BigInteger.class);
 		bi = value;
@@ -104,9 +119,19 @@ public class Value {
 		bi = value;
 	}
 
+	public Value(final BigDecimal value) {
+		this(checkNull(value, ValueType.Double), BigDecimal.class);
+		bd = value;
+	}
+
 	public Value(final String value) {
 		this(checkNull(value, ValueType.String), String.class);
 		s = value;
+	}
+
+	public Value(final Character value) {
+		this(checkNull(value, ValueType.String), Character.class);
+		c = value;
 	}
 
 	public Value(final Date value) {
@@ -146,12 +171,28 @@ public class Value {
 		return i;
 	}
 
+	public Float getFloat() {
+		return f;
+	}
+
+	public Short getShort() {
+		return sh;
+	}
+
 	public BigInteger getBigInteger() {
 		return bi;
 	}
 
+	public BigDecimal getBigDecimal() {
+		return bd;
+	}
+
 	public String getString() {
 		return s;
+	}
+
+	public Character getCharacter() {
+		return c;
 	}
 
 	public Date getDate() {

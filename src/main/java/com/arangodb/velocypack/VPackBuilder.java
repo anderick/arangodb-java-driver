@@ -1,5 +1,6 @@
 package com.arangodb.velocypack;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,8 +11,8 @@ import java.util.Map;
 import com.arangodb.velocypack.exception.VPackBuilderKeyAlreadyWrittenException;
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenCompoundException;
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenObjectException;
-import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
 import com.arangodb.velocypack.exception.VPackBuilderNumberOutOfRangeException;
+import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
 import com.arangodb.velocypack.util.DateUtil;
 import com.arangodb.velocypack.util.NumberUtil;
 import com.arangodb.velocypack.util.StringUtil;
@@ -22,7 +23,7 @@ import com.arangodb.velocypack.util.ValueType;
  * @author Mark - mark@arangodb.com
  *
  */
-public class Builder {
+public class VPackBuilder {
 
 	private final ArrayList<Byte> buffer; // Here we collect the result
 	private final ArrayList<Integer> stack; // Start positions of open
@@ -34,11 +35,11 @@ public class Builder {
 								// has been written but the value not yet
 	private final BuilderOptions options;
 
-	public Builder() {
+	public VPackBuilder() {
 		this(new BuilderOptions());
 	}
 
-	public Builder(final BuilderOptions options) {
+	public VPackBuilder(final BuilderOptions options) {
 		super();
 		this.options = options;
 		buffer = new ArrayList<Byte>();
@@ -46,12 +47,13 @@ public class Builder {
 		index = new HashMap<Integer, ArrayList<Integer>>();
 	}
 
-	public Builder add(final Value sub) throws VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
+	public VPackBuilder add(final Value sub)
+			throws VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
 		addInternal(sub);
 		return this;
 	}
 
-	public Builder add(final String attribute, final Value sub)
+	public VPackBuilder add(final String attribute, final Value sub)
 			throws VPackBuilderNeedOpenObjectException, VPackBuilderKeyAlreadyWrittenException,
 			VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
 		addInternal(attribute, sub);
@@ -120,7 +122,8 @@ public class Builder {
 		}
 	}
 
-	private void set(final Value item) throws VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
+	private void set(final Value item)
+			throws VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
 		final Class<?> clazz = item.getClazz();
 		switch (item.getType()) {
 		case Null:
@@ -131,8 +134,15 @@ public class Builder {
 			appendBoolean(item.getBoolean());
 			break;
 		case Double:
-			checkClass(clazz, ValueType.Double, Double.class);
-			appendDouble(item.getDouble());
+			final double d;
+			if (clazz == Double.class) {
+				d = item.getDouble();
+			} else if (clazz == BigDecimal.class) {
+				d = item.getBigDecimal().doubleValue();
+			} else {
+				throw new VPackBuilderUnexpectedValueException(ValueType.Double, Double.class, BigDecimal.class);
+			}
+			appendDouble(d);
 			break;
 		case SmallInt:
 			final long vSmallInt;
@@ -159,6 +169,10 @@ public class Builder {
 				vInt = item.getInteger();
 			} else if (clazz == BigInteger.class) {
 				vInt = item.getBigInteger().longValue();
+			} else if (clazz == Float.class) {
+				vInt = item.getFloat().longValue();
+			} else if (clazz == Short.class) {
+				vInt = item.getShort();
 			} else {
 				throw new VPackBuilderUnexpectedValueException(ValueType.Int, Long.class, Integer.class,
 						BigInteger.class);
@@ -166,7 +180,7 @@ public class Builder {
 			appendInt(vInt);
 			break;
 		case UInt:
-			BigInteger vUInt;
+			final BigInteger vUInt;
 			if (clazz == Long.class) {
 				vUInt = BigInteger.valueOf(item.getLong());
 			} else if (clazz == Integer.class) {
@@ -188,8 +202,15 @@ public class Builder {
 			appendUTCDate(item.getDate());
 			break;
 		case String:
-			checkClass(clazz, ValueType.String, String.class);
-			appendString(item.getString());
+			final String string;
+			if (clazz == String.class) {
+				string = item.getString();
+			} else if (clazz == Character.class) {
+				string = String.valueOf(item.getCharacter());
+			} else {
+				throw new VPackBuilderUnexpectedValueException(ValueType.String, String.class, Character.class);
+			}
+			appendString(string);
 			break;
 		case Array:
 			addArray(item.isUnindexed());
@@ -291,7 +312,7 @@ public class Builder {
 		depth.remove(depth.size() - 1);
 	}
 
-	public Builder close() throws VPackBuilderNeedOpenCompoundException {
+	public VPackBuilder close() throws VPackBuilderNeedOpenCompoundException {
 		if (isClosed()) {
 			throw new VPackBuilderNeedOpenCompoundException();
 		}
@@ -418,10 +439,10 @@ public class Builder {
 		return header;
 	}
 
-	public Slice slice() {
-		final Slice slice;
+	public VPackSlice slice() {
+		final VPackSlice slice;
 		if (buffer.isEmpty()) {
-			slice = new Slice();
+			slice = new VPackSlice();
 		} else {
 			// TODO find a way without iterate and copy
 			final byte[] vpack = new byte[buffer.size()];
@@ -429,7 +450,7 @@ public class Builder {
 			for (final byte b : buffer) {
 				vpack[i++] = b;
 			}
-			slice = new Slice(vpack);
+			slice = new VPackSlice(vpack);
 		}
 		return slice;
 	}

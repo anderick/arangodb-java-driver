@@ -21,20 +21,20 @@ import com.arangodb.velocypack.util.ValueTypeUtil;
  * @author Mark - mark@arangodb.com
  *
  */
-public class Slice {
+public class VPackSlice {
 
 	private final byte[] vpack;
 	private final int start;
 
-	protected Slice() {
+	protected VPackSlice() {
 		this(new byte[] { 0x00 }, 0);
 	}
 
-	public Slice(final byte[] vpack) {
+	public VPackSlice(final byte[] vpack) {
 		this(vpack, 0);
 	}
 
-	public Slice(final byte[] vpack, final int start) {
+	public VPackSlice(final byte[] vpack, final int start) {
 		super();
 		this.vpack = vpack;
 		this.start = start;
@@ -244,6 +244,11 @@ public class Slice {
 		return string;
 	}
 
+	public char getAsChar() {
+		// TODO
+		return getAsString().charAt(0);
+	}
+
 	private boolean isLongString() {
 		return head() == (byte) 0xbf;
 	}
@@ -307,7 +312,7 @@ public class Slice {
 				if (head <= 0x05) {
 					// array with no offset table or length
 					final int dataOffset = findDataOffset();
-					final Slice first = new Slice(vpack, start + dataOffset);
+					final VPackSlice first = new VPackSlice(vpack, start + dataOffset);
 					length = (end - dataOffset) / first.getByteSize();
 				} else if (offsetsize < 8) {
 					length = NumberUtil.toLongReversed(vpack, start + 1 + offsetsize, offsetsize);
@@ -390,22 +395,22 @@ public class Slice {
 	 * @return array value at the specified index
 	 * @throws VPackValueTypeException
 	 */
-	public Slice at(final int index) {
+	public VPackSlice at(final int index) {
 		if (!isArray()) {
 			throw new VPackValueTypeException(ValueType.Array);
 		}
 		return getNth(index);
 	}
 
-	public Slice get(final String attribute) {
+	public VPackSlice get(final String attribute) {
 		if (!isObject()) {
 			throw new VPackValueTypeException(ValueType.Object);
 		}
 		final byte head = head();
-		Slice result = new Slice();
+		VPackSlice result = new VPackSlice();
 		if (head == 0x0a) {
 			// special case, empty object
-			result = new Slice();
+			result = new VPackSlice();
 		} else if (head == 0x14) {
 			// compact Object
 			result = getFromCompactObject(attribute);
@@ -420,10 +425,10 @@ public class Slice {
 			}
 			if (n == 1) {
 				// Just one attribute, there is no index table!
-				final Slice key = new Slice(vpack, start + findDataOffset());
+				final VPackSlice key = new VPackSlice(vpack, start + findDataOffset());
 
 				if (key.isString() && key.isEqualString(attribute)) {
-					result = new Slice(vpack, (int) (key.start + key.getByteSize()));
+					result = new VPackSlice(vpack, (int) (key.start + key.getByteSize()));
 				}
 			} else {
 				final long ieBase = end - n * offsetsize - (offsetsize == 8 ? 8 : 0);
@@ -446,21 +451,24 @@ public class Slice {
 		return result;
 	}
 
-	private Slice getFromCompactObject(final String attribute) {
-		Slice result = new Slice();
-		for (final Iterator<Slice> iterator = iterator(); iterator.hasNext();) {
-			final Slice key = iterator.next();
+	private VPackSlice getFromCompactObject(final String attribute) {
+		VPackSlice result = new VPackSlice();
+		for (final Iterator<VPackSlice> iterator = iterator(); iterator.hasNext();) {
+			final VPackSlice key = iterator.next();
 			if (key.isEqualString(attribute)) {
-				result = new Slice(vpack, (int) (key.start + key.getByteSize()));
+				result = new VPackSlice(vpack, (int) (key.start + key.getByteSize()));
 				break;
 			}
 		}
 		return result;
 	}
 
-	private Slice searchObjectKeyBinary(final String attribute, final long ieBase, final int offsetsize, final long n)
-			throws VPackValueTypeException {
-		Slice result;
+	private VPackSlice searchObjectKeyBinary(
+		final String attribute,
+		final long ieBase,
+		final int offsetsize,
+		final long n) throws VPackValueTypeException {
+		VPackSlice result;
 		long l = 0;
 		long r = n - 1;
 
@@ -468,24 +476,24 @@ public class Slice {
 			// midpoint
 			final long index = l + ((r - l) / 2);
 			final long offset = ieBase + index * offsetsize;
-			final Slice key = new Slice(vpack,
+			final VPackSlice key = new VPackSlice(vpack,
 					(int) (start + NumberUtil.toLong(vpack, (int) (start + offset), offsetsize)));
 			int res = 0;
 			if (key.isString()) {
 				res = key.compareString(attribute);
 			} else {
 				// invalid key
-				result = new Slice();
+				result = new VPackSlice();
 				break;
 			}
 			if (res == 0) {
 				// found
-				result = new Slice(vpack, (int) (key.start + key.getByteSize()));
+				result = new VPackSlice(vpack, (int) (key.start + key.getByteSize()));
 				break;
 			}
 			if (res > 0) {
 				if (index == 0) {
-					result = new Slice();
+					result = new VPackSlice();
 					break;
 				}
 				r = index - 1;
@@ -493,19 +501,22 @@ public class Slice {
 				l = index + 1;
 			}
 			if (r < l) {
-				result = new Slice();
+				result = new VPackSlice();
 				break;
 			}
 		}
 		return result;
 	}
 
-	private Slice searchObjectKeyLinear(final String attribute, final long ieBase, final int offsetsize, final long n)
-			throws VPackValueTypeException {
-		Slice result = new Slice();
+	private VPackSlice searchObjectKeyLinear(
+		final String attribute,
+		final long ieBase,
+		final int offsetsize,
+		final long n) throws VPackValueTypeException {
+		VPackSlice result = new VPackSlice();
 		for (long index = 0; index < n; index++) {
 			final long offset = ieBase + index * offsetsize;
-			final Slice key = new Slice(vpack,
+			final VPackSlice key = new VPackSlice(vpack,
 					(int) (start + NumberUtil.toLong(vpack, (int) (start + offset), offsetsize)));
 			if (key.isString()) {
 				if (!key.isEqualString(attribute)) {
@@ -513,39 +524,39 @@ public class Slice {
 				}
 			} else {
 				// invalid key type
-				result = new Slice();
+				result = new VPackSlice();
 				break;
 			}
 			// key is identical. now return value
-			result = new Slice(vpack, (int) (key.start + key.getByteSize()));
+			result = new VPackSlice(vpack, (int) (key.start + key.getByteSize()));
 			break;
 		}
 		return result;
 
 	}
 
-	public Slice keyAt(final int index) {
+	public VPackSlice keyAt(final int index) {
 		if (!isObject()) {
 			throw new VPackValueTypeException(ValueType.Object);
 		}
 		return getNthKey(index);
 	}
 
-	public Slice valueAt(final int index) {
+	public VPackSlice valueAt(final int index) {
 		if (!isObject()) {
 			throw new VPackValueTypeException(ValueType.Object);
 		}
-		final Slice key = getNthKey(index);
-		return new Slice(vpack, (int) (key.start + key.getByteSize()));
+		final VPackSlice key = getNthKey(index);
+		return new VPackSlice(vpack, (int) (key.start + key.getByteSize()));
 	}
 
-	private Slice getNthKey(final int index) {
-		final Slice slice = new Slice(vpack, start + getNthOffset(index));
+	private VPackSlice getNthKey(final int index) {
+		final VPackSlice slice = new VPackSlice(vpack, start + getNthOffset(index));
 		return slice;
 	}
 
-	private Slice getNth(final int index) {
-		return new Slice(vpack, start + getNthOffset(index));
+	private VPackSlice getNth(final int index) {
+		return new VPackSlice(vpack, start + getNthOffset(index));
 	}
 
 	/**
@@ -568,7 +579,7 @@ public class Slice {
 			int dataOffset = findDataOffset();
 			if (head <= 0x05) {
 				// array with no offset table or length
-				final Slice first = new Slice(vpack, start + dataOffset);
+				final VPackSlice first = new VPackSlice(vpack, start + dataOffset);
 				n = (end - dataOffset) / first.getByteSize();
 			} else if (offsetsize < 8) {
 				n = NumberUtil.toLongReversed(vpack, start + 1 + offsetsize, offsetsize);
@@ -585,7 +596,7 @@ public class Slice {
 				if (dataOffset == 0) {
 					dataOffset = findDataOffset();
 				}
-				offset = (int) (dataOffset + index * new Slice(vpack, start + dataOffset).getByteSize());
+				offset = (int) (dataOffset + index * new VPackSlice(vpack, start + dataOffset).getByteSize());
 			} else {
 				final long ieBase = end - n * offsetsize + index * offsetsize - (offsetsize == 8 ? 8 : 0);
 				offset = (int) NumberUtil.toLongReversed(vpack, (int) (start + ieBase), offsetsize);
@@ -607,7 +618,7 @@ public class Slice {
 		long offset = 1 + NumberUtil.getVariableValueLength(end);
 		long current = 0;
 		while (current != index) {
-			final long byteSize = new Slice(vpack, (int) (start + offset)).getByteSize();
+			final long byteSize = new VPackSlice(vpack, (int) (start + offset)).getByteSize();
 			offset += byteSize;
 			if (head == 0x14) {
 				offset += byteSize;
@@ -627,8 +638,8 @@ public class Slice {
 		return string.compareTo(s);
 	}
 
-	public Iterator<Slice> iterator() {
-		final Iterator<Slice> iterator;
+	public Iterator<VPackSlice> iterator() {
+		final Iterator<VPackSlice> iterator;
 		if (isObject()) {
 			iterator = new ObjectIterator(this);
 		} else if (isArray()) {

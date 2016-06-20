@@ -1,6 +1,6 @@
 package com.arangodb.velocypack.util;
 
-import com.arangodb.velocypack.Slice;
+import com.arangodb.velocypack.VPackSlice;
 import com.arangodb.velocypack.exception.VPackValueTypeException;
 
 /**
@@ -13,7 +13,7 @@ public class ArrayIterator extends SliceIterator {
 	 * @param slice
 	 * @throws VPackValueTypeException
 	 */
-	public ArrayIterator(final Slice slice) throws VPackValueTypeException {
+	public ArrayIterator(final VPackSlice slice) throws VPackValueTypeException {
 		super(slice);
 		if (!slice.isArray()) {
 			throw new VPackValueTypeException(ValueType.Array);
@@ -26,7 +26,7 @@ public class ArrayIterator extends SliceIterator {
 	 * @see java.util.Iterator#next()
 	 */
 	@Override
-	public Slice next() {
+	public VPackSlice next() {
 		try {
 			return slice.at((int) position++);
 		} catch (final VPackValueTypeException e) {
