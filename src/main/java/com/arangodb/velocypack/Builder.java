@@ -11,7 +11,7 @@ import com.arangodb.velocypack.exception.VPackBuilderKeyAlreadyWrittenException;
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenCompoundException;
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenObjectException;
 import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
-import com.arangodb.velocypack.exception.VPackNumberOutOfRangeException;
+import com.arangodb.velocypack.exception.VPackBuilderNumberOutOfRangeException;
 import com.arangodb.velocypack.util.DateUtil;
 import com.arangodb.velocypack.util.NumberUtil;
 import com.arangodb.velocypack.util.StringUtil;
@@ -46,20 +46,20 @@ public class Builder {
 		index = new HashMap<Integer, ArrayList<Integer>>();
 	}
 
-	public Builder add(final Value sub) throws VPackBuilderUnexpectedValueException, VPackNumberOutOfRangeException {
+	public Builder add(final Value sub) throws VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
 		addInternal(sub);
 		return this;
 	}
 
 	public Builder add(final String attribute, final Value sub)
 			throws VPackBuilderNeedOpenObjectException, VPackBuilderKeyAlreadyWrittenException,
-			VPackBuilderUnexpectedValueException, VPackNumberOutOfRangeException {
+			VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
 		addInternal(attribute, sub);
 		return this;
 	}
 
 	private void addInternal(final Value sub)
-			throws VPackBuilderUnexpectedValueException, VPackNumberOutOfRangeException {
+			throws VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
 		boolean haveReported = false;
 		if (!stack.isEmpty()) {
 			if (!keyWritten) {
@@ -75,7 +75,7 @@ public class Builder {
 				cleanupAdd();
 			}
 			throw e;
-		} catch (final VPackNumberOutOfRangeException e) {
+		} catch (final VPackBuilderNumberOutOfRangeException e) {
 			// clean up in case of an exception
 			if (haveReported) {
 				cleanupAdd();
@@ -86,7 +86,7 @@ public class Builder {
 
 	private void addInternal(final String attribute, final Value sub)
 			throws VPackBuilderNeedOpenObjectException, VPackBuilderKeyAlreadyWrittenException,
-			VPackBuilderUnexpectedValueException, VPackNumberOutOfRangeException {
+			VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
 		boolean haveReported = false;
 		if (!stack.isEmpty()) {
 			final byte head = head();
@@ -109,7 +109,7 @@ public class Builder {
 				cleanupAdd();
 			}
 			throw e;
-		} catch (final VPackNumberOutOfRangeException e) {
+		} catch (final VPackBuilderNumberOutOfRangeException e) {
 			// clean up in case of an exception
 			if (haveReported) {
 				cleanupAdd();
@@ -120,7 +120,7 @@ public class Builder {
 		}
 	}
 
-	private void set(final Value item) throws VPackBuilderUnexpectedValueException, VPackNumberOutOfRangeException {
+	private void set(final Value item) throws VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
 		final Class<?> clazz = item.getClazz();
 		switch (item.getType()) {
 		case Null:
@@ -147,7 +147,7 @@ public class Builder {
 						BigInteger.class);
 			}
 			if (vSmallInt < -6 || vSmallInt > 9) {
-				throw new VPackNumberOutOfRangeException(ValueType.SmallInt);
+				throw new VPackBuilderNumberOutOfRangeException(ValueType.SmallInt);
 			}
 			appendSmallInt(vSmallInt);
 			break;

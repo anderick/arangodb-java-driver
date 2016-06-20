@@ -6,7 +6,7 @@ import com.arangodb.velocypack.util.ValueType;
  * @author Mark - mark@arangodb.com
  *
  */
-public class VPackBuilderUnexpectedValueException extends VPackException {
+public class VPackBuilderUnexpectedValueException extends VPackBuilderException {
 
 	public VPackBuilderUnexpectedValueException(final ValueType type, final Class<?>... classes) {
 		super(createMessage(type, null, classes));
