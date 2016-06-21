@@ -20,11 +20,6 @@ public class ArrayIterator extends SliceIterator {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.util.Iterator#next()
-	 */
 	@Override
 	public VPackSlice next() {
 		try {

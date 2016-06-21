@@ -25,6 +25,8 @@ import com.arangodb.velocypack.util.ValueType;
  */
 public class VPackBuilder {
 
+	private static final int LONG_BYTES = 8;
+
 	private final ArrayList<Byte> buffer; // Here we collect the result
 	private final ArrayList<Integer> stack; // Start positions of open
 											// objects/arrays
@@ -257,12 +259,12 @@ public class VPackBuilder {
 
 	private void appendInt(final long value) {
 		buffer.add((byte) 0x27);
-		NumberUtil.append(buffer, value, Long.BYTES);
+		NumberUtil.append(buffer, value, LONG_BYTES);
 	}
 
 	private void appendUInt(final BigInteger value) {
 		buffer.add((byte) 0x2f);
-		NumberUtil.append(buffer, value, Long.BYTES);
+		NumberUtil.append(buffer, value, LONG_BYTES);
 	}
 
 	private void appendUTCDate(final Date value) {

@@ -6,24 +6,19 @@ package com.arangodb.velocypack.exception;
  */
 public abstract class VPackBuilderException extends Exception {
 
-	protected VPackBuilderException() {
+	public VPackBuilderException() {
 		super();
 	}
 
-	protected VPackBuilderException(final String message, final Throwable cause, final boolean enableSuppression,
-		final boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
-
-	protected VPackBuilderException(final String message, final Throwable cause) {
+	public VPackBuilderException(final String message, final Throwable cause) {
 		super(message, cause);
 	}
 
-	protected VPackBuilderException(final String message) {
+	public VPackBuilderException(final String message) {
 		super(message);
 	}
 
-	protected VPackBuilderException(final Throwable cause) {
+	public VPackBuilderException(final Throwable cause) {
 		super(cause);
 	}
 

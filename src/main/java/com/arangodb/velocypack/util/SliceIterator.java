@@ -23,11 +23,6 @@ public abstract class SliceIterator implements Iterator<VPackSlice> {
 		position = 0;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.util.Iterator#hasNext()
-	 */
 	@Override
 	public boolean hasNext() {
 		return position < size;
@@ -35,5 +30,9 @@ public abstract class SliceIterator implements Iterator<VPackSlice> {
 
 	protected VPackSlice getCurrent() {
 		return new VPackSlice(slice.getVpack(), (int) current);
+	}
+
+	@Override
+	public void remove() {
 	}
 }

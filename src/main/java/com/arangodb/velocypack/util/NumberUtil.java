@@ -9,13 +9,14 @@ import java.util.Collection;
  *
  */
 public class NumberUtil {
+	private static final int DOUBLE_BYTES = 8;
 
 	public static double toDouble(final byte[] array, final int offset, final int length) {
-		return Double.longBitsToDouble(toLong(array, offset, Double.BYTES));
+		return Double.longBitsToDouble(toLong(array, offset, DOUBLE_BYTES));
 	}
 
 	public static void append(final Collection<Byte> buffer, final double value) {
-		append(buffer, Double.doubleToRawLongBits(value), Double.BYTES);
+		append(buffer, Double.doubleToRawLongBits(value), DOUBLE_BYTES);
 	}
 
 	public static long toLong(final byte[] array, final int offset, final int length) {

@@ -9,6 +9,10 @@ import java.util.Map;
  */
 public class ValueLengthUtil {
 
+	private static final int DOUBLE_BYTES = 8;
+	private static final int LONG_BYTES = 8;
+	private static final int CHARACTER_BYTES = 2;
+
 	private static final Map<Byte, Integer> MAP;
 
 	static {
@@ -40,9 +44,9 @@ public class ValueLengthUtil {
 		MAP.put((byte) 0x18, 1);
 		MAP.put((byte) 0x19, 1);
 		MAP.put((byte) 0x1a, 1);
-		MAP.put((byte) 0x1b, 1 + Double.BYTES);
-		MAP.put((byte) 0x1c, 1 + Long.BYTES);
-		MAP.put((byte) 0x1d, 1 + Character.BYTES);
+		MAP.put((byte) 0x1b, 1 + DOUBLE_BYTES);
+		MAP.put((byte) 0x1c, 1 + LONG_BYTES);
+		MAP.put((byte) 0x1d, 1 + CHARACTER_BYTES);
 		MAP.put((byte) 0x1e, 1);
 		MAP.put((byte) 0x1f, 1);
 		MAP.put((byte) 0x20, 2);
