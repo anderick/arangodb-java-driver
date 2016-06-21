@@ -13,6 +13,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import com.arangodb.velocypack.exception.VPackBuilderException;
 import com.arangodb.velocypack.exception.VPackBuilderKeyAlreadyWrittenException;
@@ -103,9 +105,21 @@ public class VPackParser {
 	}
 
 	private Class<?> getComponentType(final Field field, final Class<?> type) {
+		return getComponentType(field, type, 0);
+	}
+
+	private Class<?> getComponentKeyType(final Field field, final Class<?> type) {
+		return getComponentType(field, type, 0);
+	}
+
+	private Class<?> getComponentValueType(final Field field, final Class<?> type) {
+		return getComponentType(field, type, 1);
+	}
+
+	private Class<?> getComponentType(final Field field, final Class<?> type, final int i) {
 		final Class<?> componentType = type.getComponentType();
 		return componentType != null ? componentType
-				: (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+				: (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[i];
 	}
 
 	private <T> Object getValue(final VPackSlice vpack, final Field field, final Class<T> type)
@@ -149,10 +163,54 @@ public class VPackParser {
 				tmpValue.add(getValue(vpack.at(i), null, componentType));
 			}
 			value = tmpValue;
+		} else if (Map.class.isAssignableFrom(type)) {
+			final Class<?> keyType = getComponentKeyType(field, type);
+			final Class<?> valueType = getComponentValueType(field, type);
+			if (isStringableType(keyType)) {
+				final Map map = new HashMap();
+				for (int i = 0; i < vpack.getLength(); i++) {
+					map.put(fromStringKey(vpack.keyAt(i).getAsString(), keyType),
+						getValue(vpack.valueAt(i), null, valueType));
+				}
+				value = map;
+			} else {
+				// TODO
+				value = null;
+			}
 		} else {
 			value = toEntityInternal(vpack, type);
 		}
 		return value;
+	}
+
+	private Object fromStringKey(final String key, final Class<?> type) {
+		final Object result;
+		if (type == String.class) {
+			result = key;
+		} else if (type == Integer.class) {
+			result = Integer.valueOf(key);
+		} else if (type == Long.class) {
+			result = Long.valueOf(key);
+		} else if (type == Float.class) {
+			result = Float.valueOf(key);
+		} else if (type == Short.class) {
+			result = Short.valueOf(key);
+		} else if (type == Double.class) {
+			result = Double.valueOf(key);
+		} else if (type == BigInteger.class) {
+			result = new BigInteger(key);
+		} else if (type == BigDecimal.class) {
+			result = new BigDecimal(key);
+		} else if (type == Character.class && key.length() == 1) {
+			result = key.charAt(0);
+		} else if (type == Integer.class) {
+			final Class<? extends Enum> enumType = (Class<? extends Enum>) type;
+			result = Enum.valueOf(enumType, key);
+		} else {
+			result = null;// TODO
+		}
+		// TODO Number?
+		return result;
 	}
 
 	public VPackSlice fromEntity(final Object entity) throws VPackParserException {
@@ -200,11 +258,15 @@ public class VPackParser {
 		final String fieldName = field.getName();
 		final Class<?> type = field.getType();
 		final Object value = getEntityValue(entity, fieldName, type);
-		addValue(fieldName, type, value, builder);
+		addValue(field, fieldName, type, value, builder);
 	}
 
-	private void addValue(final String name, final Class<?> type, final Object value, final VPackBuilder builder)
-			throws VPackBuilderNeedOpenObjectException, VPackBuilderKeyAlreadyWrittenException,
+	private void addValue(
+		final Field field,
+		final String name,
+		final Class<?> type,
+		final Object value,
+		final VPackBuilder builder) throws VPackBuilderNeedOpenObjectException, VPackBuilderKeyAlreadyWrittenException,
 			VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException,
 			VPackBuilderNeedOpenCompoundException, NoSuchMethodException, IllegalAccessException,
 			InvocationTargetException, VPackBuilderException {
@@ -233,7 +295,7 @@ public class VPackParser {
 			add(name, new Value(ValueType.Array), builder);
 			for (int i = 0; i < Array.getLength(value); i++) {
 				final Object element = Array.get(value, i);
-				addValue(null, element.getClass(), element, builder);
+				addValue(null, null, element.getClass(), element, builder);
 			}
 			builder.close();
 		} else if (type.isEnum()) {
@@ -242,12 +304,51 @@ public class VPackParser {
 			add(name, new Value(ValueType.Array), builder);
 			for (final Iterator iterator = Iterable.class.cast(value).iterator(); iterator.hasNext();) {
 				final Object element = iterator.next();
-				addValue(null, element.getClass(), element, builder);
+				addValue(null, null, element.getClass(), element, builder);
 			}
 			builder.close();
+		} else if (Map.class.isAssignableFrom(type)) {
+			final Class<?> keyType = getComponentKeyType(field, type);
+			if (isStringableType(keyType)) {
+				add(name, new Value(ValueType.Object), builder);
+				final Set<Entry<?, ?>> entrySet = Map.class.cast(value).entrySet();
+				for (final Entry<?, ?> entry : entrySet) {
+					addValue(null, entry.getKey().toString(), entry.getValue().getClass(), entry.getValue(), builder);
+				}
+				builder.close();
+			} else {
+				// TODO
+			}
 		} else {
 			fromEntityInternal(name, value, builder);
 		}
+	}
+
+	private static final Collection<Class<?>> TYPES;
+	static {
+		TYPES = new ArrayList<Class<?>>();
+		TYPES.add(Boolean.class);
+		TYPES.add(boolean.class);
+		TYPES.add(Integer.class);
+		TYPES.add(int.class);
+		TYPES.add(Long.class);
+		TYPES.add(long.class);
+		TYPES.add(Float.class);
+		TYPES.add(float.class);
+		TYPES.add(Short.class);
+		TYPES.add(short.class);
+		TYPES.add(Double.class);
+		TYPES.add(double.class);
+		TYPES.add(BigInteger.class);
+		TYPES.add(BigDecimal.class);
+		TYPES.add(String.class);
+		TYPES.add(Character.class);
+		TYPES.add(Enum.class);
+		// TODO Number?
+	}
+
+	private boolean isStringableType(final Class<?> type) {
+		return TYPES.contains(type);
 	}
 
 	private void add(final String name, final Value value, final VPackBuilder builder)
