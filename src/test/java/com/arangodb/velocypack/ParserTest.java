@@ -2,6 +2,14 @@ package com.arangodb.velocypack;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -1066,10 +1074,172 @@ public class ParserTest {
 		}
 		final VPackSlice vpack = builder.slice();
 		final VPackParser parser = new VPackParser();
+		parser.regitserInstanceCreator(TestEntityD.class, new VPackInstanceCreator<TestEntityD>() {
+			@Override
+			public TestEntityD createInstance() {
+				return new TestEntityDImpl();
+			}
+		});
 		final TestEntityC entity = parser.toEntity(vpack, TestEntityC.class);
 		Assert.assertNotNull(entity);
-		// TODO
-		// Assert.assertNotNull(entity.d);
-		// Assert.assertEquals("test", entity.d.getD());
+		Assert.assertNotNull(entity.d);
+		Assert.assertEquals("test", entity.d.getD());
+	}
+
+	protected static class TestEntityCollection {
+		private Collection<String> c1 = new LinkedList<String>();
+		private List<String> c2 = new ArrayList<String>();
+		private ArrayList<String> c3 = new ArrayList<String>();
+		private Set<String> c4 = new LinkedHashSet<String>();
+		private HashSet<String> c5 = new HashSet<String>();
+
+		public TestEntityCollection() {
+			super();
+		}
+
+		public Collection<String> getC1() {
+			return c1;
+		}
+
+		public void setC1(final Collection<String> c1) {
+			this.c1 = c1;
+		}
+
+		public List<String> getC2() {
+			return c2;
+		}
+
+		public void setC2(final List<String> c2) {
+			this.c2 = c2;
+		}
+
+		public ArrayList<String> getC3() {
+			return c3;
+		}
+
+		public void setC3(final ArrayList<String> c3) {
+			this.c3 = c3;
+		}
+
+		public Set<String> getC4() {
+			return c4;
+		}
+
+		public void setC4(final Set<String> c4) {
+			this.c4 = c4;
+		}
+
+		public HashSet<String> getC5() {
+			return c5;
+		}
+
+		public void setC5(final HashSet<String> c5) {
+			this.c5 = c5;
+		}
+	}
+
+	@Test
+	public void fromCollection() throws VPackParserException {
+		final VPackParser parser = new VPackParser();
+		final TestEntityCollection entity = new TestEntityCollection();
+		{
+			entity.c1.add("test");
+			entity.c2.add("test");
+			entity.c3.add("test");
+			entity.c4.add("test");
+			entity.c5.add("test");
+		}
+		final VPackSlice vpack = parser.fromEntity(entity);
+		Assert.assertNotNull(vpack);
+		Assert.assertTrue(vpack.isObject());
+		{
+			final VPackSlice c1 = vpack.get("c1");
+			Assert.assertTrue(c1.isArray());
+			Assert.assertEquals(1, c1.getLength());
+			Assert.assertEquals("test", c1.at(0).getAsString());
+		}
+		{
+			final VPackSlice c2 = vpack.get("c2");
+			Assert.assertTrue(c2.isArray());
+			Assert.assertEquals(1, c2.getLength());
+			Assert.assertEquals("test", c2.at(0).getAsString());
+		}
+		{
+			final VPackSlice c3 = vpack.get("c3");
+			Assert.assertTrue(c3.isArray());
+			Assert.assertEquals(1, c3.getLength());
+			Assert.assertEquals("test", c3.at(0).getAsString());
+		}
+		{
+			final VPackSlice c4 = vpack.get("c4");
+			Assert.assertTrue(c4.isArray());
+			Assert.assertEquals(1, c4.getLength());
+			Assert.assertEquals("test", c4.at(0).getAsString());
+		}
+		{
+			final VPackSlice c5 = vpack.get("c5");
+			Assert.assertTrue(c5.isArray());
+			Assert.assertEquals(1, c5.getLength());
+			Assert.assertEquals("test", c5.at(0).getAsString());
+		}
+	}
+
+	@Test
+	public void toCollection() throws VPackBuilderException, VPackParserException {
+		final VPackBuilder builder = new VPackBuilder();
+		{
+			builder.add(new Value(ValueType.Object));
+			{
+				builder.add("c1", new Value(ValueType.Array));
+				builder.add(new Value("test1"));
+				builder.add(new Value("test2"));
+				builder.close();
+			}
+			{
+				builder.add("c2", new Value(ValueType.Array));
+				builder.add(new Value("test1"));
+				builder.add(new Value("test2"));
+				builder.close();
+			}
+			{
+				builder.add("c3", new Value(ValueType.Array));
+				builder.add(new Value("test1"));
+				builder.add(new Value("test2"));
+				builder.close();
+			}
+			{
+				builder.add("c4", new Value(ValueType.Array));
+				builder.add(new Value("test1"));
+				builder.add(new Value("test2"));
+				builder.close();
+			}
+			{
+				builder.add("c5", new Value(ValueType.Array));
+				builder.add(new Value("test1"));
+				builder.add(new Value("test2"));
+				builder.close();
+			}
+			builder.close();
+		}
+		final VPackSlice vpack = builder.slice();
+		final VPackParser parser = new VPackParser();
+		final TestEntityCollection entity = parser.toEntity(vpack, TestEntityCollection.class);
+		Assert.assertNotNull(entity);
+		{
+			checkCollection(entity.c1);
+			checkCollection(entity.c2);
+			checkCollection(entity.c3);
+			checkCollection(entity.c4);
+			checkCollection(entity.c5);
+		}
+	}
+
+	private void checkCollection(final Collection<String> col) {
+		Assert.assertNotNull(col);
+		Assert.assertEquals(2, col.size());
+		for (final Iterator<String> iterator = col.iterator(); iterator.hasNext();) {
+			final String next = iterator.next();
+			Assert.assertTrue("test1".equals(next) || "test2".equals(next));
+		}
 	}
 }

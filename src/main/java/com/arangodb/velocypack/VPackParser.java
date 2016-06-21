@@ -4,12 +4,14 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import com.arangodb.velocypack.exception.VPackBuilderException;
@@ -35,14 +37,21 @@ public class VPackParser {
 	private static final String IS = "is";
 
 	private final Map<Class<?>, VPackTypeAdapter<?>> adapters;
+	private final Map<Class<?>, VPackInstanceCreator<?>> instanceCreators;
 
 	public VPackParser() {
 		super();
 		adapters = new HashMap<Class<?>, VPackTypeAdapter<?>>();
+		instanceCreators = new HashMap<Class<?>, VPackInstanceCreator<?>>();
+		VPackDefautInstanceCreators.registerInstanceCreators(this);
 	}
 
 	public <T> void registerTypeAdatper(final Class<T> clazz, final VPackTypeAdapter<T> adapter) {
 		adapters.put(clazz, adapter);
+	}
+
+	public <T> void regitserInstanceCreator(final Class<T> clazz, final VPackInstanceCreator<T> creator) {
+		instanceCreators.put(clazz, creator);
 	}
 
 	public <T> T toEntity(final VPackSlice vpack, final Class<T> type) throws VPackParserException {
@@ -59,15 +68,26 @@ public class VPackParser {
 			throws InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException,
 			IllegalArgumentException, InvocationTargetException {
 		final T entity;
-		if (adapters.containsKey(type)) {
-			final VPackTypeAdapter<T> adapter = (VPackTypeAdapter<T>) adapters.get(type);
+		final VPackTypeAdapter<T> adapter = (VPackTypeAdapter<T>) adapters.get(type);
+		if (adapter != null) {
 			entity = adapter.toEntity(vpack);
 		} else {
-			entity = type.newInstance();
+			entity = createInstance(type);
 			final Field[] declaredFields = getDeclaredFields(entity);
 			for (final Field field : declaredFields) {
 				toField(vpack, entity, field);
 			}
+		}
+		return entity;
+	}
+
+	private <T> T createInstance(final Class<T> type) throws InstantiationException, IllegalAccessException {
+		final T entity;
+		final VPackInstanceCreator<?> creator = instanceCreators.get(type);
+		if (creator != null) {
+			entity = (T) creator.createInstance();
+		} else {
+			entity = type.newInstance();
 		}
 		return entity;
 	}
@@ -77,12 +97,18 @@ public class VPackParser {
 			InvocationTargetException, InstantiationException {
 		final VPackSlice attr = vpack.get(field.getName());
 		if (!attr.isNone()) {
-			final Object value = getValue(attr, field.getType());
+			final Object value = getValue(attr, field, field.getType());
 			setValue(entity, field.getName(), field.getType(), value);
 		}
 	}
 
-	private <T> Object getValue(final VPackSlice vpack, final Class<T> type)
+	private Class<?> getComponentType(final Field field, final Class<?> type) {
+		final Class<?> componentType = type.getComponentType();
+		return componentType != null ? componentType
+				: (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+	}
+
+	private <T> Object getValue(final VPackSlice vpack, final Field field, final Class<T> type)
 			throws InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException,
 			IllegalArgumentException, InvocationTargetException {
 		final Object value;
@@ -107,17 +133,22 @@ public class VPackParser {
 		} else if (type == Character.class || type == char.class) {
 			value = vpack.getAsChar();
 		} else if (type.isArray()) {
-			final Object tmpValue = Array.newInstance(type.getComponentType(), (int) vpack.getLength());
-			// final Collection<T> tmpValue = new ArrayList<T>();
+			final Class<?> componentType = getComponentType(field, type);
+			final Object tmpValue = Array.newInstance(componentType, (int) vpack.getLength());
 			for (int i = 0; i < vpack.getLength(); i++) {
-				Array.set(tmpValue, i, getValue(vpack.at(i), type.getComponentType()));
+				Array.set(tmpValue, i, getValue(vpack.at(i), null, componentType));
 			}
 			value = tmpValue;
 		} else if (type.isEnum()) {
 			final Class<? extends Enum> enumType = (Class<? extends Enum>) type;
 			value = Enum.valueOf(enumType, vpack.getAsString());
-		} else if (type.isInterface()) {
-			value = null;
+		} else if (Collection.class.isAssignableFrom(type)) {
+			final Class<?> componentType = getComponentType(field, type);
+			final Collection tmpValue = (Collection) createInstance(type);
+			for (int i = 0; i < vpack.getLength(); i++) {
+				tmpValue.add(getValue(vpack.at(i), null, componentType));
+			}
+			value = tmpValue;
 		} else {
 			value = toEntityInternal(vpack, type);
 		}
@@ -139,8 +170,8 @@ public class VPackParser {
 			InvocationTargetException, VPackValueTypeException, VPackBuilderException {
 
 		add(name, new Value(ValueType.Object), builder);
-		if (adapters.containsKey(entity.getClass())) {
-			final VPackTypeAdapter<Object> adapter = (VPackTypeAdapter<Object>) adapters.get(entity.getClass());
+		final VPackTypeAdapter<Object> adapter = (VPackTypeAdapter<Object>) adapters.get(entity.getClass());
+		if (adapter != null) {
 			adapter.fromEntity(builder, entity.getClass());
 		} else {
 			final Field[] fields = getDeclaredFields(entity);
@@ -207,6 +238,13 @@ public class VPackParser {
 			builder.close();
 		} else if (type.isEnum()) {
 			add(name, new Value(Enum.class.cast(value).name()), builder);
+		} else if (Iterable.class.isAssignableFrom(type)) {
+			add(name, new Value(ValueType.Array), builder);
+			for (final Iterator iterator = Iterable.class.cast(value).iterator(); iterator.hasNext();) {
+				final Object element = iterator.next();
+				addValue(null, element.getClass(), element, builder);
+			}
+			builder.close();
 		} else {
 			fromEntityInternal(name, value, builder);
 		}
