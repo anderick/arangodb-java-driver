@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -117,9 +118,16 @@ public class VPackParser {
 	}
 
 	private Class<?> getComponentType(final Field field, final Class<?> type, final int i) {
+		Class<?> result;
 		final Class<?> componentType = type.getComponentType();
-		return componentType != null ? componentType
-				: (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[i];
+		if (componentType != null) {
+			result = componentType;
+		} else {
+			final ParameterizedType genericType = (ParameterizedType) field.getGenericType();
+			final Type argType = genericType.getActualTypeArguments()[i];
+			result = "java.lang.Enum<?>".equals(argType.toString()) ? Enum.class : (Class<?>) argType;
+		}
+		return result;
 	}
 
 	private <T> Object getValue(final VPackSlice vpack, final Field field, final Class<T> type)
@@ -166,7 +174,7 @@ public class VPackParser {
 		} else if (Map.class.isAssignableFrom(type)) {
 			final Class<?> keyType = getComponentKeyType(field, type);
 			final Class<?> valueType = getComponentValueType(field, type);
-			if (isStringableType(keyType)) {
+			if (isStringableKeyType(keyType)) {
 				final Map map = new HashMap();
 				for (int i = 0; i < vpack.getLength(); i++) {
 					map.put(fromStringKey(vpack.keyAt(i).getAsString(), keyType),
@@ -195,7 +203,7 @@ public class VPackParser {
 			result = Float.valueOf(key);
 		} else if (type == Short.class) {
 			result = Short.valueOf(key);
-		} else if (type == Double.class) {
+		} else if (type == Double.class || type == Number.class) {
 			result = Double.valueOf(key);
 		} else if (type == BigInteger.class) {
 			result = new BigInteger(key);
@@ -209,7 +217,6 @@ public class VPackParser {
 		} else {
 			result = null;// TODO
 		}
-		// TODO Number?
 		return result;
 	}
 
@@ -271,7 +278,9 @@ public class VPackParser {
 			VPackBuilderNeedOpenCompoundException, NoSuchMethodException, IllegalAccessException,
 			InvocationTargetException, VPackBuilderException {
 
-		if (type == Boolean.class || type == boolean.class) {
+		if (value == null) {
+			// TODO
+		} else if (type == Boolean.class || type == boolean.class) {
 			add(name, new Value(Boolean.class.cast(value)), builder);
 		} else if (type == Integer.class || type == int.class) {
 			add(name, new Value(Integer.class.cast(value)), builder);
@@ -309,11 +318,11 @@ public class VPackParser {
 			builder.close();
 		} else if (Map.class.isAssignableFrom(type)) {
 			final Class<?> keyType = getComponentKeyType(field, type);
-			if (isStringableType(keyType)) {
+			if (isStringableKeyType(keyType)) {
 				add(name, new Value(ValueType.Object), builder);
 				final Set<Entry<?, ?>> entrySet = Map.class.cast(value).entrySet();
 				for (final Entry<?, ?> entry : entrySet) {
-					addValue(null, entry.getKey().toString(), entry.getValue().getClass(), entry.getValue(), builder);
+					addValue(null, keyToString(entry.getKey()), entry.getValue().getClass(), entry.getValue(), builder);
 				}
 				builder.close();
 			} else {
@@ -324,31 +333,29 @@ public class VPackParser {
 		}
 	}
 
-	private static final Collection<Class<?>> TYPES;
+	private static final Collection<Class<?>> KEY_TYPES;
 	static {
-		TYPES = new ArrayList<Class<?>>();
-		TYPES.add(Boolean.class);
-		TYPES.add(boolean.class);
-		TYPES.add(Integer.class);
-		TYPES.add(int.class);
-		TYPES.add(Long.class);
-		TYPES.add(long.class);
-		TYPES.add(Float.class);
-		TYPES.add(float.class);
-		TYPES.add(Short.class);
-		TYPES.add(short.class);
-		TYPES.add(Double.class);
-		TYPES.add(double.class);
-		TYPES.add(BigInteger.class);
-		TYPES.add(BigDecimal.class);
-		TYPES.add(String.class);
-		TYPES.add(Character.class);
-		TYPES.add(Enum.class);
-		// TODO Number?
+		KEY_TYPES = new ArrayList<Class<?>>();
+		KEY_TYPES.add(Boolean.class);
+		KEY_TYPES.add(Integer.class);
+		KEY_TYPES.add(Long.class);
+		KEY_TYPES.add(Float.class);
+		KEY_TYPES.add(Short.class);
+		KEY_TYPES.add(Double.class);
+		KEY_TYPES.add(Number.class);
+		KEY_TYPES.add(BigInteger.class);
+		KEY_TYPES.add(BigDecimal.class);
+		KEY_TYPES.add(String.class);
+		KEY_TYPES.add(Character.class);
+		KEY_TYPES.add(Enum.class);
 	}
 
-	private boolean isStringableType(final Class<?> type) {
-		return TYPES.contains(type);
+	private boolean isStringableKeyType(final Class<?> type) {
+		return KEY_TYPES.contains(type) || Enum.class.isAssignableFrom(type);
+	}
+
+	private String keyToString(final Object key) {
+		return Enum.class.isAssignableFrom(key.getClass()) ? Enum.class.cast(key).name() : key.toString();
 	}
 
 	private void add(final String name, final Value value, final VPackBuilder builder)

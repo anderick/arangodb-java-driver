@@ -97,7 +97,7 @@ public class Value {
 	}
 
 	public Value(final Float value) {
-		this(checkNull(value, ValueType.Int), Float.class);
+		this(checkNull(value, ValueType.Double), Float.class);
 		f = value;
 	}
 

@@ -7,9 +7,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.arangodb.velocypack.VPackBuilder.BuilderOptions;
-import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
 import com.arangodb.velocypack.exception.VPackBuilderException;
 import com.arangodb.velocypack.exception.VPackBuilderNumberOutOfRangeException;
+import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
 import com.arangodb.velocypack.util.Value;
 import com.arangodb.velocypack.util.ValueType;
 
@@ -268,6 +268,12 @@ public class BuilderTest {
 		Assert.assertTrue(slice.isArray());
 		Assert.assertEquals(0, slice.getLength());
 		Assert.assertEquals(1, slice.getVpack().length);
+		try {
+			slice.at(0);
+			Assert.fail();
+		} catch (final IndexOutOfBoundsException e) {
+
+		}
 	}
 
 	@Test
@@ -439,6 +445,20 @@ public class BuilderTest {
 		Assert.assertTrue(slice.isObject());
 		Assert.assertEquals(0, slice.getLength());
 		Assert.assertEquals(1, slice.getVpack().length);
+		final VPackSlice a = slice.get("a");
+		Assert.assertTrue(a.isNone());
+		try {
+			slice.keyAt(0);
+			Assert.fail();
+		} catch (final IndexOutOfBoundsException e) {
+
+		}
+		try {
+			slice.valueAt(0);
+			Assert.fail();
+		} catch (final IndexOutOfBoundsException e) {
+
+		}
 	}
 
 	@Test
@@ -566,4 +586,41 @@ public class BuilderTest {
 		Assert.assertTrue(d.isTrue());
 	}
 
+	@Test
+	public void objectAttributeNotFound() throws VPackBuilderException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.Object));
+		builder.add("a", new Value("a"));
+		builder.close();
+		final VPackSlice vpack = builder.slice();
+		Assert.assertTrue(vpack.isObject());
+		final VPackSlice b = vpack.get("b");
+		Assert.assertTrue(b.isNone());
+	}
+
+	@Test
+	public void largeObject() throws VPackBuilderException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.Object));
+		final int size = 4;
+		for (int i = 0; i < size; i++) {
+			builder.add(String.valueOf(i), new Value(ValueType.Object));
+			for (int j = 0; j < size; j++) {
+				builder.add(String.valueOf(j), new Value("test"));
+			}
+			builder.close();
+		}
+		builder.close();
+		final VPackSlice vpack = builder.slice();
+		Assert.assertTrue(vpack.isObject());
+		Assert.assertEquals(size, vpack.getLength());
+		for (int i = 0; i < size; i++) {
+			final VPackSlice attr = vpack.get(String.valueOf(i));
+			Assert.assertTrue(attr.isObject());
+			for (int j = 0; j < size; j++) {
+				final VPackSlice childAttr = attr.get(String.valueOf(j));
+				Assert.assertTrue(childAttr.isString());
+			}
+		}
+	}
 }

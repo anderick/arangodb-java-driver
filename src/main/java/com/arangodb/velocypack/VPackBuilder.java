@@ -141,8 +141,11 @@ public class VPackBuilder {
 				d = item.getDouble();
 			} else if (clazz == BigDecimal.class) {
 				d = item.getBigDecimal().doubleValue();
+			} else if (clazz == Float.class) {
+				d = item.getFloat().doubleValue();
 			} else {
-				throw new VPackBuilderUnexpectedValueException(ValueType.Double, Double.class, BigDecimal.class);
+				throw new VPackBuilderUnexpectedValueException(ValueType.Double, Double.class, BigDecimal.class,
+						Float.class);
 			}
 			appendDouble(d);
 			break;
@@ -171,13 +174,11 @@ public class VPackBuilder {
 				vInt = item.getInteger();
 			} else if (clazz == BigInteger.class) {
 				vInt = item.getBigInteger().longValue();
-			} else if (clazz == Float.class) {
-				vInt = item.getFloat().longValue();
 			} else if (clazz == Short.class) {
 				vInt = item.getShort();
 			} else {
 				throw new VPackBuilderUnexpectedValueException(ValueType.Int, Long.class, Integer.class,
-						BigInteger.class);
+						BigInteger.class, Short.class);
 			}
 			appendInt(vInt);
 			break;

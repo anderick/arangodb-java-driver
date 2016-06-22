@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.arangodb.velocypack.exception.VPackBuilderException;
@@ -329,13 +330,13 @@ public class ParserTest {
 		Assert.assertTrue(vpack.isObject());
 		{
 			final VPackSlice f1 = vpack.get("f1");
-			Assert.assertTrue(f1.isInteger());
-			Assert.assertEquals(1, f1.getAsFloat(), 0.);
+			Assert.assertTrue(f1.isDouble());
+			Assert.assertEquals(1.0, f1.getAsFloat(), 0.);
 		}
 		{
 			final VPackSlice f2 = vpack.get("f2");
-			Assert.assertTrue(f2.isInteger());
-			Assert.assertEquals(1, f2.getAsFloat(), 0.);
+			Assert.assertTrue(f2.isDouble());
+			Assert.assertEquals(1.0, f2.getAsFloat(), 0.);
 		}
 	}
 
@@ -344,8 +345,8 @@ public class ParserTest {
 		final VPackBuilder builder = new VPackBuilder();
 		{
 			builder.add(new Value(ValueType.Object));
-			builder.add("f1", new Value(2));
-			builder.add("f2", new Value(3));
+			builder.add("f1", new Value(2F));
+			builder.add("f2", new Value(3F));
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
@@ -1588,6 +1589,287 @@ public class ParserTest {
 		}
 	}
 
+	protected static class TestEntityMapStringableKey {
+		private Map<Boolean, String> m1;
+		private Map<Integer, String> m2;
+		private Map<Long, String> m3;
+		private Map<Float, String> m4;
+		private Map<Short, String> m5;
+		private Map<Double, String> m6;
+		private Map<Number, String> m7;
+		private Map<BigInteger, String> m8;
+		private Map<BigDecimal, String> m9;
+		private Map<Character, String> m10;
+		private Map<Enum<?>, String> m11;
+		private Map<TestEnum, String> m12;
+
+		public Map<Boolean, String> getM1() {
+			return m1;
+		}
+
+		public void setM1(final Map<Boolean, String> m1) {
+			this.m1 = m1;
+		}
+
+		public Map<Integer, String> getM2() {
+			return m2;
+		}
+
+		public void setM2(final Map<Integer, String> m2) {
+			this.m2 = m2;
+		}
+
+		public Map<Long, String> getM3() {
+			return m3;
+		}
+
+		public void setM3(final Map<Long, String> m3) {
+			this.m3 = m3;
+		}
+
+		public Map<Float, String> getM4() {
+			return m4;
+		}
+
+		public void setM4(final Map<Float, String> m4) {
+			this.m4 = m4;
+		}
+
+		public Map<Short, String> getM5() {
+			return m5;
+		}
+
+		public void setM5(final Map<Short, String> m5) {
+			this.m5 = m5;
+		}
+
+		public Map<Double, String> getM6() {
+			return m6;
+		}
+
+		public void setM6(final Map<Double, String> m6) {
+			this.m6 = m6;
+		}
+
+		public Map<Number, String> getM7() {
+			return m7;
+		}
+
+		public void setM7(final Map<Number, String> m7) {
+			this.m7 = m7;
+		}
+
+		public Map<BigInteger, String> getM8() {
+			return m8;
+		}
+
+		public void setM8(final Map<BigInteger, String> m8) {
+			this.m8 = m8;
+		}
+
+		public Map<BigDecimal, String> getM9() {
+			return m9;
+		}
+
+		public void setM9(final Map<BigDecimal, String> m9) {
+			this.m9 = m9;
+		}
+
+		public Map<Character, String> getM10() {
+			return m10;
+		}
+
+		public void setM10(final Map<Character, String> m10) {
+			this.m10 = m10;
+		}
+
+		public Map<Enum<?>, String> getM11() {
+			return m11;
+		}
+
+		public void setM11(final Map<Enum<?>, String> m11) {
+			this.m11 = m11;
+		}
+
+		public Map<TestEnum, String> getM12() {
+			return m12;
+		}
+
+		public void setM12(final Map<TestEnum, String> m12) {
+			this.m12 = m12;
+		}
+	}
+
+	@Test
+	@Ignore
+	public void fromMapStringableKey() throws VPackParserException {
+		final VPackParser parser = new VPackParser();
+		final TestEntityMapStringableKey entity = new TestEntityMapStringableKey();
+		final String value = "test";
+		{
+			final Map<Boolean, String> m1 = new HashMap<Boolean, String>();
+			m1.put(true, value);
+			m1.put(false, value);
+			entity.setM1(m1);
+		}
+		{
+			final Map<Integer, String> m2 = new HashMap<Integer, String>();
+			m2.put(1, value);
+			m2.put(2, value);
+			entity.setM2(m2);
+		}
+		{
+			final Map<Long, String> m3 = new HashMap<Long, String>();
+			m3.put(1L, value);
+			m3.put(2L, value);
+			entity.setM3(m3);
+		}
+		{
+			final Map<Float, String> m4 = new HashMap<Float, String>();
+			m4.put(1.5F, value);
+			m4.put(2.25F, value);
+			entity.setM4(m4);
+		}
+		{
+			final Map<Short, String> m5 = new HashMap<Short, String>();
+			m5.put(new Short("1"), value);
+			m5.put(new Short("2"), value);
+			entity.setM5(m5);
+		}
+		{
+			final Map<Double, String> m6 = new HashMap<Double, String>();
+			m6.put(1.5, value);
+			m6.put(2.25, value);
+			entity.setM6(m6);
+		}
+		{
+			final Map<Number, String> m7 = new HashMap<Number, String>();
+			m7.put(1.5, value);
+			m7.put(1L, value);
+			entity.setM7(m7);
+		}
+		{
+			final Map<BigInteger, String> m8 = new HashMap<BigInteger, String>();
+			m8.put(new BigInteger("1"), value);
+			m8.put(new BigInteger("2"), value);
+			entity.setM8(m8);
+		}
+		{
+			final Map<BigDecimal, String> m9 = new HashMap<BigDecimal, String>();
+			m9.put(new BigDecimal("1.5"), value);
+			m9.put(new BigDecimal("2.25"), value);
+			entity.setM9(m9);
+		}
+		{
+			final Map<Character, String> m10 = new HashMap<Character, String>();
+			m10.put('1', value);
+			m10.put('a', value);
+			entity.setM10(m10);
+		}
+		{
+			final Map<Enum<?>, String> m11 = new HashMap<Enum<?>, String>();
+			m11.put(TestEnum.A, value);
+			m11.put(TestEnum.B, value);
+			entity.setM11(m11);
+		}
+		{
+			final Map<TestEnum, String> m12 = new HashMap<ParserTest.TestEnum, String>();
+			m12.put(TestEnum.A, value);
+			m12.put(TestEnum.B, value);
+			entity.setM12(m12);
+		}
+		final VPackSlice vpack = parser.fromEntity(entity);
+		Assert.assertNotNull(vpack);
+		Assert.assertTrue(vpack.isObject());
+		{
+			final VPackSlice m1 = vpack.get("m1");
+			Assert.assertTrue(m1.isObject());
+			Assert.assertEquals(2, m1.getLength());
+			checkMapAttribute(m1.get("true"));
+			checkMapAttribute(m1.get("false"));
+		}
+		{
+			final VPackSlice m2 = vpack.get("m2");
+			Assert.assertTrue(m2.isObject());
+			Assert.assertEquals(2, m2.getLength());
+			checkMapAttribute(m2.get("1"));
+			checkMapAttribute(m2.get("2"));
+		}
+		{
+			final VPackSlice m3 = vpack.get("m3");
+			Assert.assertTrue(m3.isObject());
+			Assert.assertEquals(2, m3.getLength());
+			checkMapAttribute(m3.get("1"));
+			checkMapAttribute(m3.get("2"));
+		}
+		{
+			final VPackSlice m4 = vpack.get("m4");
+			Assert.assertTrue(m4.isObject());
+			Assert.assertEquals(2, m4.getLength());
+			checkMapAttribute(m4.get("1.5"));
+			checkMapAttribute(m4.get("2.25"));
+		}
+		{
+			final VPackSlice m5 = vpack.get("m5");
+			Assert.assertTrue(m5.isObject());
+			Assert.assertEquals(2, m5.getLength());
+			checkMapAttribute(m5.get("1"));
+			checkMapAttribute(m5.get("2"));
+		}
+		{
+			final VPackSlice m6 = vpack.get("m6");
+			Assert.assertTrue(m6.isObject());
+			Assert.assertEquals(2, m6.getLength());
+			checkMapAttribute(m6.get("1.5"));
+			checkMapAttribute(m6.get("2.25"));
+		}
+		{
+			final VPackSlice m7 = vpack.get("m7");
+			Assert.assertTrue(m7.isObject());
+			Assert.assertEquals(2, m7.getLength());
+			checkMapAttribute(m7.get("1.5"));
+			checkMapAttribute(m7.get("1"));
+		}
+		{
+			final VPackSlice m8 = vpack.get("m8");
+			Assert.assertTrue(m8.isObject());
+			Assert.assertEquals(2, m8.getLength());
+			checkMapAttribute(m8.get("1"));
+			checkMapAttribute(m8.get("2"));
+		}
+		{
+			final VPackSlice m9 = vpack.get("m9");
+			Assert.assertTrue(m9.isObject());
+			Assert.assertEquals(2, m9.getLength());
+			checkMapAttribute(m9.get("1.5"));
+			checkMapAttribute(m9.get("2.25"));
+		}
+		{
+			final VPackSlice m10 = vpack.get("m10");
+			Assert.assertTrue(m10.isObject());
+			Assert.assertEquals(2, m10.getLength());
+			checkMapAttribute(m10.get("1"));
+			checkMapAttribute(m10.get("a"));
+		}
+		{
+			final VPackSlice m11 = vpack.get("m11");
+			Assert.assertTrue(m11.isObject());
+			Assert.assertEquals(2, m11.getLength());
+			checkMapAttribute(m11.get(TestEnum.A.name()));
+			checkMapAttribute(m11.get(TestEnum.B.name()));
+		}
+		{
+			final VPackSlice m12 = vpack.get("m12");
+			Assert.assertTrue(m12.isObject());
+			Assert.assertEquals(2, m12.getLength());
+		}
+	}
+
+	private void checkMapAttribute(final VPackSlice attr) {
+		Assert.assertTrue(attr.isString());
+		Assert.assertEquals("test", attr.getAsString());
+	}
+
 	@Test
 	public void fromMapWithObjectKey() {
 		// final Map<TestEntityLong, TestEntityCollection> m4 = new
@@ -1597,4 +1879,5 @@ public class ParserTest {
 		// entity.setM4(m4);
 	}
 
+	// TODO empty map and/or object
 }

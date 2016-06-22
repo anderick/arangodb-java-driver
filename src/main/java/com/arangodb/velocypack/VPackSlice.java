@@ -163,6 +163,10 @@ public class VPackSlice {
 		if (!isDouble()) {
 			throw new VPackValueTypeException(ValueType.Double);
 		}
+		return getAsDoubleUnchecked();
+	}
+
+	private double getAsDoubleUnchecked() {
 		return NumberUtil.toDouble(vpack, start + 1, length());
 	}
 
@@ -212,7 +216,7 @@ public class VPackSlice {
 	}
 
 	public float getAsFloat() {
-		return getAsNumber().floatValue();
+		return (float) getAsDoubleUnchecked();
 	}
 
 	public short getAsShort() {
@@ -342,6 +346,7 @@ public class VPackSlice {
 		return offset;
 	}
 
+	// TODO return int?
 	public long getByteSize() {
 		final long size;
 		final byte head = head();
