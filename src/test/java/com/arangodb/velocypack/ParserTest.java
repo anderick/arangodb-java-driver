@@ -2007,7 +2007,69 @@ public class ParserTest {
 			}
 		}
 	}
-	// TODO to map with objectkeys
-	// TODO empty map and/or object
+
+	protected static class TestEntityEmpty {
+
+	}
+
+	@Test
+	public void fromEmptyObject() throws VPackParserException {
+		final VPackParser parser = new VPackParser();
+		final VPackSlice vpack = parser.fromEntity(new TestEntityEmpty());
+		Assert.assertNotNull(vpack);
+		Assert.assertTrue(vpack.isObject());
+		Assert.assertEquals(0, vpack.getLength());
+	}
+
+	@Test
+	public void toEmptyObject() throws VPackBuilderException, VPackParserException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.Object));
+		builder.close();
+		final VPackParser parser = new VPackParser();
+		final TestEntityEmpty entity = parser.toEntity(builder.slice(), TestEntityEmpty.class);
+		Assert.assertNotNull(entity);
+	}
+
+	protected static class TestEntityEmptyMap {
+		private Map<String, Object> m;
+
+		public Map<String, Object> getM() {
+			return m;
+		}
+
+		public void setM(final Map<String, Object> m) {
+			this.m = m;
+		}
+	}
+
+	@Test
+	public void fromEmptyMap() throws VPackParserException {
+		final VPackParser parser = new VPackParser();
+		final TestEntityEmptyMap entity = new TestEntityEmptyMap();
+		entity.setM(new HashMap<String, Object>());
+		final VPackSlice vpack = parser.fromEntity(entity);
+		Assert.assertNotNull(vpack);
+		Assert.assertTrue(vpack.isObject());
+		Assert.assertEquals(1, vpack.getLength());
+		final VPackSlice m = vpack.get("m");
+		Assert.assertTrue(m.isObject());
+		Assert.assertEquals(0, m.getLength());
+	}
+
+	@Test
+	public void toEmptyMap() throws VPackBuilderException, VPackParserException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.Object));
+		builder.add("m", new Value(ValueType.Object));
+		builder.close();
+		builder.close();
+		final VPackParser parser = new VPackParser();
+		final TestEntityEmptyMap entity = parser.toEntity(builder.slice(), TestEntityEmptyMap.class);
+		Assert.assertNotNull(entity);
+		Assert.assertNotNull(entity.m);
+		Assert.assertEquals(0, entity.m.size());
+	}
+
 	// TODO id string-integer converter/tanslator
 }
