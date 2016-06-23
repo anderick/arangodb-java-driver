@@ -35,6 +35,8 @@ import com.arangodb.velocypack.util.ValueType;
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class VPackParser {
 
+	private static final String ATTR_KEY = "key";
+	private static final String ATTR_VALUE = "value";
 	private static final String SET = "set";
 	private static final String GET = "get";
 	private static final String IS = "is";
@@ -182,8 +184,14 @@ public class VPackParser {
 				}
 				value = map;
 			} else {
-				// TODO
-				value = null;
+				final Map map = new HashMap();
+				for (int i = 0; i < vpack.getLength(); i++) {
+					final VPackSlice entry = vpack.at(i);
+					final Object mapKey = getValue(entry.get(ATTR_KEY), null, keyType);
+					final Object mapValue = getValue(entry.get(ATTR_VALUE), null, valueType);
+					map.put(mapKey, mapValue);
+				}
+				value = map;
 			}
 		} else {
 			value = toEntityInternal(vpack, type);
@@ -326,7 +334,15 @@ public class VPackParser {
 				}
 				builder.close();
 			} else {
-				// TODO
+				add(name, new Value(ValueType.Array), builder);
+				final Set<Entry<?, ?>> entrySet = Map.class.cast(value).entrySet();
+				for (final Entry<?, ?> entry : entrySet) {
+					add(null, new Value(ValueType.Object), builder);
+					addValue(null, ATTR_KEY, entry.getKey().getClass(), entry.getKey(), builder);
+					addValue(null, ATTR_VALUE, entry.getValue().getClass(), entry.getValue(), builder);
+					builder.close();
+				}
+				builder.close();
 			}
 		} else {
 			fromEntityInternal(name, value, builder);

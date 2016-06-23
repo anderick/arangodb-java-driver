@@ -12,6 +12,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -1576,18 +1577,6 @@ public class ParserTest {
 		}
 	}
 
-	protected static class TestEntityMapWithObjectKey {
-		private Map<TestEntityLong, TestEntityCollection> m1;
-
-		public Map<TestEntityLong, TestEntityCollection> getM1() {
-			return m1;
-		}
-
-		public void setM1(final Map<TestEntityLong, TestEntityCollection> m1) {
-			this.m1 = m1;
-		}
-	}
-
 	protected static class TestEntityMapStringableKey {
 		private Map<Boolean, String> m1;
 		private Map<Integer, String> m2;
@@ -1868,14 +1857,157 @@ public class ParserTest {
 		Assert.assertEquals("test", attr.getAsString());
 	}
 
-	@Test
-	public void fromMapWithObjectKey() {
-		// final Map<TestEntityLong, TestEntityCollection> m4 = new
-		// HashMap<ParserTest.TestEntityLong,
-		// ParserTest.TestEntityCollection>();
-		// m4.put(new TestEntityLong(), new TestEntityCollection());
-		// entity.setM4(m4);
+	protected static class TestEntityMapWithObjectKey {
+		private Map<TestEntityLong, TestEntityCollection> m1;
+		private Map<TestEntityLong, String> m2;
+
+		public Map<TestEntityLong, TestEntityCollection> getM1() {
+			return m1;
+		}
+
+		public void setM1(final Map<TestEntityLong, TestEntityCollection> m1) {
+			this.m1 = m1;
+		}
+
+		public Map<TestEntityLong, String> getM2() {
+			return m2;
+		}
+
+		public void setM2(final Map<TestEntityLong, String> m2) {
+			this.m2 = m2;
+		}
 	}
 
+	@Test
+	public void fromMapWithObjectKey() throws VPackParserException {
+		final VPackParser parser = new VPackParser();
+		final TestEntityMapWithObjectKey entity = new TestEntityMapWithObjectKey();
+		{
+			final Map<TestEntityLong, TestEntityCollection> m1 = new HashMap<ParserTest.TestEntityLong, ParserTest.TestEntityCollection>();
+			m1.put(new TestEntityLong(), new TestEntityCollection());
+			m1.put(new TestEntityLong(), new TestEntityCollection());
+			entity.setM1(m1);
+		}
+		{
+			final Map<TestEntityLong, String> m2 = new HashMap<ParserTest.TestEntityLong, String>();
+			m2.put(new TestEntityLong(), "test");
+			m2.put(new TestEntityLong(), "test");
+			m2.put(new TestEntityLong(), "test");
+			entity.setM2(m2);
+		}
+		final VPackSlice vpack = parser.fromEntity(entity);
+		Assert.assertTrue(vpack.isObject());
+		{
+			final VPackSlice m1 = vpack.get("m1");
+			Assert.assertTrue(m1.isArray());
+			Assert.assertEquals(2, m1.getLength());
+			for (int i = 0; i < m1.getLength(); i++) {
+				final VPackSlice at = m1.at(i);
+				Assert.assertTrue(at.isObject());
+				Assert.assertEquals(2, at.getLength());
+				{
+					final VPackSlice key = at.get("key");
+					Assert.assertTrue(key.isObject());
+					final VPackSlice l1 = key.get("l1");
+					Assert.assertTrue(l1.isInteger());
+					Assert.assertEquals(1, l1.getAsLong());
+				}
+				{
+					final VPackSlice value = at.get("value");
+					Assert.assertTrue(value.isObject());
+					final VPackSlice c1 = value.get("c1");
+					Assert.assertTrue(c1.isArray());
+				}
+			}
+		}
+		{
+			final VPackSlice m2 = vpack.get("m2");
+			Assert.assertTrue(m2.isArray());
+			Assert.assertEquals(3, m2.getLength());
+			for (int i = 0; i < m2.getLength(); i++) {
+				final VPackSlice at = m2.at(i);
+				Assert.assertTrue(at.isObject());
+				Assert.assertEquals(2, at.getLength());
+				{
+					final VPackSlice key = at.get("key");
+					Assert.assertTrue(key.isObject());
+					final VPackSlice l1 = key.get("l1");
+					Assert.assertTrue(l1.isInteger());
+					Assert.assertEquals(1, l1.getAsLong());
+				}
+				{
+					final VPackSlice value = at.get("value");
+					Assert.assertTrue(value.isString());
+					Assert.assertEquals("test", value.getAsString());
+				}
+			}
+		}
+	}
+
+	@Test
+	public void toMapWithObjectKey() throws VPackBuilderException, VPackParserException {
+		final int size = 2;
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.Object));
+		{
+			builder.add("m1", new Value(ValueType.Array));
+			for (int i = 0; i < size; i++) {
+				builder.add(new Value(ValueType.Object));
+				{
+					builder.add("key", new Value(ValueType.Object));
+					builder.add("l1", new Value(5L));
+					builder.close();
+				}
+				{
+					builder.add("value", new Value(ValueType.Object));
+					builder.add("c1", new Value(ValueType.Array));
+					builder.add(new Value("test"));
+					builder.close();
+					builder.close();
+				}
+				builder.close();
+			}
+			builder.close();
+		}
+		{
+			builder.add("m2", new Value(ValueType.Array));
+			for (int i = 0; i < size; i++) {
+				builder.add(new Value(ValueType.Object));
+				{
+					builder.add("key", new Value(ValueType.Object));
+					builder.add("l1", new Value(5L));
+					builder.close();
+				}
+				{
+					builder.add("value", new Value("test"));
+				}
+				builder.close();
+			}
+			builder.close();
+		}
+		builder.close();
+		final VPackParser parser = new VPackParser();
+		final TestEntityMapWithObjectKey entity = parser.toEntity(builder.slice(), TestEntityMapWithObjectKey.class);
+		Assert.assertNotNull(entity);
+		{
+			Assert.assertNotNull(entity.m1);
+			Assert.assertEquals(size, entity.m1.size());
+			for (final Entry<TestEntityLong, TestEntityCollection> entry : entity.m1.entrySet()) {
+				Assert.assertEquals(5L, entry.getKey().l1);
+				Assert.assertEquals(1, entry.getValue().c1.size());
+				Assert.assertEquals("test", entry.getValue().c1.iterator().next());
+			}
+		}
+		{
+			Assert.assertNotNull(entity.m2);
+			Assert.assertEquals(2, entity.m2.size());
+			for (final Entry<TestEntityLong, String> entry : entity.m2.entrySet()) {
+				Assert.assertEquals(5L, entry.getKey().l1);
+				Assert.assertEquals("test", entry.getValue());
+			}
+		}
+	}
+	// TODO to map with objectkeys
 	// TODO empty map and/or object
+	// TODO id string-integer converter/tanslator
 }
