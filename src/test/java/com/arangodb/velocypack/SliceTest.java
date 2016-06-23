@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.Iterator;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.arangodb.velocypack.exception.VPackValueTypeException;
@@ -878,7 +877,7 @@ public class SliceTest {
 	}
 
 	@Test
-	public void largeObject() {
+	public void object1ByteOffset() {
 		/*
 		 * {"0":{"0":"test","1":"test","2":"test","3":"test","4":"test"},
 		 * "1":{"0":"test","1":"test","2":"test","3":"test","4":"test"},
@@ -916,8 +915,7 @@ public class SliceTest {
 	}
 
 	@Test
-	@Ignore
-	public void largerObject() {
+	public void object2ByteOffset() {
 		/*
 		 * {"0":{"0":"test","1":"test","2":"test","3":"test","4":"test","5":
 		 * "test","6":"test","7":"test","8":"test","9":"test"},

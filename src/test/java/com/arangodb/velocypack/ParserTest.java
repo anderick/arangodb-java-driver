@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.arangodb.velocypack.exception.VPackBuilderException;
@@ -1701,7 +1700,6 @@ public class ParserTest {
 	}
 
 	@Test
-	@Ignore
 	public void fromMapStringableKey() throws VPackParserException {
 		final VPackParser parser = new VPackParser();
 		final TestEntityMapStringableKey entity = new TestEntityMapStringableKey();

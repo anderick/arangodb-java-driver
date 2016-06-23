@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -388,10 +390,12 @@ public class VPackBuilder {
 		if (needIndexTable) {
 			if (buffer.get(tos) == 0x0b) {
 				// Object
-				buffer.set(tos, (byte) 0x0f); // unsorted
+				// buffer.set(tos, (byte) 0x0f); // unsorted
+				sortObjectIndex(tos, in);
 			}
 			for (int i = 0; i < in.size(); i++) {
-				NumberUtil.append(buffer, in.get(i) + offsetSize, offsetSize);
+				NumberUtil.appendReversed(buffer, in.get(i) + (offsetSize == 1 ? offsetSize : offsetSize + 1),
+					offsetSize);
 			}
 		} else { // no index table
 			if (buffer.get(tos) == 0x06) {
@@ -411,14 +415,15 @@ public class VPackBuilder {
 				}
 			}
 		}
+		// set the number of items in the beginning
 		if (offsetSize < 8 && needNrSubs) {
 			int x = in.size();
-			for (int i = 1; i < 2 * offsetSize; i++) {
+			for (int i = 1; i <= offsetSize; i++) {
 				buffer.add(tos + i, (byte) (x & 0xff));
 				x >>= 8;
 			}
 		}
-		// Fix the byte length in the beginning:
+		// set the byte length in the beginning
 		long x = buffer.size() - tos + offsetSize;
 		for (int i = 1; i <= offsetSize; i++) {
 			buffer.add(tos + i, (byte) (x & 0xff));
@@ -426,6 +431,19 @@ public class VPackBuilder {
 		}
 		stack.remove(stack.size() - 1);
 		return this;
+	}
+
+	private void sortObjectIndex(final int start, final ArrayList<Integer> offsets) {
+		final Comparator<Integer> c = new Comparator<Integer>() {
+			@Override
+			public int compare(final Integer o1, final Integer o2) {
+				final byte[] vpack = getVpack();
+				final VPackSlice key1 = new VPackSlice(vpack, start + o1 - 1);
+				final VPackSlice key2 = new VPackSlice(vpack, start + o2 - 1);
+				return key1.getAsString().compareTo(key2.getAsString());
+			}
+		};
+		Collections.sort(offsets, c);
 	}
 
 	private boolean isClosed() {
@@ -447,15 +465,19 @@ public class VPackBuilder {
 		if (buffer.isEmpty()) {
 			slice = new VPackSlice();
 		} else {
-			// TODO find a way without iterate and copy
-			final byte[] vpack = new byte[buffer.size()];
-			int i = 0;
-			for (final byte b : buffer) {
-				vpack[i++] = b;
-			}
-			slice = new VPackSlice(vpack);
+			slice = new VPackSlice(getVpack());
 		}
 		return slice;
+	}
+
+	private byte[] getVpack() {
+		// TODO find a way without iterate and copy
+		final byte[] vpack = new byte[buffer.size()];
+		int i = 0;
+		for (final byte b : buffer) {
+			vpack[i++] = b;
+		}
+		return vpack;
 	}
 
 	public static class BuilderOptions {

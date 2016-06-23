@@ -481,8 +481,8 @@ public class VPackSlice {
 			// midpoint
 			final long index = l + ((r - l) / 2);
 			final long offset = ieBase + index * offsetsize;
-			final VPackSlice key = new VPackSlice(vpack,
-					(int) (start + NumberUtil.toLong(vpack, (int) (start + offset), offsetsize)));
+			final long keyIndex = NumberUtil.toLongReversed(vpack, (int) (start + offset), offsetsize);
+			final VPackSlice key = new VPackSlice(vpack, (int) (start + keyIndex));
 			int res = 0;
 			if (key.isString()) {
 				res = key.compareString(attribute);
@@ -521,8 +521,8 @@ public class VPackSlice {
 		VPackSlice result = new VPackSlice();
 		for (long index = 0; index < n; index++) {
 			final long offset = ieBase + index * offsetsize;
-			final VPackSlice key = new VPackSlice(vpack,
-					(int) (start + NumberUtil.toLong(vpack, (int) (start + offset), offsetsize)));
+			final long keyIndex = NumberUtil.toLongReversed(vpack, (int) (start + offset), offsetsize);
+			final VPackSlice key = new VPackSlice(vpack, (int) (start + keyIndex));
 			if (key.isString()) {
 				if (!key.isEqualString(attribute)) {
 					continue;

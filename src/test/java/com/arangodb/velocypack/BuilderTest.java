@@ -599,10 +599,10 @@ public class BuilderTest {
 	}
 
 	@Test
-	public void largeObject() throws VPackBuilderException {
+	public void object1ByteOffset() throws VPackBuilderException {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.Object));
-		final int size = 4;
+		final int size = 5;
 		for (int i = 0; i < size; i++) {
 			builder.add(String.valueOf(i), new Value(ValueType.Object));
 			for (int j = 0; j < size; j++) {
@@ -621,6 +621,69 @@ public class BuilderTest {
 				final VPackSlice childAttr = attr.get(String.valueOf(j));
 				Assert.assertTrue(childAttr.isString());
 			}
+		}
+	}
+
+	@Test
+	public void object2ByteOffset() throws VPackBuilderException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.Object));
+		final int size = 10;
+		for (int i = 0; i < size; i++) {
+			builder.add(String.valueOf(i), new Value(ValueType.Object));
+			for (int j = 0; j < size; j++) {
+				builder.add(String.valueOf(j), new Value("test"));
+			}
+			builder.close();
+		}
+		builder.close();
+		final VPackSlice vpack = builder.slice();
+		Assert.assertTrue(vpack.isObject());
+		Assert.assertEquals(size, vpack.getLength());
+		for (int i = 0; i < size; i++) {
+			final VPackSlice attr = vpack.get(String.valueOf(i));
+			Assert.assertTrue(attr.isObject());
+			for (int j = 0; j < size; j++) {
+				final VPackSlice childAttr = attr.get(String.valueOf(j));
+				Assert.assertTrue(childAttr.isString());
+			}
+		}
+	}
+
+	@Test
+	public void sortObjectAttr() throws VPackBuilderException {
+		final int min = 0;
+		final int max = 9;
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.Object));
+		for (int i = max; i >= min; i--) {
+			builder.add(String.valueOf(i), new Value("test"));
+		}
+		builder.close();
+		final VPackSlice vpack = builder.slice();
+		Assert.assertTrue(vpack.isObject());
+		Assert.assertEquals(max - min + 1, vpack.getLength());
+		for (int i = min, j = 0; i <= max; i++, j++) {
+			Assert.assertEquals(String.valueOf(i), vpack.keyAt(j).getAsString());
+		}
+	}
+
+	@Test
+	public void sortObjectAttr2() throws VPackBuilderException {
+		final String[] keys = { "a", "b", "c", "d", "e", "f", "g", "h" };
+		final String[] keysUnsorted = { "b", "d", "c", "e", "g", "f", "h", "a" };
+		Assert.assertEquals(keys.length, keysUnsorted.length);
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.Object));
+		for (int i = 0; i < keysUnsorted.length; i++) {
+			builder.add(String.valueOf(i), new Value("test"));
+		}
+		builder.close();
+		final VPackSlice vpack = builder.slice();
+		Assert.assertTrue(vpack.isObject());
+		Assert.assertEquals(keys.length, vpack.getLength());
+		for (int i = 0; i < keys.length; i++) {
+			Assert.assertEquals(String.valueOf(i), vpack.keyAt(i).getAsString());
 		}
 	}
 }
