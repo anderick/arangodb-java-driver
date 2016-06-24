@@ -2082,24 +2082,142 @@ public class VPackSerializeDeserializeTest {
 
 	@Test
 	public void fromObjectWithAttributeAdapter() throws VPackBuilderException, VPackParserException {
-		final VPackSlice entity = new VPack().serialize(new TestEntityBaseAttributes());
-		Assert.assertTrue(entity.isObject());
-
+		final VPackSlice vpack = new VPack().serialize(new TestEntityBaseAttributes());
+		Assert.assertTrue(vpack.isObject());
+		Assert.assertEquals(5, vpack.getLength());
+		{
+			final VPackSlice key = vpack.get("_key");
+			Assert.assertTrue(key.isString());
+			Assert.assertEquals("test1", key.getAsString());
+		}
+		{
+			final VPackSlice rev = vpack.get("_rev");
+			Assert.assertTrue(rev.isString());
+			Assert.assertEquals("test2", rev.getAsString());
+		}
+		{
+			final VPackSlice id = vpack.get("_id");
+			Assert.assertTrue(id.isString());
+			Assert.assertEquals("test3", id.getAsString());
+		}
+		{
+			final VPackSlice from = vpack.get("_from");
+			Assert.assertTrue(from.isString());
+			Assert.assertEquals("test4", from.getAsString());
+		}
+		{
+			final VPackSlice to = vpack.get("_to");
+			Assert.assertTrue(to.isString());
+			Assert.assertEquals("test5", to.getAsString());
+		}
 	}
 
 	@Test
-	public void toObjectWithAttributeAdapter() throws VPackBuilderException {
+	public void toObjectWithAttributeAdapter() throws VPackBuilderException, VPackParserException {
 		final VPackBuilder builder = new VPackBuilder();
 		{
 			builder.add(new Value(ValueType.Object));
-			builder.add("_key", new Value("a"));// _key
+			builder.add("_key", new Value("a"));
 			builder.add("_rev", new Value("b"));
 			builder.add("_id", new Value("c"));
 			builder.add("_from", new Value("d"));
 			builder.add("_to", new Value("e"));
 			builder.close();
 		}
+		final TestEntityBaseAttributes entity = new VPack().deserialize(builder.slice(),
+			TestEntityBaseAttributes.class);
+		Assert.assertNotNull(entity);
+		Assert.assertEquals("a", entity._key);
+		Assert.assertEquals("b", entity._rev);
+		Assert.assertEquals("c", entity._id);
+		Assert.assertEquals("d", entity._from);
+		Assert.assertEquals("e", entity._to);
 	}
 
-	// TODO rename attribute via annotation
+	@Test
+	public void fromMapWithAttributeAdapter() throws VPackParserException {
+		final TestEntityMap entity = new TestEntityMap();
+		{
+			final Map<String, String> m1 = new HashMap<String, String>();
+			m1.put("_key", "test1");
+			m1.put("_rev", "test2");
+			m1.put("_id", "test3");
+			m1.put("_from", "test4");
+			m1.put("_to", "test5");
+			entity.setM1(m1);
+		}
+		final VPackSlice vpack = new VPack().serialize(entity);
+		Assert.assertTrue(vpack.isObject());
+		final VPackSlice m1 = vpack.get("m1");
+		Assert.assertTrue(m1.isObject());
+		Assert.assertEquals(5, m1.getLength());
+		{
+			final VPackSlice key = m1.get("_key");
+			Assert.assertTrue(key.isString());
+			Assert.assertEquals("test1", key.getAsString());
+		}
+		{
+			final VPackSlice rev = m1.get("_rev");
+			Assert.assertTrue(rev.isString());
+			Assert.assertEquals("test2", rev.getAsString());
+		}
+		{
+			final VPackSlice id = m1.get("_id");
+			Assert.assertTrue(id.isString());
+			Assert.assertEquals("test3", id.getAsString());
+		}
+		{
+			final VPackSlice from = m1.get("_from");
+			Assert.assertTrue(from.isString());
+			Assert.assertEquals("test4", from.getAsString());
+		}
+		{
+			final VPackSlice to = m1.get("_to");
+			Assert.assertTrue(to.isString());
+			Assert.assertEquals("test5", to.getAsString());
+		}
+	}
+
+	@Test
+	public void toMapWithAttributeAdapter() throws VPackBuilderException, VPackParserException {
+		final VPackBuilder builder = new VPackBuilder();
+		{
+			builder.add(new Value(ValueType.Object));
+			builder.add("m1", new Value(ValueType.Object));
+			builder.add("_key", new Value("a"));
+			builder.add("_rev", new Value("b"));
+			builder.add("_id", new Value("c"));
+			builder.add("_from", new Value("d"));
+			builder.add("_to", new Value("e"));
+			builder.close();
+			builder.close();
+		}
+		final TestEntityMap entity = new VPack().deserialize(builder.slice(), TestEntityMap.class);
+		Assert.assertNotNull(entity);
+		Assert.assertNotNull(entity.m1);
+		Assert.assertEquals(5, entity.m1.size());
+	}
+
+	@Test
+	public void fromNullValue() throws VPackParserException {
+		final TestEntityString entity = new TestEntityString();
+		entity.setS(null);
+		final VPackSlice vpack = new VPack().serialize(entity);
+		Assert.assertNotNull(vpack);
+		final VPackSlice s = vpack.get("s");
+		Assert.assertTrue(s.isNull());
+	}
+
+	@Test
+	public void toNullValue() throws VPackBuilderException, VPackParserException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.Object));
+		builder.add("s", new Value(ValueType.Null));
+		builder.close();
+		final TestEntityString entity = new VPack().deserialize(builder.slice(), TestEntityString.class);
+		Assert.assertNotNull(entity);
+		Assert.assertNull(entity.s);
+		Assert.assertNotNull(entity.c1);
+		Assert.assertNotNull(entity.c2);
+	}
 }

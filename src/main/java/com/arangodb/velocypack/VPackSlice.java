@@ -265,12 +265,10 @@ public class VPackSlice {
 		if (!isString()) {
 			throw new VPackValueTypeException(ValueType.String);
 		}
-		final String string = isLongString() ? getLongString() : getShortString();
-		return string;
+		return isLongString() ? getLongString() : getShortString();
 	}
 
 	public char getAsChar() {
-		// TODO
 		return getAsString().charAt(0);
 	}
 
@@ -367,8 +365,7 @@ public class VPackSlice {
 		return offset;
 	}
 
-	// TODO return int?
-	public long getByteSize() {
+	public int getByteSize() {
 		final long size;
 		final byte head = head();
 		final int valueLength = ValueLengthUtil.get(head);
@@ -414,7 +411,7 @@ public class VPackSlice {
 				throw new InternalError();
 			}
 		}
-		return size;
+		return (int) size;
 	}
 
 	/**
@@ -455,7 +452,7 @@ public class VPackSlice {
 
 				if ((key.isString() && key.isEqualString(attribute))
 						|| (key.isInteger() && attribute.equals(options.getKeyTranslator().fromKey(key.getAsInt())))) {
-					result = new VPackSlice(vpack, (int) (key.start + key.getByteSize()), options);
+					result = new VPackSlice(vpack, key.start + key.getByteSize(), options);
 				}
 			} else {
 				final long ieBase = end - n * offsetsize - (offsetsize == 8 ? 8 : 0);
@@ -484,13 +481,13 @@ public class VPackSlice {
 			final VPackSlice key = iterator.next();
 			if (key.isString()) {
 				if (key.isEqualString(attribute)) {
-					result = new VPackSlice(vpack, (int) (key.start + key.getByteSize()), options);
+					result = new VPackSlice(vpack, key.start + key.getByteSize(), options);
 					break;
 				}
 			} else if (key.isInteger()) {
 				final String keyAsString = options.getKeyTranslator().fromKey(key.getAsInt());
 				if (attribute.equals(keyAsString)) {
-					result = new VPackSlice(vpack, (int) (key.start + key.getByteSize()), options);
+					result = new VPackSlice(vpack, key.start + key.getByteSize(), options);
 					break;
 				}
 			}
@@ -533,7 +530,7 @@ public class VPackSlice {
 			}
 			if (res == 0) {
 				// found
-				result = new VPackSlice(vpack, (int) (key.start + key.getByteSize()), options);
+				result = new VPackSlice(vpack, key.start + key.getByteSize(), options);
 				break;
 			}
 			if (res > 0) {
@@ -584,7 +581,7 @@ public class VPackSlice {
 				break;
 			}
 			// key is identical. now return value
-			result = new VPackSlice(vpack, (int) (key.start + key.getByteSize()), options);
+			result = new VPackSlice(vpack, key.start + key.getByteSize(), options);
 			break;
 		}
 		return result;
@@ -603,7 +600,7 @@ public class VPackSlice {
 			throw new VPackValueTypeException(ValueType.Object);
 		}
 		final VPackSlice key = getNthKey(index);
-		return new VPackSlice(vpack, (int) (key.start + key.getByteSize()), options);
+		return new VPackSlice(vpack, key.start + key.getByteSize(), options);
 	}
 
 	private VPackSlice getNthKey(final int index) {
@@ -652,7 +649,7 @@ public class VPackSlice {
 				if (dataOffset == 0) {
 					dataOffset = findDataOffset();
 				}
-				offset = (int) (dataOffset + index * new VPackSlice(vpack, start + dataOffset, options).getByteSize());
+				offset = dataOffset + index * new VPackSlice(vpack, start + dataOffset, options).getByteSize();
 			} else {
 				final long ieBase = end - n * offsetsize + index * offsetsize - (offsetsize == 8 ? 8 : 0);
 				offset = (int) NumberUtil.toLongReversed(vpack, (int) (start + ieBase), offsetsize);

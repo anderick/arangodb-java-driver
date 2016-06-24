@@ -27,6 +27,7 @@ import com.arangodb.velocypack.exception.VPackBuilderNeedOpenCompoundException;
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenObjectException;
 import com.arangodb.velocypack.exception.VPackBuilderNumberOutOfRangeException;
 import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
+import com.arangodb.velocypack.exception.VPackKeyTypeException;
 import com.arangodb.velocypack.exception.VPackParserException;
 import com.arangodb.velocypack.exception.VPackValueTypeException;
 import com.arangodb.velocypack.util.Value;
@@ -100,7 +101,7 @@ public class VPack {
 
 	private <T> T deserializeInternal(final VPackSlice vpack, final Class<T> type)
 			throws InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException,
-			IllegalArgumentException, InvocationTargetException {
+			IllegalArgumentException, InvocationTargetException, VPackKeyTypeException {
 		final T entity;
 		final VPackDeserializer<T> deserializer = (VPackDeserializer<T>) deserializers.get(type);
 		if (deserializer != null) {
@@ -128,7 +129,7 @@ public class VPack {
 
 	private void deserializeField(final VPackSlice vpack, final Object entity, final Field field)
 			throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException, InstantiationException {
+			InvocationTargetException, InstantiationException, VPackKeyTypeException {
 		final VPackSlice attr = vpack.get(field.getName());
 		if (!attr.isNone()) {
 			final Object value = getValue(attr, field, field.getType());
@@ -163,9 +164,11 @@ public class VPack {
 
 	private <T> Object getValue(final VPackSlice vpack, final Field field, final Class<T> type)
 			throws InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException,
-			IllegalArgumentException, InvocationTargetException {
+			IllegalArgumentException, InvocationTargetException, VPackKeyTypeException {
 		final Object value;
-		if (type == Boolean.class || type == boolean.class) {
+		if (vpack.isNull()) {
+			value = null;
+		} else if (type == Boolean.class || type == boolean.class) {
 			value = vpack.getAsBoolean();
 		} else if (type == Integer.class || type == int.class) {
 			value = vpack.getAsInt();
@@ -208,7 +211,7 @@ public class VPack {
 			if (isStringableKeyType(keyType)) {
 				final Map map = new HashMap();
 				for (int i = 0; i < vpack.getLength(); i++) {
-					map.put(getKeyfromString(vpack.keyAt(i).getAsString(), keyType),
+					map.put(getKeyfromString(getKeyAsString(vpack.keyAt(i)), keyType),
 						getValue(vpack.valueAt(i), null, valueType));
 				}
 				value = map;
@@ -228,7 +231,19 @@ public class VPack {
 		return value;
 	}
 
-	private Object getKeyfromString(final String key, final Class<?> type) {
+	private String getKeyAsString(final VPackSlice key) throws VPackKeyTypeException {
+		final String result;
+		if (key.isString()) {
+			result = key.getAsString();
+		} else if (key.isInteger()) {
+			result = options.getKeyTranslator().fromKey(key.getAsInt());
+		} else {
+			throw new VPackKeyTypeException("Expecting type String oder Integer for key");
+		}
+		return result;
+	}
+
+	private Object getKeyfromString(final String key, final Class<?> type) throws VPackKeyTypeException {
 		final Object result;
 		if (type == String.class) {
 			result = key;
@@ -252,7 +267,7 @@ public class VPack {
 			final Class<? extends Enum> enumType = (Class<? extends Enum>) type;
 			result = Enum.valueOf(enumType, key);
 		} else {
-			result = null;// TODO
+			throw new VPackKeyTypeException(String.format("can not convert key: %s in type: %s", key, type.getName()));
 		}
 		return result;
 	}
@@ -316,7 +331,7 @@ public class VPack {
 			InvocationTargetException, VPackBuilderException {
 
 		if (value == null) {
-			// TODO
+			add(name, new Value(ValueType.Null), builder);
 		} else if (type == Boolean.class || type == boolean.class) {
 			add(name, new Value(Boolean.class.cast(value)), builder);
 		} else if (type == Integer.class || type == int.class) {

@@ -41,7 +41,6 @@ public class VPackDefaultKeyTranslator implements VPackKeyTranslator {
 	@Override
 	public void register(final String attribute, final int key) {
 		if (keyToAttribute.containsKey(key)) {
-			// TODO throw arango exception
 			throw new IllegalArgumentException(String.format("attribute adaption with key %s already registered", key));
 		}
 		attributeToKey.put(attribute, key);

@@ -85,11 +85,9 @@ public class VPackBuilder {
 	private void addInternal(final Value sub)
 			throws VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
 		boolean haveReported = false;
-		if (!stack.isEmpty()) {
-			if (!keyWritten) {
-				reportAdd();
-				haveReported = true;
-			}
+		if (!stack.isEmpty() && !keyWritten) {
+			reportAdd();
+			haveReported = true;
 		}
 		try {
 			set(sub);
@@ -216,7 +214,7 @@ public class VPackBuilder {
 				throw new VPackBuilderUnexpectedValueException(ValueType.UInt, Long.class, Integer.class,
 						BigInteger.class);
 			}
-			if (vUInt.compareTo(BigInteger.ZERO) == -1) {
+			if (-1 == vUInt.compareTo(BigInteger.ZERO)) {
 				throw new VPackBuilderUnexpectedValueException(ValueType.UInt, "non-negative", Long.class,
 						Integer.class, BigInteger.class);
 			}
@@ -352,7 +350,7 @@ public class VPackBuilder {
 			throw new VPackBuilderNeedOpenCompoundException();
 		}
 		final byte head = head();
-		final boolean isArray = (head == 0x06 || head == 0x13);
+		final boolean isArray = head == 0x06 || head == 0x13;
 		final ArrayList<Integer> in = index.get(stack.size() - 1);
 		final int tos = stack.get(stack.size() - 1);
 		if (in.isEmpty()) {
@@ -423,8 +421,8 @@ public class VPackBuilder {
 				sortObjectIndex(tos, in);
 			}
 			for (int i = 0; i < in.size(); i++) {
-				NumberUtil.appendReversed(buffer, in.get(i) + (offsetSize == 1 ? offsetSize : offsetSize + 1),
-					offsetSize);
+				final long value = in.get(i) + (offsetSize == 1 ? offsetSize : offsetSize + 1);
+				NumberUtil.appendReversed(buffer, value, offsetSize);
 			}
 		} else { // no index table
 			if (buffer.get(tos) == 0x06) {
@@ -484,8 +482,7 @@ public class VPackBuilder {
 		} else if (key.isInteger()) {
 			result = options.getKeyTranslator().fromKey(key.getAsInt());
 		} else {
-			// TODO
-			result = null;
+			result = "";
 		}
 		return result;
 	}
@@ -499,9 +496,8 @@ public class VPackBuilder {
 	 * @return head of open object/array
 	 */
 	private byte head() {
-		final Integer index = stack.get(stack.size() - 1);
-		final byte header = buffer.get(index);
-		return header;
+		final Integer in = stack.get(stack.size() - 1);
+		return buffer.get(in);
 	}
 
 	public VPackSlice slice() {
@@ -515,7 +511,6 @@ public class VPackBuilder {
 	}
 
 	private byte[] getVpack() {
-		// TODO find a way without iterate and copy
 		final byte[] vpack = new byte[buffer.size()];
 		int i = 0;
 		for (final byte b : buffer) {
