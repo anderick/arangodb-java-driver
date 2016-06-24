@@ -289,7 +289,7 @@ public class VPack {
 		add(name, new Value(ValueType.Object), builder);
 		final VPackSerializer<Object> serializer = (VPackSerializer<Object>) serializers.get(entity.getClass());
 		if (serializer != null) {
-			serializer.serialize(builder, entity.getClass());
+			serializer.serialize(builder, entity);
 		} else {
 			final Field[] fields = getDeclaredFields(entity);
 			for (final Field field : fields) {

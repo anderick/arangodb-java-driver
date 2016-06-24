@@ -2220,4 +2220,52 @@ public class VPackSerializeDeserializeTest {
 		Assert.assertNotNull(entity.c1);
 		Assert.assertNotNull(entity.c2);
 	}
+
+	@Test
+	public void customSerializer() throws VPackParserException {
+		final String value = "abc";
+		final VPack vp = new VPack();
+		vp.registerSerializer(TestEntityString.class, new VPackSerializer<TestEntityString>() {
+			@Override
+			public void serialize(final VPackBuilder builder, final TestEntityString entity)
+					throws VPackBuilderException {
+				builder.add("not-s", new Value(entity.s));
+			}
+		});
+		final TestEntityString entity = new TestEntityString();
+		entity.setS(value);
+		final VPackSlice vpack = vp.serialize(entity);
+		Assert.assertNotNull(vpack);
+		Assert.assertTrue(vpack.isObject());
+		{
+			final VPackSlice s = vpack.get("not-s");
+			Assert.assertTrue(s.isString());
+			Assert.assertEquals(value, s.getAsString());
+		}
+	}
+
+	@Test
+	public void customDeserializer() throws VPackBuilderException, VPackParserException {
+		final String value = "abc";
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.Object));
+		builder.add("not-s", new Value(value));
+		builder.close();
+		final VPack vp = new VPack();
+		vp.registerDeserializer(TestEntityString.class, new VPackDeserializer<TestEntityString>() {
+			@Override
+			public TestEntityString deserialize(final VPackSlice vpack) {
+				final TestEntityString entity = new TestEntityString();
+				final VPackSlice nots = vpack.get("not-s");
+				if (nots.isString()) {
+					entity.s = nots.getAsString();
+				}
+				return entity;
+			}
+		});
+		final TestEntityString entity = vp.deserialize(builder.slice(), TestEntityString.class);
+		Assert.assertNotNull(entity);
+		Assert.assertNotNull(entity.s);
+		Assert.assertEquals(value, entity.s);
+	}
 }
