@@ -1,10 +1,13 @@
-package com.arangodb.velocypack;
+package com.arangodb.velocypack.defaults;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.arangodb.velocypack.VPackInstanceCreator;
+import com.arangodb.velocypack.VPack;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -13,7 +16,7 @@ import java.util.Set;
 @SuppressWarnings("rawtypes")
 public class VPackDefautInstanceCreators {
 
-	public static void registerInstanceCreators(final VPackParser parser) {
+	public static void registerInstanceCreators(final VPack parser) {
 		parser.regitserInstanceCreator(Collection.class, new CollectionInstanceCreator());
 		parser.regitserInstanceCreator(List.class, new ListInstanceCreator());
 		parser.regitserInstanceCreator(Set.class, new SetInstanceCreator());

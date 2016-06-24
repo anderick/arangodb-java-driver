@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.arangodb.velocypack.VPackSlice.SliceOptions;
+import com.arangodb.velocypack.defaults.VPackDefaultOptions;
 import com.arangodb.velocypack.exception.VPackBuilderKeyAlreadyWrittenException;
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenCompoundException;
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenObjectException;
@@ -27,7 +29,19 @@ import com.arangodb.velocypack.util.ValueType;
  */
 public class VPackBuilder {
 
+	public static interface BuilderOptions extends SliceOptions {
+		boolean isBuildUnindexedArrays();
+
+		void setBuildUnindexedArrays(boolean buildUnindexedArrays);
+
+		boolean isBuildUnindexedObjects();
+
+		void setBuildUnindexedObjects(boolean buildUnindexedObjects);
+	}
+
 	private static final int LONG_BYTES = 8;
+	private static final int INT_BYTES = 4;
+	private static final int SHORT_BYTES = 2;
 
 	private final ArrayList<Byte> buffer; // Here we collect the result
 	private final ArrayList<Integer> stack; // Start positions of open
@@ -40,7 +54,7 @@ public class VPackBuilder {
 	private final BuilderOptions options;
 
 	public VPackBuilder() {
-		this(new BuilderOptions());
+		this(new VPackDefaultOptions());
 	}
 
 	public VPackBuilder(final BuilderOptions options) {
@@ -49,6 +63,10 @@ public class VPackBuilder {
 		buffer = new ArrayList<Byte>();
 		stack = new ArrayList<Integer>();
 		index = new HashMap<Integer, ArrayList<Integer>>();
+	}
+
+	public BuilderOptions getOptions() {
+		return options;
 	}
 
 	public VPackBuilder add(final Value sub)
@@ -106,7 +124,11 @@ public class VPackBuilder {
 			haveReported = true;
 		}
 		try {
-			set(new Value(attribute));
+			final VPackKeyTranslator keyAdapter = options.getKeyTranslator();
+			final Integer key = keyAdapter != null ? keyAdapter.toKey(attribute) : null;
+			final Value attr = key != null ? new Value(key, (key < -6 || key > 9) ? ValueType.Int : ValueType.SmallInt)
+					: new Value(attribute);
+			set(attr);
 			keyWritten = true;
 			set(sub);
 		} catch (final VPackBuilderUnexpectedValueException e) {
@@ -169,20 +191,18 @@ public class VPackBuilder {
 			appendSmallInt(vSmallInt);
 			break;
 		case Int:
-			final long vInt;
 			if (clazz == Long.class) {
-				vInt = item.getLong();
+				appendLong(item.getLong());
 			} else if (clazz == Integer.class) {
-				vInt = item.getInteger();
+				appendInt(item.getInteger());
 			} else if (clazz == BigInteger.class) {
-				vInt = item.getBigInteger().longValue();
+				appendLong(item.getBigInteger().longValue());
 			} else if (clazz == Short.class) {
-				vInt = item.getShort();
+				appendShort(item.getShort());
 			} else {
 				throw new VPackBuilderUnexpectedValueException(ValueType.Int, Long.class, Integer.class,
 						BigInteger.class, Short.class);
 			}
-			appendInt(vInt);
 			break;
 		case UInt:
 			final BigInteger vUInt;
@@ -260,9 +280,19 @@ public class VPackBuilder {
 		}
 	}
 
-	private void appendInt(final long value) {
+	private void appendLong(final long value) {
 		buffer.add((byte) 0x27);
 		NumberUtil.append(buffer, value, LONG_BYTES);
+	}
+
+	private void appendInt(final int value) {
+		buffer.add((byte) 0x23);
+		NumberUtil.append(buffer, value, INT_BYTES);
+	}
+
+	private void appendShort(final short value) {
+		buffer.add((byte) 0x21);
+		NumberUtil.append(buffer, value, SHORT_BYTES);
 	}
 
 	private void appendUInt(final BigInteger value) {
@@ -390,7 +420,6 @@ public class VPackBuilder {
 		if (needIndexTable) {
 			if (buffer.get(tos) == 0x0b) {
 				// Object
-				// buffer.set(tos, (byte) 0x0f); // unsorted
 				sortObjectIndex(tos, in);
 			}
 			for (int i = 0; i < in.size(); i++) {
@@ -438,12 +467,27 @@ public class VPackBuilder {
 			@Override
 			public int compare(final Integer o1, final Integer o2) {
 				final byte[] vpack = getVpack();
-				final VPackSlice key1 = new VPackSlice(vpack, start + o1 - 1);
-				final VPackSlice key2 = new VPackSlice(vpack, start + o2 - 1);
-				return key1.getAsString().compareTo(key2.getAsString());
+				final VPackSlice key1 = new VPackSlice(vpack, start + o1 - 1, options);
+				final String key1AsString = getKeyAsString(key1);
+				final VPackSlice key2 = new VPackSlice(vpack, start + o2 - 1, options);
+				final String key2AsString = getKeyAsString(key2);
+				return key1AsString.compareTo(key2AsString);
 			}
 		};
 		Collections.sort(offsets, c);
+	}
+
+	private String getKeyAsString(final VPackSlice key) {
+		final String result;
+		if (key.isString()) {
+			result = key.getAsString();
+		} else if (key.isInteger()) {
+			result = options.getKeyTranslator().fromKey(key.getAsInt());
+		} else {
+			// TODO
+			result = null;
+		}
+		return result;
 	}
 
 	private boolean isClosed() {
@@ -465,7 +509,7 @@ public class VPackBuilder {
 		if (buffer.isEmpty()) {
 			slice = new VPackSlice();
 		} else {
-			slice = new VPackSlice(getVpack());
+			slice = new VPackSlice(getVpack(), options);
 		}
 		return slice;
 	}
@@ -478,32 +522,5 @@ public class VPackBuilder {
 			vpack[i++] = b;
 		}
 		return vpack;
-	}
-
-	public static class BuilderOptions {
-		private boolean buildUnindexedArrays;
-		private boolean buildUnindexedObjects;
-
-		public BuilderOptions() {
-			super();
-			buildUnindexedArrays = false;
-			buildUnindexedObjects = false;
-		}
-
-		public boolean isBuildUnindexedArrays() {
-			return buildUnindexedArrays;
-		}
-
-		public void setBuildUnindexedArrays(final boolean buildUnindexedArrays) {
-			this.buildUnindexedArrays = buildUnindexedArrays;
-		}
-
-		public boolean isBuildUnindexedObjects() {
-			return buildUnindexedObjects;
-		}
-
-		public void setBuildUnindexedObjects(final boolean buildUnindexedObjects) {
-			this.buildUnindexedObjects = buildUnindexedObjects;
-		}
 	}
 }

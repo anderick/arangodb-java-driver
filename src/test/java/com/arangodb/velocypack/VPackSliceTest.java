@@ -15,7 +15,7 @@ import com.arangodb.velocypack.exception.VPackValueTypeException;
  * @author Mark - mark@arangodb.com
  *
  */
-public class SliceTest {
+public class VPackSliceTest {
 
 	@Test
 	public void isNone() {
@@ -1002,6 +1002,108 @@ public class SliceTest {
 				final VPackSlice childAttr = attr.get(String.valueOf(j));
 				Assert.assertTrue(childAttr.isString());
 			}
+		}
+	}
+
+	@Test
+	public void attributeAdapter() {
+		// {1:"a"}
+		// {"_key":"a"}
+		final VPackSlice slice = new VPackSlice(new byte[] { 0x0b, 0x06, 0x01, 0x31, 0x41, 0x61 });
+		Assert.assertTrue(slice.isObject());
+		Assert.assertEquals(1, slice.getLength());
+		final VPackSlice key = slice.get("_key");
+		Assert.assertTrue(key.isString());
+		Assert.assertEquals("a", key.getAsString());
+	}
+
+	@Test
+	public void attributeAdapterDefaults() {
+		// {1:"a",2:"b",3:"c",4:"d",5:"e"}
+		// {"_key":"a","_rev":"b","_id":"c","_from":"d","_to":"e"}
+		final VPackSlice slice = new VPackSlice(new byte[] { 0x14, 0x12, 0x31, 0x41, 0x61, 0x32, 0x41, 0x62, 0x33, 0x41,
+				0x63, 0x34, 0x41, 0x64, 0x35, 0x41, 0x65, 0x05 });
+		Assert.assertTrue(slice.isObject());
+		Assert.assertEquals(5, slice.getLength());
+		{
+			final VPackSlice key = slice.get("_key");
+			Assert.assertTrue(key.isString());
+			Assert.assertEquals("a", key.getAsString());
+		}
+		{
+			final VPackSlice rev = slice.get("_rev");
+			Assert.assertTrue(rev.isString());
+			Assert.assertEquals("b", rev.getAsString());
+		}
+		{
+			final VPackSlice id = slice.get("_id");
+			Assert.assertTrue(id.isString());
+			Assert.assertEquals("c", id.getAsString());
+		}
+		{
+			final VPackSlice from = slice.get("_from");
+			Assert.assertTrue(from.isString());
+			Assert.assertEquals("d", from.getAsString());
+		}
+		{
+			final VPackSlice to = slice.get("_to");
+			Assert.assertTrue(to.isString());
+			Assert.assertEquals("e", to.getAsString());
+		}
+	}
+
+	@Test
+	public void attributeAdapterCustom() {
+		// {69:"a"}
+		final VPackSlice slice = new VPackSlice(new byte[] { 0x0b, 0x07, 0x01, 0x28, 0x45, 0x41, 0x61 });
+		final String attribute = "test";
+		slice.getOptions().getKeyTranslator().register(attribute, 69);
+		Assert.assertTrue(slice.isObject());
+		Assert.assertEquals(1, slice.getLength());
+		final VPackSlice test = slice.get(attribute);
+		Assert.assertTrue(test.isString());
+		Assert.assertEquals("a", test.getAsString());
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void attributeAdapterCustomFail() {
+		final VPackSlice slice = new VPackSlice();
+		slice.getOptions().getKeyTranslator().register("test", 1);
+	}
+
+	@Test
+	public void attributeAdapterObjectWithIndexTable() {
+		// {1:"a",2:"b",3:"c",4:"d",5:"e"}
+		// {"_key":"a","_rev":"b","_id":"c","_from":"d","_to":"e"}
+		final VPackSlice slice = new VPackSlice(new byte[] { 0x0b, 0x21, 0x05, 0x31, 0x41, 0x61, 0x32, 0x42, 0x62, 0x62,
+				0x33, 0x43, 0x63, 0x63, 0x63, 0x34, 0x44, 0x64, 0x64, 0x64, 0x64, 0x35, 0x45, 0x65, 0x65, 0x65, 0x65,
+				0x65, 0x0f, 0x0a, 0x03, 0x06, 0x15 });
+		Assert.assertTrue(slice.isObject());
+		Assert.assertEquals(5, slice.getLength());
+		{
+			final VPackSlice key = slice.get("_key");
+			Assert.assertTrue(key.isString());
+			Assert.assertEquals("a", key.getAsString());
+		}
+		{
+			final VPackSlice rev = slice.get("_rev");
+			Assert.assertTrue(rev.isString());
+			Assert.assertEquals("bb", rev.getAsString());
+		}
+		{
+			final VPackSlice id = slice.get("_id");
+			Assert.assertTrue(id.isString());
+			Assert.assertEquals("ccc", id.getAsString());
+		}
+		{
+			final VPackSlice from = slice.get("_from");
+			Assert.assertTrue(from.isString());
+			Assert.assertEquals("dddd", from.getAsString());
+		}
+		{
+			final VPackSlice to = slice.get("_to");
+			Assert.assertTrue(to.isString());
+			Assert.assertEquals("eeeee", to.getAsString());
 		}
 	}
 

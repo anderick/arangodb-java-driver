@@ -29,7 +29,7 @@ public abstract class SliceIterator implements Iterator<VPackSlice> {
 	}
 
 	protected VPackSlice getCurrent() {
-		return new VPackSlice(slice.getVpack(), (int) current);
+		return new VPackSlice(slice.getVpack(), (int) current, slice.getOptions());
 	}
 
 	@Override

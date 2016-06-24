@@ -6,7 +6,6 @@ import java.util.Date;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.arangodb.velocypack.VPackBuilder.BuilderOptions;
 import com.arangodb.velocypack.exception.VPackBuilderException;
 import com.arangodb.velocypack.exception.VPackBuilderNumberOutOfRangeException;
 import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
@@ -17,7 +16,7 @@ import com.arangodb.velocypack.util.ValueType;
  * @author Mark - mark@arangodb.com
  *
  */
-public class BuilderTest {
+public class VPackBuilderTest {
 
 	@Test
 	public void addNull() throws VPackBuilderException {
@@ -299,9 +298,8 @@ public class BuilderTest {
 	@Test
 	public void unindexedArray() throws VPackBuilderException {
 		final long[] expected = { 1, 16 };
-		final BuilderOptions options = new BuilderOptions();
-		options.setBuildUnindexedArrays(true);
-		final VPackBuilder builder = new VPackBuilder(options);
+		final VPackBuilder builder = new VPackBuilder();
+		builder.getOptions().setBuildUnindexedArrays(true);
 		builder.add(new Value(ValueType.Array, false));
 		for (final long l : expected) {
 			builder.add(new Value(l));
@@ -482,9 +480,8 @@ public class BuilderTest {
 	@Test
 	public void unindexedObject() throws VPackBuilderException {
 		// {"a": 12, "b": true, "c": "xyz"}
-		final BuilderOptions options = new BuilderOptions();
-		options.setBuildUnindexedObjects(true);
-		final VPackBuilder builder = new VPackBuilder(options);
+		final VPackBuilder builder = new VPackBuilder();
+		builder.getOptions().setBuildUnindexedObjects(true);
 		builder.add(new Value(ValueType.Object, false));
 		builder.add("a", new Value(12));
 		builder.add("b", new Value(true));
@@ -686,4 +683,29 @@ public class BuilderTest {
 			Assert.assertEquals(String.valueOf(i), vpack.keyAt(i).getAsString());
 		}
 	}
+
+	@Test
+	public void attributeAdapterDefaults() throws VPackBuilderException {
+		final VPackSlice vpackWithAttrAdapter;
+		{
+			final VPackBuilder builder = new VPackBuilder();
+			builder.add(new Value(ValueType.Object));
+			builder.add("_key", new Value("a"));
+			builder.close();
+			vpackWithAttrAdapter = builder.slice();
+			Assert.assertTrue(vpackWithAttrAdapter.isObject());
+		}
+		final VPackSlice vpackWithoutAttrAdapter;
+		{
+			final VPackBuilder builder = new VPackBuilder();
+			builder.getOptions().setKeyTranslator(null);
+			builder.add(new Value(ValueType.Object));
+			builder.add("_key", new Value("a"));
+			builder.close();
+			vpackWithoutAttrAdapter = builder.slice();
+			Assert.assertTrue(vpackWithoutAttrAdapter.isObject());
+		}
+		Assert.assertTrue(vpackWithAttrAdapter.getByteSize() < vpackWithoutAttrAdapter.getByteSize());
+	}
+
 }

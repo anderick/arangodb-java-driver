@@ -6,10 +6,8 @@ import com.arangodb.velocypack.exception.VPackBuilderException;
  * @author Mark - mark@arangodb.com
  *
  */
-public interface VPackTypeAdapter<T> {
+public interface VPackSerializer<T> {
 
-	T toEntity(VPackSlice vpack);
-
-	void fromEntity(VPackBuilder builder, T entity) throws VPackBuilderException;
+	void serialize(VPackBuilder builder, T entity) throws VPackBuilderException;
 
 }

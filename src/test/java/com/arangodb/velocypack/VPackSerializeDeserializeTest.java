@@ -27,7 +27,7 @@ import com.arangodb.velocypack.util.ValueType;
  * @author Mark - mark@arangodb.com
  *
  */
-public class ParserTest {
+public class VPackSerializeDeserializeTest {
 
 	protected static class TestEntityBoolean {
 		private boolean a = true;
@@ -70,8 +70,7 @@ public class ParserTest {
 
 	@Test
 	public void fromBoolean() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
-		final VPackSlice vpack = parser.fromEntity(new TestEntityBoolean());
+		final VPackSlice vpack = new VPack().serialize(new TestEntityBoolean());
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -108,8 +107,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityBoolean entity = parser.toEntity(vpack, TestEntityBoolean.class);
+		final TestEntityBoolean entity = new VPack().deserialize(vpack, TestEntityBoolean.class);
 		Assert.assertNotNull(entity);
 		Assert.assertEquals(false, entity.a);
 		Assert.assertEquals(true, entity.b);
@@ -149,8 +147,7 @@ public class ParserTest {
 
 	@Test
 	public void fromStrings() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
-		final VPackSlice vpack = parser.fromEntity(new TestEntityString());
+		final VPackSlice vpack = new VPack().serialize(new TestEntityString());
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -181,8 +178,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityString entity = parser.toEntity(vpack, TestEntityString.class);
+		final TestEntityString entity = new VPack().deserialize(vpack, TestEntityString.class);
 		Assert.assertNotNull(entity);
 		Assert.assertEquals("abc", entity.s);
 		Assert.assertEquals(new Character('d'), entity.c1);
@@ -212,8 +208,7 @@ public class ParserTest {
 
 	@Test
 	public void fromInteger() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
-		final VPackSlice vpack = parser.fromEntity(new TestEntityInteger());
+		final VPackSlice vpack = new VPack().serialize(new TestEntityInteger());
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -238,8 +233,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityInteger entity = parser.toEntity(vpack, TestEntityInteger.class);
+		final TestEntityInteger entity = new VPack().deserialize(vpack, TestEntityInteger.class);
 		Assert.assertNotNull(entity);
 		Assert.assertEquals(2, entity.i1);
 		Assert.assertEquals(new Integer(3), entity.i2);
@@ -268,8 +262,7 @@ public class ParserTest {
 
 	@Test
 	public void fromLong() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
-		final VPackSlice vpack = parser.fromEntity(new TestEntityLong());
+		final VPackSlice vpack = new VPack().serialize(new TestEntityLong());
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -294,8 +287,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityLong entity = parser.toEntity(vpack, TestEntityLong.class);
+		final TestEntityLong entity = new VPack().deserialize(vpack, TestEntityLong.class);
 		Assert.assertNotNull(entity);
 		Assert.assertEquals(2, entity.l1);
 		Assert.assertEquals(new Long(3), entity.l2);
@@ -324,8 +316,7 @@ public class ParserTest {
 
 	@Test
 	public void fromFloat() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
-		final VPackSlice vpack = parser.fromEntity(new TestEntityFloat());
+		final VPackSlice vpack = new VPack().serialize(new TestEntityFloat());
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -350,8 +341,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityFloat entity = parser.toEntity(vpack, TestEntityFloat.class);
+		final TestEntityFloat entity = new VPack().deserialize(vpack, TestEntityFloat.class);
 		Assert.assertNotNull(entity);
 		Assert.assertEquals(2, entity.f1, 0.);
 		Assert.assertEquals(new Float(3), entity.f2);
@@ -380,8 +370,7 @@ public class ParserTest {
 
 	@Test
 	public void fromShort() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
-		final VPackSlice vpack = parser.fromEntity(new TestEntityShort());
+		final VPackSlice vpack = new VPack().serialize(new TestEntityShort());
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -406,8 +395,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityShort entity = parser.toEntity(vpack, TestEntityShort.class);
+		final TestEntityShort entity = new VPack().deserialize(vpack, TestEntityShort.class);
 		Assert.assertNotNull(entity);
 		Assert.assertEquals(2, entity.s1);
 		Assert.assertEquals(new Short((short) 3), entity.s2);
@@ -436,8 +424,7 @@ public class ParserTest {
 
 	@Test
 	public void fromDouble() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
-		final VPackSlice vpack = parser.fromEntity(new TestEntityDouble());
+		final VPackSlice vpack = new VPack().serialize(new TestEntityDouble());
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -462,8 +449,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityDouble entity = parser.toEntity(vpack, TestEntityDouble.class);
+		final TestEntityDouble entity = new VPack().deserialize(vpack, TestEntityDouble.class);
 		Assert.assertNotNull(entity);
 		Assert.assertEquals(2.25, entity.d1, 0.);
 		Assert.assertEquals(3.75, entity.d2, 0.);
@@ -492,8 +478,7 @@ public class ParserTest {
 
 	@Test
 	public void fromBigNumbers() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
-		final VPackSlice vpack = parser.fromEntity(new TestEntityBigNumber());
+		final VPackSlice vpack = new VPack().serialize(new TestEntityBigNumber());
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -518,8 +503,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityBigNumber entity = parser.toEntity(vpack, TestEntityBigNumber.class);
+		final TestEntityBigNumber entity = new VPack().deserialize(vpack, TestEntityBigNumber.class);
 		Assert.assertNotNull(entity);
 		Assert.assertEquals(BigInteger.valueOf(2), entity.bi);
 		Assert.assertEquals(BigDecimal.valueOf(3.75), entity.bd);
@@ -567,9 +551,8 @@ public class ParserTest {
 
 	@Test
 	public void fromArray() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
 		final TestEntityArray entity = new TestEntityArray();
-		final VPackSlice vpack = parser.fromEntity(entity);
+		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -641,8 +624,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityArray entity = parser.toEntity(vpack, TestEntityArray.class);
+		final TestEntityArray entity = new VPack().deserialize(vpack, TestEntityArray.class);
 		Assert.assertNotNull(entity);
 		{
 			Assert.assertEquals(3, entity.a1.length);
@@ -687,8 +669,7 @@ public class ParserTest {
 
 	@Test
 	public void fromEnum() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
-		final VPackSlice vpack = parser.fromEntity(new TestEntityEnum());
+		final VPackSlice vpack = new VPack().serialize(new TestEntityEnum());
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -707,8 +688,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityEnum entity = parser.toEntity(vpack, TestEntityEnum.class);
+		final TestEntityEnum entity = new VPack().deserialize(vpack, TestEntityEnum.class);
 		Assert.assertNotNull(entity);
 		Assert.assertEquals(TestEnum.B, entity.e1);
 	}
@@ -736,9 +716,8 @@ public class ParserTest {
 
 	@Test
 	public void fromObject() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
 		final TestEntityObject entity = new TestEntityObject();
-		final VPackSlice vpack = parser.fromEntity(entity);
+		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -838,8 +817,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityObject entity = parser.toEntity(vpack, TestEntityObject.class);
+		final TestEntityObject entity = new VPack().deserialize(vpack, TestEntityObject.class);
 		Assert.assertNotNull(entity);
 		{
 			Assert.assertEquals(5, entity.o1.l1);
@@ -884,9 +862,8 @@ public class ParserTest {
 
 	@Test
 	public void fromArrayInArray() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
 		final TestEntityArrayInArray entity = new TestEntityArrayInArray();
-		final VPackSlice vpack = parser.fromEntity(entity);
+		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -932,8 +909,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityArrayInArray entity = parser.toEntity(vpack, TestEntityArrayInArray.class);
+		final TestEntityArrayInArray entity = new VPack().deserialize(vpack, TestEntityArrayInArray.class);
 		Assert.assertNotNull(entity);
 		Assert.assertEquals(2, entity.a1.length);
 		{
@@ -964,7 +940,6 @@ public class ParserTest {
 
 	@Test
 	public void fromObjectInArray() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
 		final TestEntityObjectInArray entity = new TestEntityObjectInArray();
 		{
 			final TestEntityString[] a1 = new TestEntityString[2];
@@ -974,7 +949,7 @@ public class ParserTest {
 			a1[1] = s;
 			entity.setA1(a1);
 		}
-		final VPackSlice vpack = parser.fromEntity(entity);
+		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -1006,8 +981,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityObjectInArray entity = parser.toEntity(vpack, TestEntityObjectInArray.class);
+		final TestEntityObjectInArray entity = new VPack().deserialize(vpack, TestEntityObjectInArray.class);
 		Assert.assertNotNull(entity);
 		Assert.assertNotNull(entity.a1);
 		Assert.assertEquals(1, entity.a1.length);
@@ -1042,8 +1016,7 @@ public class ParserTest {
 
 	@Test
 	public void fromInheritance() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
-		final VPackSlice vpack = parser.fromEntity(new TestEntityB());
+		final VPackSlice vpack = new VPack().serialize(new TestEntityB());
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		Assert.assertEquals(2, vpack.getLength());
@@ -1069,14 +1042,13 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
 		{
-			final TestEntityA entity = parser.toEntity(vpack, TestEntityA.class);
+			final TestEntityA entity = new VPack().deserialize(vpack, TestEntityA.class);
 			Assert.assertNotNull(entity);
 			Assert.assertEquals("test", entity.getA());
 		}
 		{
-			final TestEntityB entity = parser.toEntity(vpack, TestEntityB.class);
+			final TestEntityB entity = new VPack().deserialize(vpack, TestEntityB.class);
 			Assert.assertNotNull(entity);
 			Assert.assertEquals("test", entity.getA());
 			Assert.assertEquals("test", entity.getB());
@@ -1117,10 +1089,9 @@ public class ParserTest {
 
 	@Test
 	public void fromInterface() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
 		final TestEntityC entity = new TestEntityC();
 		entity.setD(new TestEntityDImpl());
-		final VPackSlice vpack = parser.fromEntity(entity);
+		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -1142,15 +1113,15 @@ public class ParserTest {
 			builder.close();
 			builder.close();
 		}
-		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		parser.regitserInstanceCreator(TestEntityD.class, new VPackInstanceCreator<TestEntityD>() {
+		final VPackSlice slice = builder.slice();
+		final VPack vPack = new VPack();
+		vPack.regitserInstanceCreator(TestEntityD.class, new VPackInstanceCreator<TestEntityD>() {
 			@Override
 			public TestEntityD createInstance() {
 				return new TestEntityDImpl();
 			}
 		});
-		final TestEntityC entity = parser.toEntity(vpack, TestEntityC.class);
+		final TestEntityC entity = vPack.deserialize(slice, TestEntityC.class);
 		Assert.assertNotNull(entity);
 		Assert.assertNotNull(entity.d);
 		Assert.assertEquals("test", entity.d.getD());
@@ -1210,7 +1181,6 @@ public class ParserTest {
 
 	@Test
 	public void fromCollection() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
 		final TestEntityCollection entity = new TestEntityCollection();
 		{
 			entity.c1.add("test");
@@ -1219,7 +1189,7 @@ public class ParserTest {
 			entity.c4.add("test");
 			entity.c5.add("test");
 		}
-		final VPackSlice vpack = parser.fromEntity(entity);
+		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -1292,8 +1262,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityCollection entity = parser.toEntity(vpack, TestEntityCollection.class);
+		final TestEntityCollection entity = new VPack().deserialize(vpack, TestEntityCollection.class);
 		Assert.assertNotNull(entity);
 		{
 			checkCollection(entity.c1);
@@ -1336,18 +1305,17 @@ public class ParserTest {
 
 	@Test
 	public void fromCollectionWithObjects() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
 		final TestEntityCollectionWithObjects entity = new TestEntityCollectionWithObjects();
 		{
-			final Collection<TestEntityString> c1 = new ArrayList<ParserTest.TestEntityString>();
+			final Collection<TestEntityString> c1 = new ArrayList<VPackSerializeDeserializeTest.TestEntityString>();
 			c1.add(new TestEntityString());
 			c1.add(new TestEntityString());
 			entity.setC1(c1);
-			final Set<TestEntityArray> c2 = new HashSet<ParserTest.TestEntityArray>();
+			final Set<TestEntityArray> c2 = new HashSet<VPackSerializeDeserializeTest.TestEntityArray>();
 			c2.add(new TestEntityArray());
 			entity.setC2(c2);
 		}
-		final VPackSlice vpack = parser.fromEntity(entity);
+		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -1406,8 +1374,8 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityCollectionWithObjects entity = parser.toEntity(vpack, TestEntityCollectionWithObjects.class);
+		final TestEntityCollectionWithObjects entity = new VPack().deserialize(vpack,
+			TestEntityCollectionWithObjects.class);
 		Assert.assertNotNull(entity);
 		{
 			Assert.assertNotNull(entity.c1);
@@ -1456,7 +1424,6 @@ public class ParserTest {
 
 	@Test
 	public void fromMap() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
 		final TestEntityMap entity = new TestEntityMap();
 		{
 			final Map<String, String> m1 = new LinkedHashMap<String, String>();
@@ -1467,13 +1434,13 @@ public class ParserTest {
 			m2.put(1, "a");
 			m2.put(2, "b");
 			entity.setM2(m2);
-			final Map<String, TestEntityString> m3 = new HashMap<String, ParserTest.TestEntityString>();
+			final Map<String, TestEntityString> m3 = new HashMap<String, VPackSerializeDeserializeTest.TestEntityString>();
 			final TestEntityString s = new TestEntityString();
 			s.setS("abc");
 			m3.put("a", s);
 			entity.setM3(m3);
 		}
-		final VPackSlice vpack = parser.fromEntity(entity);
+		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -1545,8 +1512,7 @@ public class ParserTest {
 			builder.close();
 		}
 		final VPackSlice vpack = builder.slice();
-		final VPackParser parser = new VPackParser();
-		final TestEntityMap entity = parser.toEntity(vpack, TestEntityMap.class);
+		final TestEntityMap entity = new VPack().deserialize(vpack, TestEntityMap.class);
 		Assert.assertNotNull(entity);
 		{
 			Assert.assertNotNull(entity.m1);
@@ -1690,7 +1656,6 @@ public class ParserTest {
 
 	@Test
 	public void fromMapStringableKey() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
 		final TestEntityMapStringableKey entity = new TestEntityMapStringableKey();
 		final String value = "test";
 		{
@@ -1760,12 +1725,12 @@ public class ParserTest {
 			entity.setM11(m11);
 		}
 		{
-			final Map<TestEnum, String> m12 = new HashMap<ParserTest.TestEnum, String>();
+			final Map<TestEnum, String> m12 = new HashMap<VPackSerializeDeserializeTest.TestEnum, String>();
 			m12.put(TestEnum.A, value);
 			m12.put(TestEnum.B, value);
 			entity.setM12(m12);
 		}
-		final VPackSlice vpack = parser.fromEntity(entity);
+		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		{
@@ -1880,22 +1845,21 @@ public class ParserTest {
 
 	@Test
 	public void fromMapWithObjectKey() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
 		final TestEntityMapWithObjectKey entity = new TestEntityMapWithObjectKey();
 		{
-			final Map<TestEntityLong, TestEntityCollection> m1 = new HashMap<ParserTest.TestEntityLong, ParserTest.TestEntityCollection>();
+			final Map<TestEntityLong, TestEntityCollection> m1 = new HashMap<VPackSerializeDeserializeTest.TestEntityLong, VPackSerializeDeserializeTest.TestEntityCollection>();
 			m1.put(new TestEntityLong(), new TestEntityCollection());
 			m1.put(new TestEntityLong(), new TestEntityCollection());
 			entity.setM1(m1);
 		}
 		{
-			final Map<TestEntityLong, String> m2 = new HashMap<ParserTest.TestEntityLong, String>();
+			final Map<TestEntityLong, String> m2 = new HashMap<VPackSerializeDeserializeTest.TestEntityLong, String>();
 			m2.put(new TestEntityLong(), "test");
 			m2.put(new TestEntityLong(), "test");
 			m2.put(new TestEntityLong(), "test");
 			entity.setM2(m2);
 		}
-		final VPackSlice vpack = parser.fromEntity(entity);
+		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertTrue(vpack.isObject());
 		{
 			final VPackSlice m1 = vpack.get("m1");
@@ -1986,8 +1950,8 @@ public class ParserTest {
 			builder.close();
 		}
 		builder.close();
-		final VPackParser parser = new VPackParser();
-		final TestEntityMapWithObjectKey entity = parser.toEntity(builder.slice(), TestEntityMapWithObjectKey.class);
+		final TestEntityMapWithObjectKey entity = new VPack().deserialize(builder.slice(),
+			TestEntityMapWithObjectKey.class);
 		Assert.assertNotNull(entity);
 		{
 			Assert.assertNotNull(entity.m1);
@@ -2014,8 +1978,7 @@ public class ParserTest {
 
 	@Test
 	public void fromEmptyObject() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
-		final VPackSlice vpack = parser.fromEntity(new TestEntityEmpty());
+		final VPackSlice vpack = new VPack().serialize(new TestEntityEmpty());
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		Assert.assertEquals(0, vpack.getLength());
@@ -2026,8 +1989,7 @@ public class ParserTest {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.Object));
 		builder.close();
-		final VPackParser parser = new VPackParser();
-		final TestEntityEmpty entity = parser.toEntity(builder.slice(), TestEntityEmpty.class);
+		final TestEntityEmpty entity = new VPack().deserialize(builder.slice(), TestEntityEmpty.class);
 		Assert.assertNotNull(entity);
 	}
 
@@ -2045,10 +2007,9 @@ public class ParserTest {
 
 	@Test
 	public void fromEmptyMap() throws VPackParserException {
-		final VPackParser parser = new VPackParser();
 		final TestEntityEmptyMap entity = new TestEntityEmptyMap();
 		entity.setM(new HashMap<String, Object>());
-		final VPackSlice vpack = parser.fromEntity(entity);
+		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
 		Assert.assertEquals(1, vpack.getLength());
@@ -2064,12 +2025,81 @@ public class ParserTest {
 		builder.add("m", new Value(ValueType.Object));
 		builder.close();
 		builder.close();
-		final VPackParser parser = new VPackParser();
-		final TestEntityEmptyMap entity = parser.toEntity(builder.slice(), TestEntityEmptyMap.class);
+		final TestEntityEmptyMap entity = new VPack().deserialize(builder.slice(), TestEntityEmptyMap.class);
 		Assert.assertNotNull(entity);
 		Assert.assertNotNull(entity.m);
 		Assert.assertEquals(0, entity.m.size());
 	}
 
-	// TODO id string-integer converter/tanslator
+	protected static class TestEntityBaseAttributes {
+		private String _key = "test1";
+		private String _rev = "test2";
+		private String _id = "test3";
+		private String _from = "test4";
+		private String _to = "test5";
+
+		public String get_key() {
+			return _key;
+		}
+
+		public void set_key(final String _key) {
+			this._key = _key;
+		}
+
+		public String get_rev() {
+			return _rev;
+		}
+
+		public void set_rev(final String _rev) {
+			this._rev = _rev;
+		}
+
+		public String get_id() {
+			return _id;
+		}
+
+		public void set_id(final String _id) {
+			this._id = _id;
+		}
+
+		public String get_from() {
+			return _from;
+		}
+
+		public void set_from(final String _from) {
+			this._from = _from;
+		}
+
+		public String get_to() {
+			return _to;
+		}
+
+		public void set_to(final String _to) {
+			this._to = _to;
+		}
+
+	}
+
+	@Test
+	public void fromObjectWithAttributeAdapter() throws VPackBuilderException, VPackParserException {
+		final VPackSlice entity = new VPack().serialize(new TestEntityBaseAttributes());
+		Assert.assertTrue(entity.isObject());
+
+	}
+
+	@Test
+	public void toObjectWithAttributeAdapter() throws VPackBuilderException {
+		final VPackBuilder builder = new VPackBuilder();
+		{
+			builder.add(new Value(ValueType.Object));
+			builder.add("_key", new Value("a"));// _key
+			builder.add("_rev", new Value("b"));
+			builder.add("_id", new Value("c"));
+			builder.add("_from", new Value("d"));
+			builder.add("_to", new Value("e"));
+			builder.close();
+		}
+	}
+
+	// TODO rename attribute via annotation
 }
