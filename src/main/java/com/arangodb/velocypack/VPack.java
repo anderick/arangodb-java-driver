@@ -286,7 +286,7 @@ public class VPack {
 			throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException, VPackValueTypeException, VPackBuilderException {
 
-		add(name, new Value(ValueType.Object), builder);
+		add(name, new Value(ValueType.OBJECT), builder);
 		final VPackSerializer<Object> serializer = (VPackSerializer<Object>) serializers.get(entity.getClass());
 		if (serializer != null) {
 			serializer.serialize(builder, entity);
@@ -331,7 +331,7 @@ public class VPack {
 			InvocationTargetException, VPackBuilderException {
 
 		if (value == null) {
-			add(name, new Value(ValueType.Null), builder);
+			add(name, new Value(ValueType.NULL), builder);
 		} else if (type == Boolean.class || type == boolean.class) {
 			add(name, new Value(Boolean.class.cast(value)), builder);
 		} else if (type == Integer.class || type == int.class) {
@@ -353,7 +353,7 @@ public class VPack {
 		} else if (type == Character.class || type == char.class) {
 			add(name, new Value(Character.class.cast(value)), builder);
 		} else if (type.isArray()) {
-			add(name, new Value(ValueType.Array), builder);
+			add(name, new Value(ValueType.ARRAY), builder);
 			for (int i = 0; i < Array.getLength(value); i++) {
 				final Object element = Array.get(value, i);
 				addValue(null, null, element.getClass(), element, builder);
@@ -362,7 +362,7 @@ public class VPack {
 		} else if (type.isEnum()) {
 			add(name, new Value(Enum.class.cast(value).name()), builder);
 		} else if (Iterable.class.isAssignableFrom(type)) {
-			add(name, new Value(ValueType.Array), builder);
+			add(name, new Value(ValueType.ARRAY), builder);
 			for (final Iterator iterator = Iterable.class.cast(value).iterator(); iterator.hasNext();) {
 				final Object element = iterator.next();
 				addValue(null, null, element.getClass(), element, builder);
@@ -371,17 +371,17 @@ public class VPack {
 		} else if (Map.class.isAssignableFrom(type)) {
 			final Class<?> keyType = getComponentKeyType(field, type);
 			if (isStringableKeyType(keyType)) {
-				add(name, new Value(ValueType.Object), builder);
+				add(name, new Value(ValueType.OBJECT), builder);
 				final Set<Entry<?, ?>> entrySet = Map.class.cast(value).entrySet();
 				for (final Entry<?, ?> entry : entrySet) {
 					addValue(null, keyToString(entry.getKey()), entry.getValue().getClass(), entry.getValue(), builder);
 				}
 				builder.close();
 			} else {
-				add(name, new Value(ValueType.Array), builder);
+				add(name, new Value(ValueType.ARRAY), builder);
 				final Set<Entry<?, ?>> entrySet = Map.class.cast(value).entrySet();
 				for (final Entry<?, ?> entry : entrySet) {
-					add(null, new Value(ValueType.Object), builder);
+					add(null, new Value(ValueType.OBJECT), builder);
 					addValue(null, ATTR_KEY, entry.getKey().getClass(), entry.getKey(), builder);
 					addValue(null, ATTR_VALUE, entry.getValue().getClass(), entry.getValue(), builder);
 					builder.close();

@@ -35,6 +35,10 @@ public class ObjectArrayUtil {
 		FIRST_SUB_MAP.put((byte) 0x12, 9); // object with unsorted index table
 	}
 
+	private ObjectArrayUtil() {
+		super();
+	}
+
 	public static int getFirstSubMap(final byte key) {
 		return FIRST_SUB_MAP.get(key);
 	}

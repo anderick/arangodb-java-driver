@@ -9,7 +9,12 @@ import java.util.Collection;
  *
  */
 public class NumberUtil {
+
 	private static final int DOUBLE_BYTES = 8;
+
+	private NumberUtil() {
+		super();
+	}
 
 	public static double toDouble(final byte[] array, final int offset, final int length) {
 		return Double.longBitsToDouble(toLong(array, offset, DOUBLE_BYTES));

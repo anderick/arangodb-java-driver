@@ -9,6 +9,10 @@ import java.util.Date;
  */
 public class DateUtil {
 
+	private DateUtil() {
+		super();
+	}
+
 	public static void append(final Collection<Byte> buffer, final Date value) {
 		NumberUtil.append(buffer, value.getTime(), 8);
 	}

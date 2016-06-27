@@ -86,19 +86,19 @@ public class VPackSlice {
 	}
 
 	public boolean isNone() {
-		return isType(ValueType.None);
+		return isType(ValueType.NONE);
 	}
 
 	public boolean isNull() {
-		return isType(ValueType.Null);
+		return isType(ValueType.NULL);
 	}
 
 	public boolean isIllegal() {
-		return isType(ValueType.Illegal);
+		return isType(ValueType.ILLEGAL);
 	}
 
 	public boolean isBoolean() {
-		return isType(ValueType.Bool);
+		return isType(ValueType.BOOL);
 	}
 
 	public boolean isTrue() {
@@ -110,43 +110,43 @@ public class VPackSlice {
 	}
 
 	public boolean isArray() {
-		return isType(ValueType.Array);
+		return isType(ValueType.ARRAY);
 	}
 
 	public boolean isObject() {
-		return isType(ValueType.Object);
+		return isType(ValueType.OBJECT);
 	}
 
 	public boolean isDouble() {
-		return isType(ValueType.Double);
+		return isType(ValueType.DOUBLE);
 	}
 
 	public boolean isUTCDate() {
-		return isType(ValueType.UTCDate);
+		return isType(ValueType.UTC_DATE);
 	}
 
 	public boolean isExternal() {
-		return isType(ValueType.External);
+		return isType(ValueType.EXTERNAL);
 	}
 
 	public boolean isMinKey() {
-		return isType(ValueType.MinKey);
+		return isType(ValueType.MIN_KEY);
 	}
 
 	public boolean isMaxKey() {
-		return isType(ValueType.MaxKey);
+		return isType(ValueType.MAX_KEY);
 	}
 
 	public boolean isInt() {
-		return isType(ValueType.Int);
+		return isType(ValueType.INT);
 	}
 
 	public boolean isUInt() {
-		return isType(ValueType.UInt);
+		return isType(ValueType.UINT);
 	}
 
 	public boolean isSmallInt() {
-		return isType(ValueType.SmallInt);
+		return isType(ValueType.SMALLINT);
 	}
 
 	public boolean isInteger() {
@@ -158,11 +158,11 @@ public class VPackSlice {
 	}
 
 	public boolean isString() {
-		return isType(ValueType.String);
+		return isType(ValueType.STRING);
 	}
 
 	public boolean isBinary() {
-		return isType(ValueType.Binary);
+		return isType(ValueType.BINARY);
 	}
 
 	public boolean isBCD() {
@@ -170,19 +170,19 @@ public class VPackSlice {
 	}
 
 	public boolean isCustom() {
-		return isType(ValueType.Custom);
+		return isType(ValueType.CUSTOM);
 	}
 
 	public boolean getAsBoolean() {
 		if (!isBoolean()) {
-			throw new VPackValueTypeException(ValueType.Bool);
+			throw new VPackValueTypeException(ValueType.BOOL);
 		}
 		return isTrue();
 	}
 
 	public double getAsDouble() {
 		if (!isDouble()) {
-			throw new VPackValueTypeException(ValueType.Double);
+			throw new VPackValueTypeException(ValueType.DOUBLE);
 		}
 		return getAsDoubleUnchecked();
 	}
@@ -223,7 +223,7 @@ public class VPackSlice {
 		} else if (isUInt()) {
 			result = getUInt();
 		} else {
-			throw new VPackValueTypeException(ValueType.Int, ValueType.UInt, ValueType.SmallInt);
+			throw new VPackValueTypeException(ValueType.INT, ValueType.UINT, ValueType.SMALLINT);
 		}
 		return result;
 	}
@@ -250,20 +250,20 @@ public class VPackSlice {
 		} else if (isUInt()) {
 			return NumberUtil.toBigInteger(vpack, start + 1, length());
 		} else {
-			throw new VPackValueTypeException(ValueType.Int, ValueType.UInt, ValueType.SmallInt);
+			throw new VPackValueTypeException(ValueType.INT, ValueType.UINT, ValueType.SMALLINT);
 		}
 	}
 
 	public Date getAsDate() {
 		if (!isUTCDate()) {
-			throw new VPackValueTypeException(ValueType.UTCDate);
+			throw new VPackValueTypeException(ValueType.UTC_DATE);
 		}
 		return DateUtil.toDate(vpack, start + 1, length());
 	}
 
 	public String getAsString() {
 		if (!isString()) {
-			throw new VPackValueTypeException(ValueType.String);
+			throw new VPackValueTypeException(ValueType.STRING);
 		}
 		return isLongString() ? getLongString() : getShortString();
 	}
@@ -294,7 +294,7 @@ public class VPackSlice {
 
 	public byte[] getAsBinary() {
 		if (!isBinary()) {
-			throw new VPackValueTypeException(ValueType.Binary);
+			throw new VPackValueTypeException(ValueType.BINARY);
 		}
 		final byte[] binary = BinaryUtil.toBinary(vpack, start + 1 + head() - ((byte) 0xbf), getBinaryLength());
 		return binary;
@@ -302,7 +302,7 @@ public class VPackSlice {
 
 	public int getBinaryLength() {
 		if (!isBinary()) {
-			throw new VPackValueTypeException(ValueType.Binary);
+			throw new VPackValueTypeException(ValueType.BINARY);
 		}
 		return getBinaryLengthUnchecked();
 	}
@@ -319,7 +319,7 @@ public class VPackSlice {
 		if (isString()) {
 			length = getStringLength();
 		} else if (!isArray() && !isObject()) {
-			throw new VPackValueTypeException(ValueType.Array, ValueType.Object, ValueType.String);
+			throw new VPackValueTypeException(ValueType.ARRAY, ValueType.OBJECT, ValueType.STRING);
 		} else {
 			final byte head = head();
 			if (head == 0x01 || head == 0x0a) {
@@ -373,8 +373,8 @@ public class VPackSlice {
 			size = valueLength;
 		} else {
 			switch (type()) {
-			case Array:
-			case Object:
+			case ARRAY:
+			case OBJECT:
 				if (head == 0x13 || head == 0x14) {
 					// compact Array or Object
 					size = NumberUtil.readVariableValueLength(vpack, start + 1, false);
@@ -382,11 +382,11 @@ public class VPackSlice {
 					size = NumberUtil.toLong(vpack, start + 1, ObjectArrayUtil.getOffsetSize(head));
 				}
 				break;
-			case String:
+			case STRING:
 				// long UTF-8 String
 				size = getLongStringLength() + 1 + 8;
 				break;
-			case Binary:
+			case BINARY:
 				size = 1 + head - getBinaryLengthUnchecked();
 				break;
 			case BCD:
@@ -396,7 +396,7 @@ public class VPackSlice {
 					size = 1 + head - ((byte) 0xcf) + NumberUtil.toLong(vpack, start + 1, head - ((byte) 0xcf));
 				}
 				break;
-			case Custom:
+			case CUSTOM:
 				if (head == 0xf4 || head == 0xf5 || head == 0xf6) {
 					size = 2 + NumberUtil.toLong(vpack, start + 1, 1);
 				} else if (head == 0xf7 || head == 0xf8 || head == 0xf9) {
@@ -420,14 +420,14 @@ public class VPackSlice {
 	 */
 	public VPackSlice at(final int index) {
 		if (!isArray()) {
-			throw new VPackValueTypeException(ValueType.Array);
+			throw new VPackValueTypeException(ValueType.ARRAY);
 		}
 		return getNth(index);
 	}
 
 	public VPackSlice get(final String attribute) {
 		if (!isObject()) {
-			throw new VPackValueTypeException(ValueType.Object);
+			throw new VPackValueTypeException(ValueType.OBJECT);
 		}
 		final byte head = head();
 		VPackSlice result = new VPackSlice();
@@ -590,14 +590,14 @@ public class VPackSlice {
 
 	public VPackSlice keyAt(final int index) {
 		if (!isObject()) {
-			throw new VPackValueTypeException(ValueType.Object);
+			throw new VPackValueTypeException(ValueType.OBJECT);
 		}
 		return getNthKey(index);
 	}
 
 	public VPackSlice valueAt(final int index) {
 		if (!isObject()) {
-			throw new VPackValueTypeException(ValueType.Object);
+			throw new VPackValueTypeException(ValueType.OBJECT);
 		}
 		final VPackSlice key = getNthKey(index);
 		return new VPackSlice(vpack, key.start + key.getByteSize(), options);
@@ -698,7 +698,7 @@ public class VPackSlice {
 		} else if (isArray()) {
 			iterator = new ArrayIterator(this);
 		} else {
-			throw new VPackValueTypeException(ValueType.Array, ValueType.Object);
+			throw new VPackValueTypeException(ValueType.ARRAY, ValueType.OBJECT);
 		}
 		return iterator;
 	}

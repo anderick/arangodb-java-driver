@@ -5,22 +5,22 @@ package com.arangodb.velocypack.util;
  *
  */
 public enum ValueType {
-	None, // not yet initialized
-	Illegal, // illegal value
-	Null, // JSON null
-	Bool,
-	Array,
-	Object,
-	Double,
-	UTCDate,
-	External,
-	MinKey,
-	MaxKey,
-	Int,
-	UInt,
-	SmallInt,
-	String,
-	Binary,
+	NONE, // not yet initialized
+	ILLEGAL, // illegal value
+	NULL, // JSON null
+	BOOL,
+	ARRAY,
+	OBJECT,
+	DOUBLE,
+	UTC_DATE, // UTC Date
+	EXTERNAL,
+	MIN_KEY,
+	MAX_KEY,
+	INT,
+	UINT,
+	SMALLINT,
+	STRING,
+	BINARY,
 	BCD,
-	Custom
+	CUSTOM
 }

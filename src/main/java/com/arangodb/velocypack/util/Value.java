@@ -44,7 +44,7 @@ public class Value {
 	 * 
 	 * @throws VPackValueTypeException
 	 */
-	public Value(final ValueType type) throws VPackValueTypeException {
+	public Value(final ValueType type) {
 		this(type, false);
 	}
 
@@ -55,92 +55,92 @@ public class Value {
 	 */
 	public Value(final ValueType type, final boolean unindexed) throws VPackValueTypeException {
 		this(type, null, unindexed);
-		if (type != ValueType.Array && type != ValueType.Object && type != ValueType.Null) {
-			throw new VPackValueTypeException(ValueType.Array, ValueType.Object, ValueType.Null);
+		if (type != ValueType.ARRAY && type != ValueType.OBJECT && type != ValueType.NULL) {
+			throw new VPackValueTypeException(ValueType.ARRAY, ValueType.OBJECT, ValueType.NULL);
 		}
 	}
 
 	public Value(final Boolean value) {
-		this(checkNull(value, ValueType.Bool), Boolean.class);
+		this(checkNull(value, ValueType.BOOL), Boolean.class);
 		b = value;
 	}
 
 	public Value(final Double value) {
-		this(checkNull(value, ValueType.Double), Double.class);
+		this(checkNull(value, ValueType.DOUBLE), Double.class);
 		d = value;
 	}
 
 	public Value(final Long value) {
-		this(checkNull(value, ValueType.Int), Long.class);
+		this(checkNull(value, ValueType.INT), Long.class);
 		l = value;
 	}
 
 	public Value(final Long value, final ValueType type) throws VPackValueTypeException {
 		this(checkNull(value, type), Long.class);
-		if (type != ValueType.Int && type != ValueType.UInt && type != ValueType.SmallInt) {
-			throw new VPackValueTypeException(ValueType.Int, ValueType.UInt, ValueType.SmallInt);
+		if (type != ValueType.INT && type != ValueType.UINT && type != ValueType.SMALLINT) {
+			throw new VPackValueTypeException(ValueType.INT, ValueType.UINT, ValueType.SMALLINT);
 		}
 		l = value;
 	}
 
 	public Value(final Integer value) {
-		this(checkNull(value, ValueType.Int), Integer.class);
+		this(checkNull(value, ValueType.INT), Integer.class);
 		i = value;
 	}
 
 	public Value(final Integer value, final ValueType type) throws VPackValueTypeException {
 		this(checkNull(value, type), Integer.class);
-		if (type != ValueType.Int && type != ValueType.UInt && type != ValueType.SmallInt) {
-			throw new VPackValueTypeException(ValueType.Int, ValueType.UInt, ValueType.SmallInt);
+		if (type != ValueType.INT && type != ValueType.UINT && type != ValueType.SMALLINT) {
+			throw new VPackValueTypeException(ValueType.INT, ValueType.UINT, ValueType.SMALLINT);
 		}
 		i = value;
 	}
 
 	public Value(final Float value) {
-		this(checkNull(value, ValueType.Double), Float.class);
+		this(checkNull(value, ValueType.DOUBLE), Float.class);
 		f = value;
 	}
 
 	public Value(final Short value) {
-		this(checkNull(value, ValueType.Int), Short.class);
+		this(checkNull(value, ValueType.INT), Short.class);
 		sh = value;
 	}
 
 	public Value(final BigInteger value) {
-		this(checkNull(value, ValueType.Int), BigInteger.class);
+		this(checkNull(value, ValueType.INT), BigInteger.class);
 		bi = value;
 	}
 
 	public Value(final BigInteger value, final ValueType type) throws VPackValueTypeException {
 		this(checkNull(value, type), BigInteger.class);
-		if (type != ValueType.Int && type != ValueType.UInt && type != ValueType.SmallInt) {
-			throw new VPackValueTypeException(ValueType.Int, ValueType.UInt, ValueType.SmallInt);
+		if (type != ValueType.INT && type != ValueType.UINT && type != ValueType.SMALLINT) {
+			throw new VPackValueTypeException(ValueType.INT, ValueType.UINT, ValueType.SMALLINT);
 		}
 		bi = value;
 	}
 
 	public Value(final BigDecimal value) {
-		this(checkNull(value, ValueType.Double), BigDecimal.class);
+		this(checkNull(value, ValueType.DOUBLE), BigDecimal.class);
 		bd = value;
 	}
 
 	public Value(final String value) {
-		this(checkNull(value, ValueType.String), String.class);
+		this(checkNull(value, ValueType.STRING), String.class);
 		s = value;
 	}
 
 	public Value(final Character value) {
-		this(checkNull(value, ValueType.String), Character.class);
+		this(checkNull(value, ValueType.STRING), Character.class);
 		c = value;
 	}
 
 	public Value(final Date value) {
-		this(checkNull(value, ValueType.UTCDate), Date.class);
+		this(checkNull(value, ValueType.UTC_DATE), Date.class);
 		date = value;
 	}
 
 	private static ValueType checkNull(final Object obj, final ValueType type) {
-		return obj != null ? type : ValueType.Null;
+		return obj != null ? type : ValueType.NULL;
 	}
 
 	public ValueType getType() {

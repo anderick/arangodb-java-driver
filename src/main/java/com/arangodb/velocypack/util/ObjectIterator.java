@@ -16,7 +16,7 @@ public class ObjectIterator extends SliceIterator {
 	public ObjectIterator(final VPackSlice slice) throws VPackValueTypeException {
 		super(slice);
 		if (!slice.isObject()) {
-			throw new VPackValueTypeException(ValueType.Object);
+			throw new VPackValueTypeException(ValueType.OBJECT);
 		}
 		if (size > 0) {
 			final byte head = slice.head();

@@ -4,7 +4,7 @@ package com.arangodb.velocypack.exception;
  * @author Mark - mark@arangodb.com
  *
  */
-public abstract class VPackBuilderException extends Exception {
+public abstract class VPackBuilderException extends VPackException {
 
 	public VPackBuilderException() {
 		super();

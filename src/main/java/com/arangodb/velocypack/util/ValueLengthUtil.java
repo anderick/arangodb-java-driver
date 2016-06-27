@@ -275,6 +275,10 @@ public class ValueLengthUtil {
 		MAP.put((byte) 0xff, 0);
 	}
 
+	private ValueLengthUtil() {
+		super();
+	}
+
 	public static int get(final byte key) {
 		return MAP.get(key);
 	}

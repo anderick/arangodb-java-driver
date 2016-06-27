@@ -16,17 +16,13 @@ public class ArrayIterator extends SliceIterator {
 	public ArrayIterator(final VPackSlice slice) throws VPackValueTypeException {
 		super(slice);
 		if (!slice.isArray()) {
-			throw new VPackValueTypeException(ValueType.Array);
+			throw new VPackValueTypeException(ValueType.ARRAY);
 		}
 	}
 
 	@Override
 	public VPackSlice next() {
-		try {
-			return slice.at((int) position++);
-		} catch (final VPackValueTypeException e) {
-			throw new RuntimeException(e);
-		}
+		return slice.at((int) position++);
 	}
 
 }

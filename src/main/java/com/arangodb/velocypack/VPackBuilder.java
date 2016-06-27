@@ -124,7 +124,7 @@ public class VPackBuilder {
 		try {
 			final VPackKeyTranslator keyAdapter = options.getKeyTranslator();
 			final Integer key = keyAdapter != null ? keyAdapter.toKey(attribute) : null;
-			final Value attr = key != null ? new Value(key, (key < -6 || key > 9) ? ValueType.Int : ValueType.SmallInt)
+			final Value attr = key != null ? new Value(key, (key < -6 || key > 9) ? ValueType.INT : ValueType.SMALLINT)
 					: new Value(attribute);
 			set(attr);
 			keyWritten = true;
@@ -150,14 +150,14 @@ public class VPackBuilder {
 			throws VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
 		final Class<?> clazz = item.getClazz();
 		switch (item.getType()) {
-		case Null:
+		case NULL:
 			appendNull();
 			break;
-		case Bool:
-			checkClass(clazz, ValueType.Bool, Boolean.class);
+		case BOOL:
+			checkClass(clazz, ValueType.BOOL, Boolean.class);
 			appendBoolean(item.getBoolean());
 			break;
-		case Double:
+		case DOUBLE:
 			final double d;
 			if (clazz == Double.class) {
 				d = item.getDouble();
@@ -166,12 +166,12 @@ public class VPackBuilder {
 			} else if (clazz == Float.class) {
 				d = item.getFloat().doubleValue();
 			} else {
-				throw new VPackBuilderUnexpectedValueException(ValueType.Double, Double.class, BigDecimal.class,
+				throw new VPackBuilderUnexpectedValueException(ValueType.DOUBLE, Double.class, BigDecimal.class,
 						Float.class);
 			}
 			appendDouble(d);
 			break;
-		case SmallInt:
+		case SMALLINT:
 			final long vSmallInt;
 			if (clazz == Long.class) {
 				vSmallInt = item.getLong();
@@ -180,15 +180,15 @@ public class VPackBuilder {
 			} else if (clazz == BigInteger.class) {
 				vSmallInt = item.getBigInteger().longValue();
 			} else {
-				throw new VPackBuilderUnexpectedValueException(ValueType.SmallInt, Long.class, Integer.class,
+				throw new VPackBuilderUnexpectedValueException(ValueType.SMALLINT, Long.class, Integer.class,
 						BigInteger.class);
 			}
 			if (vSmallInt < -6 || vSmallInt > 9) {
-				throw new VPackBuilderNumberOutOfRangeException(ValueType.SmallInt);
+				throw new VPackBuilderNumberOutOfRangeException(ValueType.SMALLINT);
 			}
 			appendSmallInt(vSmallInt);
 			break;
-		case Int:
+		case INT:
 			if (clazz == Long.class) {
 				appendLong(item.getLong());
 			} else if (clazz == Integer.class) {
@@ -198,11 +198,11 @@ public class VPackBuilder {
 			} else if (clazz == Short.class) {
 				appendShort(item.getShort());
 			} else {
-				throw new VPackBuilderUnexpectedValueException(ValueType.Int, Long.class, Integer.class,
+				throw new VPackBuilderUnexpectedValueException(ValueType.INT, Long.class, Integer.class,
 						BigInteger.class, Short.class);
 			}
 			break;
-		case UInt:
+		case UINT:
 			final BigInteger vUInt;
 			if (clazz == Long.class) {
 				vUInt = BigInteger.valueOf(item.getLong());
@@ -211,34 +211,34 @@ public class VPackBuilder {
 			} else if (clazz == BigInteger.class) {
 				vUInt = item.getBigInteger();
 			} else {
-				throw new VPackBuilderUnexpectedValueException(ValueType.UInt, Long.class, Integer.class,
+				throw new VPackBuilderUnexpectedValueException(ValueType.UINT, Long.class, Integer.class,
 						BigInteger.class);
 			}
 			if (-1 == vUInt.compareTo(BigInteger.ZERO)) {
-				throw new VPackBuilderUnexpectedValueException(ValueType.UInt, "non-negative", Long.class,
+				throw new VPackBuilderUnexpectedValueException(ValueType.UINT, "non-negative", Long.class,
 						Integer.class, BigInteger.class);
 			}
 			appendUInt(vUInt);
 			break;
-		case UTCDate:
-			checkClass(clazz, ValueType.UTCDate, Date.class);
+		case UTC_DATE:
+			checkClass(clazz, ValueType.UTC_DATE, Date.class);
 			appendUTCDate(item.getDate());
 			break;
-		case String:
+		case STRING:
 			final String string;
 			if (clazz == String.class) {
 				string = item.getString();
 			} else if (clazz == Character.class) {
 				string = String.valueOf(item.getCharacter());
 			} else {
-				throw new VPackBuilderUnexpectedValueException(ValueType.String, String.class, Character.class);
+				throw new VPackBuilderUnexpectedValueException(ValueType.STRING, String.class, Character.class);
 			}
 			appendString(string);
 			break;
-		case Array:
+		case ARRAY:
 			addArray(item.isUnindexed());
 			break;
-		case Object:
+		case OBJECT:
 			addObject(item.isUnindexed());
 			break;
 		default:
