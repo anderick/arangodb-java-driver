@@ -110,7 +110,9 @@ public class VPack {
 			entity = createInstance(type);
 			final Field[] declaredFields = getDeclaredFields(entity);
 			for (final Field field : declaredFields) {
-				deserializeField(vpack, entity, field);
+				if (!field.isSynthetic()) {
+					deserializeField(vpack, entity, field);
+				}
 			}
 		}
 		return entity;
@@ -293,7 +295,9 @@ public class VPack {
 		} else {
 			final Field[] fields = getDeclaredFields(entity);
 			for (final Field field : fields) {
-				serializeField(entity, builder, field);
+				if (!field.isSynthetic()) {
+					serializeField(entity, builder, field);
+				}
 			}
 		}
 		builder.close();

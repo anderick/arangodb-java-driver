@@ -5,13 +5,15 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import com.arangodb.velocypack.util.NumberUtilTest;
+import com.arangodb.velocypack.util.ValueTest;
 
 /**
  * @author Mark - mark@arangodb.com
  *
  */
 @RunWith(Suite.class)
-@SuiteClasses({ VPackBuilderTest.class, VPackSliceTest.class, NumberUtilTest.class, VPackSerializeDeserializeTest.class })
+@SuiteClasses({ VPackBuilderTest.class, VPackSliceTest.class, NumberUtilTest.class, ValueTest.class,
+		VPackSerializeDeserializeTest.class })
 public class VPackTestSuite {
 
 }
