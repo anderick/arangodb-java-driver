@@ -159,7 +159,8 @@ public class VPack {
 		} else {
 			final ParameterizedType genericType = (ParameterizedType) field.getGenericType();
 			final Type argType = genericType.getActualTypeArguments()[i];
-			result = "java.lang.Enum<?>".equals(argType.toString()) ? Enum.class : (Class<?>) argType;
+			result = (Class<?>) (ParameterizedType.class.isAssignableFrom(argType.getClass())
+					? ParameterizedType.class.cast(argType).getRawType() : argType);
 		}
 		return result;
 	}
@@ -265,9 +266,11 @@ public class VPack {
 			result = new BigDecimal(key);
 		} else if (type == Character.class && key.length() == 1) {
 			result = key.charAt(0);
-		} else if (type == Integer.class) {
+		} else if (Enum.class.isAssignableFrom(type)) {
 			final Class<? extends Enum> enumType = (Class<? extends Enum>) type;
 			result = Enum.valueOf(enumType, key);
+		} else if (type == Boolean.class) {
+			result = Boolean.valueOf(key);
 		} else {
 			throw new VPackKeyTypeException(String.format("can not convert key: %s in type: %s", key, type.getName()));
 		}

@@ -1,8 +1,8 @@
 package com.arangodb.velocypack.util;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -108,7 +108,7 @@ public class NumberUtil {
 	}
 
 	public static void storeVariableValueLength(
-		final ArrayList<Byte> buffer,
+		final List<Byte> buffer,
 		final int offset,
 		final long value,
 		final boolean reverse) {
@@ -126,7 +126,7 @@ public class NumberUtil {
 				buffer.add(index++, (byte) (val | 0x80));
 				val >>= 7;
 			}
-			buffer.add(index++, (byte) (val & 0x7f));
+			buffer.add(index, (byte) (val & 0x7f));
 		}
 	}
 

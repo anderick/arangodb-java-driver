@@ -222,6 +222,8 @@ public class VPackSlice {
 			result = getInt();
 		} else if (isUInt()) {
 			result = getUInt();
+		} else if (isDouble()) {
+			result = getAsDouble();
 		} else {
 			throw new VPackValueTypeException(ValueType.INT, ValueType.UINT, ValueType.SMALLINT);
 		}
@@ -408,6 +410,7 @@ public class VPackSlice {
 				}
 				break;
 			default:
+				// TODO
 				throw new InternalError();
 			}
 		}

@@ -35,10 +35,6 @@ public class ObjectArrayUtil {
 		FIRST_SUB_MAP.put((byte) 0x12, 9); // object with unsorted index table
 	}
 
-	private ObjectArrayUtil() {
-		super();
-	}
-
 	public static int getFirstSubMap(final byte key) {
 		return FIRST_SUB_MAP.get(key);
 	}
@@ -66,6 +62,10 @@ public class ObjectArrayUtil {
 		OFFSET_SIZE.put((byte) 0x10, 2); // object with unsorted index table
 		OFFSET_SIZE.put((byte) 0x11, 4); // object with unsorted index table
 		OFFSET_SIZE.put((byte) 0x12, 8); // object with unsorted index table
+	}
+
+	private ObjectArrayUtil() {
+		super();
 	}
 
 	public static int getOffsetSize(final byte key) {

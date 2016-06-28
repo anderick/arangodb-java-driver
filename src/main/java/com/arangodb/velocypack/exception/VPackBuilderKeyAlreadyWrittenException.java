@@ -6,4 +6,8 @@ package com.arangodb.velocypack.exception;
  */
 public class VPackBuilderKeyAlreadyWrittenException extends VPackBuilderException {
 
+	public VPackBuilderKeyAlreadyWrittenException() {
+		super();
+	}
+
 }

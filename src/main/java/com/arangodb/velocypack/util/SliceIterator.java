@@ -34,5 +34,6 @@ public abstract class SliceIterator implements Iterator<VPackSlice> {
 
 	@Override
 	public void remove() {
+		throw new UnsupportedOperationException();
 	}
 }

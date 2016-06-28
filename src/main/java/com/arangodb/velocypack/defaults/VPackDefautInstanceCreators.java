@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.arangodb.velocypack.VPackInstanceCreator;
 import com.arangodb.velocypack.VPack;
+import com.arangodb.velocypack.VPackInstanceCreator;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -15,6 +15,10 @@ import com.arangodb.velocypack.VPack;
  */
 @SuppressWarnings("rawtypes")
 public class VPackDefautInstanceCreators {
+
+	private VPackDefautInstanceCreators() {
+		super();
+	}
 
 	public static void registerInstanceCreators(final VPack parser) {
 		parser.regitserInstanceCreator(Collection.class, new CollectionInstanceCreator());

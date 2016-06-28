@@ -1,5 +1,7 @@
 package com.arangodb.velocypack.util;
 
+import java.util.NoSuchElementException;
+
 import com.arangodb.velocypack.VPackSlice;
 import com.arangodb.velocypack.exception.VPackValueTypeException;
 
@@ -40,7 +42,7 @@ public class ObjectIterator extends SliceIterator {
 				// skip over value
 				current += getCurrent().getByteSize();
 			} else {
-				current = 0;
+				throw new NoSuchElementException();
 			}
 		}
 		return getCurrent();

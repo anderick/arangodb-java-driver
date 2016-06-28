@@ -6,4 +6,8 @@ package com.arangodb.velocypack.exception;
  */
 public class VPackBuilderNeedOpenObjectException extends VPackBuilderNeedOpenCompoundException {
 
+	public VPackBuilderNeedOpenObjectException() {
+		super();
+	}
+
 }

@@ -1,5 +1,7 @@
 package com.arangodb.velocypack.util;
 
+import java.util.NoSuchElementException;
+
 import com.arangodb.velocypack.VPackSlice;
 import com.arangodb.velocypack.exception.VPackValueTypeException;
 
@@ -22,7 +24,13 @@ public class ArrayIterator extends SliceIterator {
 
 	@Override
 	public VPackSlice next() {
-		return slice.at((int) position++);
+		final VPackSlice next;
+		if (hasNext()) {
+			next = slice.at((int) position++);
+		} else {
+			throw new NoSuchElementException();
+		}
+		return next;
 	}
 
 }

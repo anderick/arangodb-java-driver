@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.arangodb.velocypack.exception.VPackBuilderException;
+import com.arangodb.velocypack.exception.VPackBuilderNeedOpenCompoundException;
 import com.arangodb.velocypack.exception.VPackBuilderNumberOutOfRangeException;
 import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
 import com.arangodb.velocypack.util.Value;
@@ -17,6 +18,12 @@ import com.arangodb.velocypack.util.ValueType;
  *
  */
 public class VPackBuilderTest {
+
+	@Test
+	public void empty() {
+		final VPackSlice slice = new VPackBuilder().slice();
+		Assert.assertTrue(slice.isNone());
+	}
 
 	@Test
 	public void addNull() throws VPackBuilderException {
@@ -708,4 +715,11 @@ public class VPackBuilderTest {
 		Assert.assertTrue(vpackWithAttrAdapter.getByteSize() < vpackWithoutAttrAdapter.getByteSize());
 	}
 
+	@Test(expected = VPackBuilderNeedOpenCompoundException.class)
+	public void closeClosed() throws VPackBuilderException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.OBJECT));
+		builder.close();
+		builder.close();
+	}
 }

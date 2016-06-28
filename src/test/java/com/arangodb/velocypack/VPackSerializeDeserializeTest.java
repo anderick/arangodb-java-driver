@@ -19,6 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.arangodb.velocypack.exception.VPackBuilderException;
+import com.arangodb.velocypack.exception.VPackException;
 import com.arangodb.velocypack.exception.VPackParserException;
 import com.arangodb.velocypack.util.Value;
 import com.arangodb.velocypack.util.ValueType;
@@ -28,6 +29,11 @@ import com.arangodb.velocypack.util.ValueType;
  *
  */
 public class VPackSerializeDeserializeTest {
+
+	@Test
+	public void defaultOptions() {
+		Assert.assertNotNull(new VPack().getOptions());
+	}
 
 	protected static class TestEntityBoolean {
 		private boolean a = true;
@@ -1554,8 +1560,7 @@ public class VPackSerializeDeserializeTest {
 		private Map<BigInteger, String> m8;
 		private Map<BigDecimal, String> m9;
 		private Map<Character, String> m10;
-		private Map<Enum<?>, String> m11;
-		private Map<TestEnum, String> m12;
+		private Map<TestEnum, String> m11;
 
 		public Map<Boolean, String> getM1() {
 			return m1;
@@ -1637,21 +1642,14 @@ public class VPackSerializeDeserializeTest {
 			this.m10 = m10;
 		}
 
-		public Map<Enum<?>, String> getM11() {
+		public Map<TestEnum, String> getM11() {
 			return m11;
 		}
 
-		public void setM11(final Map<Enum<?>, String> m11) {
+		public void setM11(final Map<TestEnum, String> m11) {
 			this.m11 = m11;
 		}
 
-		public Map<TestEnum, String> getM12() {
-			return m12;
-		}
-
-		public void setM12(final Map<TestEnum, String> m12) {
-			this.m12 = m12;
-		}
 	}
 
 	@Test
@@ -1719,16 +1717,10 @@ public class VPackSerializeDeserializeTest {
 			entity.setM10(m10);
 		}
 		{
-			final Map<Enum<?>, String> m11 = new HashMap<Enum<?>, String>();
+			final Map<TestEnum, String> m11 = new HashMap<TestEnum, String>();
 			m11.put(TestEnum.A, value);
 			m11.put(TestEnum.B, value);
 			entity.setM11(m11);
-		}
-		{
-			final Map<TestEnum, String> m12 = new HashMap<VPackSerializeDeserializeTest.TestEnum, String>();
-			m12.put(TestEnum.A, value);
-			m12.put(TestEnum.B, value);
-			entity.setM12(m12);
 		}
 		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertNotNull(vpack);
@@ -1810,16 +1802,145 @@ public class VPackSerializeDeserializeTest {
 			checkMapAttribute(m11.get(TestEnum.A.name()));
 			checkMapAttribute(m11.get(TestEnum.B.name()));
 		}
+	}
+
+	@Test
+	public void toMapSringableKey() throws VPackException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.OBJECT));
 		{
-			final VPackSlice m12 = vpack.get("m12");
-			Assert.assertTrue(m12.isObject());
-			Assert.assertEquals(2, m12.getLength());
+			builder.add("m1", new Value(ValueType.OBJECT));
+			builder.add("true", new Value("test"));
+			builder.add("false", new Value("test"));
+			builder.close();
+		}
+		{
+			builder.add("m2", new Value(ValueType.OBJECT));
+			builder.add("1", new Value("test"));
+			builder.add("2", new Value("test"));
+			builder.close();
+		}
+		{
+			builder.add("m3", new Value(ValueType.OBJECT));
+			builder.add("1", new Value("test"));
+			builder.add("2", new Value("test"));
+			builder.close();
+		}
+		{
+			builder.add("m4", new Value(ValueType.OBJECT));
+			builder.add("1.5", new Value("test"));
+			builder.add("2.25", new Value("test"));
+			builder.close();
+		}
+		{
+			builder.add("m5", new Value(ValueType.OBJECT));
+			builder.add("1", new Value("test"));
+			builder.add("2", new Value("test"));
+			builder.close();
+		}
+		{
+			builder.add("m6", new Value(ValueType.OBJECT));
+			builder.add("1.5", new Value("test"));
+			builder.add("2.25", new Value("test"));
+			builder.close();
+		}
+		{
+			builder.add("m7", new Value(ValueType.OBJECT));
+			builder.add("1.5", new Value("test"));
+			builder.add("1", new Value("test"));
+			builder.close();
+		}
+		{
+			builder.add("m8", new Value(ValueType.OBJECT));
+			builder.add("1", new Value("test"));
+			builder.add("2", new Value("test"));
+			builder.close();
+		}
+		{
+			builder.add("m9", new Value(ValueType.OBJECT));
+			builder.add("1.5", new Value("test"));
+			builder.add("2.25", new Value("test"));
+			builder.close();
+		}
+		{
+			builder.add("m10", new Value(ValueType.OBJECT));
+			builder.add("1", new Value("test"));
+			builder.add("a", new Value("test"));
+			builder.close();
+		}
+		{
+			builder.add("m11", new Value(ValueType.OBJECT));
+			builder.add(TestEnum.A.name(), new Value("test"));
+			builder.add(TestEnum.B.name(), new Value("test"));
+			builder.close();
+		}
+		builder.close();
+		final TestEntityMapStringableKey entity = new VPack().deserialize(builder.slice(),
+			TestEntityMapStringableKey.class);
+		{
+			Assert.assertEquals(2, entity.m1.size());
+			checkMapAttribute(entity.m1.get(true));
+			checkMapAttribute(entity.m1.get(false));
+		}
+		{
+			Assert.assertEquals(2, entity.m2.size());
+			checkMapAttribute(entity.m2.get(1));
+			checkMapAttribute(entity.m2.get(2));
+		}
+		{
+			Assert.assertEquals(2, entity.m3.size());
+			checkMapAttribute(entity.m3.get(1L));
+			checkMapAttribute(entity.m3.get(2L));
+		}
+		{
+			Assert.assertEquals(2, entity.m4.size());
+			checkMapAttribute(entity.m4.get(1.5F));
+			checkMapAttribute(entity.m4.get(2.25F));
+		}
+		{
+			Assert.assertEquals(2, entity.m5.size());
+			checkMapAttribute(entity.m5.get(new Short("1")));
+			checkMapAttribute(entity.m5.get(new Short("2")));
+		}
+		{
+			Assert.assertEquals(2, entity.m6.size());
+			checkMapAttribute(entity.m6.get(1.5));
+			checkMapAttribute(entity.m6.get(2.25));
+		}
+		{
+			Assert.assertEquals(2, entity.m7.size());
+			checkMapAttribute(entity.m7.get(new Double(1.5)));
+			checkMapAttribute(entity.m7.get(new Double(1L)));
+		}
+		{
+			Assert.assertEquals(2, entity.m8.size());
+			checkMapAttribute(entity.m8.get(new BigInteger("1")));
+			checkMapAttribute(entity.m8.get(new BigInteger("2")));
+		}
+		{
+			Assert.assertEquals(2, entity.m9.size());
+			checkMapAttribute(entity.m9.get(new BigDecimal("1.5")));
+			checkMapAttribute(entity.m9.get(new BigDecimal("2.25")));
+		}
+		{
+			Assert.assertEquals(2, entity.m10.size());
+			checkMapAttribute(entity.m10.get('1'));
+			checkMapAttribute(entity.m10.get('a'));
+		}
+		{
+			Assert.assertEquals(2, entity.m11.size());
+			checkMapAttribute(entity.m11.get(TestEnum.A));
+			checkMapAttribute(entity.m11.get(TestEnum.B));
 		}
 	}
 
 	private void checkMapAttribute(final VPackSlice attr) {
 		Assert.assertTrue(attr.isString());
 		Assert.assertEquals("test", attr.getAsString());
+	}
+
+	private void checkMapAttribute(final String attr) {
+		Assert.assertEquals("test", attr);
 	}
 
 	protected static class TestEntityMapWithObjectKey {
