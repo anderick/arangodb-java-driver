@@ -18,6 +18,7 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.arangodb.velocypack.annotations.Expose;
 import com.arangodb.velocypack.annotations.SerializedName;
 import com.arangodb.velocypack.exception.VPackBuilderException;
 import com.arangodb.velocypack.exception.VPackException;
@@ -2407,7 +2408,7 @@ public class VPackSerializeDeserializeTest {
 	}
 
 	@Test
-	public void fromAnnotation() throws VPackParserException {
+	public void fromSerializedName() throws VPackParserException {
 		final TestEntitySerializeAnnotation entity = new TestEntitySerializeAnnotation();
 		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertTrue(vpack.isObject());
@@ -2418,7 +2419,7 @@ public class VPackSerializeDeserializeTest {
 	}
 
 	@Test
-	public void toAnnotation() throws VPackBuilderException, VPackParserException {
+	public void toSerializedName() throws VPackBuilderException, VPackParserException {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.OBJECT));
 		builder.add("abc", new Value("test2"));
@@ -2428,6 +2429,122 @@ public class VPackSerializeDeserializeTest {
 		Assert.assertNotNull(entity);
 		Assert.assertNotNull(entity.test);
 		Assert.assertEquals("test2", entity.test);
+	}
+
+	protected static class TestEntityExpose {
+		private String a;
+		@Expose
+		private String b;
+		@Expose(serialize = true, deserialize = true)
+		private String c;
+		@Expose(serialize = true, deserialize = false)
+		private String d;
+		@Expose(serialize = false, deserialize = true)
+		private String e;
+		@Expose(serialize = false, deserialize = false)
+		private String f;
+
+		public String getA() {
+			return a;
+		}
+
+		public void setA(final String a) {
+			this.a = a;
+		}
+
+		public String getB() {
+			return b;
+		}
+
+		public void setB(final String b) {
+			this.b = b;
+		}
+
+		public String getC() {
+			return c;
+		}
+
+		public void setC(final String c) {
+			this.c = c;
+		}
+
+		public String getD() {
+			return d;
+		}
+
+		public void setD(final String d) {
+			this.d = d;
+		}
+
+		public String getE() {
+			return e;
+		}
+
+		public void setE(final String e) {
+			this.e = e;
+		}
+
+		public String getF() {
+			return f;
+		}
+
+		public void setF(final String f) {
+			this.f = f;
+		}
+	}
+
+	@Test
+	public void fromExpose() throws VPackParserException {
+		final TestEntityExpose entity = new TestEntityExpose();
+		entity.a = entity.b = entity.c = entity.d = entity.e = entity.f = "test";
+		final VPackSlice vpack = new VPack().serialize(entity);
+		Assert.assertTrue(vpack.isObject());
+		Assert.assertEquals(4, vpack.getLength());
+		{
+			final VPackSlice a = vpack.get("a");
+			Assert.assertTrue(a.isString());
+			Assert.assertEquals("test", a.getAsString());
+		}
+		{
+			final VPackSlice b = vpack.get("b");
+			Assert.assertTrue(b.isString());
+			Assert.assertEquals("test", b.getAsString());
+		}
+		{
+			final VPackSlice c = vpack.get("c");
+			Assert.assertTrue(c.isString());
+			Assert.assertEquals("test", c.getAsString());
+		}
+		{
+			final VPackSlice d = vpack.get("d");
+			Assert.assertTrue(d.isString());
+			Assert.assertEquals("test", d.getAsString());
+		}
+	}
+
+	@Test
+	public void toExpose() throws VPackBuilderException, VPackParserException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.OBJECT));
+		builder.add("a", new Value("test"));
+		builder.add("b", new Value("test"));
+		builder.add("c", new Value("test"));
+		builder.add("d", new Value("test"));
+		builder.add("e", new Value("test"));
+		builder.add("f", new Value("test"));
+		builder.close();
+		final TestEntityExpose entity = new VPack().deserialize(builder.slice(), TestEntityExpose.class);
+		Assert.assertNotNull(entity);
+		Assert.assertNotNull(entity.a);
+		Assert.assertEquals("test", entity.a);
+		Assert.assertNotNull(entity.b);
+		Assert.assertEquals("test", entity.b);
+		Assert.assertNotNull(entity.c);
+		Assert.assertEquals("test", entity.c);
+		Assert.assertNotNull(entity.e);
+		Assert.assertEquals("test", entity.e);
+		Assert.assertNull(entity.d);
+		Assert.assertNull(entity.f);
 	}
 
 }

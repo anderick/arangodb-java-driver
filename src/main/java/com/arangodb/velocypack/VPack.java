@@ -18,6 +18,7 @@ import java.util.Set;
 
 import com.arangodb.velocypack.VPackBuilder.BuilderOptions;
 import com.arangodb.velocypack.VPackSlice.SliceOptions;
+import com.arangodb.velocypack.annotations.Expose;
 import com.arangodb.velocypack.annotations.SerializedName;
 import com.arangodb.velocypack.defaults.VPackDefaultOptions;
 import com.arangodb.velocypack.defaults.VPackDefautInstanceCreators;
@@ -36,6 +37,19 @@ public class VPack {
 
 	public static interface VPackOptions extends SliceOptions, BuilderOptions {
 
+	}
+
+	private static class FieldInfo {
+		private final String fieldName;
+		private final boolean serialize;
+		private final boolean deserialize;
+
+		public FieldInfo(final String fieldName, final boolean serialize, final boolean deserialize) {
+			super();
+			this.fieldName = fieldName;
+			this.serialize = serialize;
+			this.deserialize = deserialize;
+		}
 	}
 
 	private static final String ATTR_KEY = "key";
@@ -63,7 +77,7 @@ public class VPack {
 	private final VPackOptions options;
 
 	private final Map<Class<?>, Collection<Field>> fieldCache;
-	private final Map<Field, String> fieldNameCache;
+	private final Map<Field, FieldInfo> fieldInfoCache;
 
 	public VPack() {
 		this(new VPackDefaultOptions());
@@ -77,7 +91,7 @@ public class VPack {
 		instanceCreators = new HashMap<Class<?>, VPackInstanceCreator<?>>();
 		VPackDefautInstanceCreators.registerInstanceCreators(this);
 		fieldCache = new HashMap<Class<?>, Collection<Field>>();
-		fieldNameCache = new HashMap<Field, String>();
+		fieldInfoCache = new HashMap<Field, FieldInfo>();
 	}
 
 	public VPackOptions getOptions() {
@@ -137,7 +151,7 @@ public class VPack {
 
 	private void deserializeFields(final Object entity, final VPackSlice vpack) throws VPackKeyTypeException,
 			NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-		final Collection<Field> fields = getDeclaredFields(entity);
+		final Collection<Field> fields = getDeclaredFields(entity, false);
 		for (final Field field : fields) {
 			deserializeField(vpack, entity, field);
 		}
@@ -339,13 +353,13 @@ public class VPack {
 
 	private void serializeFields(final Object entity, final VPackBuilder builder)
 			throws VPackBuilderException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-		final Collection<Field> fields = getDeclaredFields(entity);
+		final Collection<Field> fields = getDeclaredFields(entity, true);
 		for (final Field field : fields) {
 			serializeField(entity, builder, field);
 		}
 	}
 
-	private Collection<Field> getDeclaredFields(final Object entity) {
+	private Collection<Field> getDeclaredFields(final Object entity, final boolean serialize) {
 
 		Collection<Field> fields = fieldCache.get(entity.getClass());
 		if (fields == null) {
@@ -354,7 +368,7 @@ public class VPack {
 			while (tmp != null && tmp != Object.class) {
 				final Field[] declaredFields = tmp.getDeclaredFields();
 				for (final Field field : declaredFields) {
-					if (filterField(field)) {
+					if (filterField(field, serialize)) {
 						fields.add(field);
 					}
 				}
@@ -365,8 +379,10 @@ public class VPack {
 		return fields;
 	}
 
-	private boolean filterField(final Field field) {
-		return !field.isSynthetic() && !Modifier.isStatic(field.getModifiers());
+	private boolean filterField(final Field field, final boolean serialize) {
+		final FieldInfo fieldInfo = getFieldInfo(field);
+		final boolean dontExpose = fieldInfo != null ? serialize ? fieldInfo.serialize : fieldInfo.deserialize : true;
+		return !field.isSynthetic() && !Modifier.isStatic(field.getModifiers()) && dontExpose;
 	}
 
 	private void serializeField(final Object entity, final VPackBuilder builder, final Field field)
@@ -379,13 +395,22 @@ public class VPack {
 	}
 
 	private String getFieldName(final Field field) {
-		String fieldName = fieldNameCache.get(field);
-		if (fieldName == null) {
-			final SerializedName annotation = field.getAnnotation(SerializedName.class);
-			fieldName = annotation != null ? annotation.value() : field.getName();
-			fieldNameCache.put(field, fieldName);
+		final FieldInfo fieldInfo = getFieldInfo(field);
+		return fieldInfo != null ? fieldInfo.fieldName : field.getName();
+	}
+
+	private FieldInfo getFieldInfo(final Field field) {
+		FieldInfo fieldInfo = fieldInfoCache.get(field);
+		if (fieldInfo == null) {
+			final SerializedName annotationName = field.getAnnotation(SerializedName.class);
+			final String fieldName = annotationName != null ? annotationName.value() : field.getName();
+			final Expose expose = field.getAnnotation(Expose.class);
+			final boolean serialize = expose != null ? expose.serialize() : true;
+			final boolean deserialize = expose != null ? expose.deserialize() : true;
+			fieldInfo = new FieldInfo(fieldName, serialize, deserialize);
+			fieldInfoCache.put(field, fieldInfo);
 		}
-		return fieldName;
+		return fieldInfo;
 	}
 
 	private void addValue(
