@@ -1,5 +1,6 @@
 package com.arangodb.velocypack.util;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 
 /**
@@ -16,8 +17,8 @@ public class StringUtil {
 		return new String(array, offset, length);
 	}
 
-	public static void append(final Collection<Byte> buffer, final String value) {
-		final byte[] bytes = value.getBytes();
+	public static void append(final Collection<Byte> buffer, final String value) throws UnsupportedEncodingException {
+		final byte[] bytes = value.getBytes("UTF-8");
 		for (final byte b : bytes) {
 			buffer.add(b);
 		}

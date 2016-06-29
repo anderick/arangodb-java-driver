@@ -1,5 +1,6 @@
 package com.arangodb.velocypack;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -8,10 +9,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.arangodb.velocypack.VPackSlice.SliceOptions;
 import com.arangodb.velocypack.defaults.VPackDefaultOptions;
+import com.arangodb.velocypack.exception.VPackBuilderException;
 import com.arangodb.velocypack.exception.VPackBuilderKeyAlreadyWrittenException;
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenCompoundException;
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenObjectException;
@@ -69,21 +72,17 @@ public class VPackBuilder {
 		return options;
 	}
 
-	public VPackBuilder add(final Value sub)
-			throws VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
+	public VPackBuilder add(final Value sub) throws VPackBuilderException {
 		addInternal(sub);
 		return this;
 	}
 
-	public VPackBuilder add(final String attribute, final Value sub)
-			throws VPackBuilderNeedOpenObjectException, VPackBuilderKeyAlreadyWrittenException,
-			VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
+	public VPackBuilder add(final String attribute, final Value sub) throws VPackBuilderException {
 		addInternal(attribute, sub);
 		return this;
 	}
 
-	private void addInternal(final Value sub)
-			throws VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
+	private void addInternal(final Value sub) throws VPackBuilderException {
 		boolean haveReported = false;
 		if (!stack.isEmpty() && !keyWritten) {
 			reportAdd();
@@ -91,13 +90,7 @@ public class VPackBuilder {
 		}
 		try {
 			set(sub);
-		} catch (final VPackBuilderUnexpectedValueException e) {
-			// clean up in case of an exception
-			if (haveReported) {
-				cleanupAdd();
-			}
-			throw e;
-		} catch (final VPackBuilderNumberOutOfRangeException e) {
+		} catch (final VPackBuilderException e) {
 			// clean up in case of an exception
 			if (haveReported) {
 				cleanupAdd();
@@ -106,9 +99,7 @@ public class VPackBuilder {
 		}
 	}
 
-	private void addInternal(final String attribute, final Value sub)
-			throws VPackBuilderNeedOpenObjectException, VPackBuilderKeyAlreadyWrittenException,
-			VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
+	private void addInternal(final String attribute, final Value sub) throws VPackBuilderException {
 		boolean haveReported = false;
 		if (!stack.isEmpty()) {
 			final byte head = head();
@@ -122,20 +113,14 @@ public class VPackBuilder {
 			haveReported = true;
 		}
 		try {
-			final VPackKeyTranslator keyAdapter = options.getKeyTranslator();
-			final Integer key = keyAdapter != null ? keyAdapter.toKey(attribute) : null;
+			final VPackKeyTranslator keyTranslator = options.getKeyTranslator();
+			final Integer key = keyTranslator != null ? keyTranslator.toKey(attribute) : null;
 			final Value attr = key != null ? new Value(key, (key < -6 || key > 9) ? ValueType.INT : ValueType.SMALLINT)
 					: new Value(attribute);
 			set(attr);
 			keyWritten = true;
 			set(sub);
-		} catch (final VPackBuilderUnexpectedValueException e) {
-			// clean up in case of an exception
-			if (haveReported) {
-				cleanupAdd();
-			}
-			throw e;
-		} catch (final VPackBuilderNumberOutOfRangeException e) {
+		} catch (final VPackBuilderException e) {
 			// clean up in case of an exception
 			if (haveReported) {
 				cleanupAdd();
@@ -146,8 +131,7 @@ public class VPackBuilder {
 		}
 	}
 
-	private void set(final Value item)
-			throws VPackBuilderUnexpectedValueException, VPackBuilderNumberOutOfRangeException {
+	private void set(final Value item) throws VPackBuilderException {
 		final Class<?> clazz = item.getClazz();
 		switch (item.getType()) {
 		case NULL:
@@ -303,7 +287,7 @@ public class VPackBuilder {
 		DateUtil.append(buffer, value);
 	}
 
-	private void appendString(final String value) {
+	private void appendString(final String value) throws VPackBuilderException {
 		final int length = value.length();
 		if (length <= 126) {
 			// short string
@@ -313,7 +297,11 @@ public class VPackBuilder {
 			buffer.add((byte) 0xbf);
 			appendLength(length);
 		}
-		StringUtil.append(buffer, value);
+		try {
+			StringUtil.append(buffer, value);
+		} catch (final UnsupportedEncodingException e) {
+			throw new VPackBuilderException(e);
+		}
 	}
 
 	private void addArray(final boolean unindexed) {
@@ -460,16 +448,17 @@ public class VPackBuilder {
 		return this;
 	}
 
-	private void sortObjectIndex(final int start, final ArrayList<Integer> offsets) {
+	private void sortObjectIndex(final int start, final List<Integer> offsets) {
+		final byte[] vpack = getVpack();
 		final Comparator<Integer> c = new Comparator<Integer>() {
 			@Override
 			public int compare(final Integer o1, final Integer o2) {
-				final byte[] vpack = getVpack();
 				final VPackSlice key1 = new VPackSlice(vpack, start + o1 - 1, options);
 				final String key1AsString = getKeyAsString(key1);
 				final VPackSlice key2 = new VPackSlice(vpack, start + o2 - 1, options);
 				final String key2AsString = getKeyAsString(key2);
 				return key1AsString.compareTo(key2AsString);
+
 			}
 		};
 		Collections.sort(offsets, c);
