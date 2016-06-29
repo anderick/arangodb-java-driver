@@ -146,7 +146,7 @@ public class VPack {
 	private void deserializeField(final VPackSlice vpack, final Object entity, final Field field)
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException,
 			VPackKeyTypeException {
-		final VPackSlice attr = vpack.get(field.getName());
+		final VPackSlice attr = vpack.get(getFieldName(field));
 		if (!attr.isNone()) {
 			final Object value = getValue(attr, field, field.getType());
 			setEntityValue(entity, field, value);

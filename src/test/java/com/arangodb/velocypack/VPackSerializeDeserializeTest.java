@@ -18,6 +18,7 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.arangodb.velocypack.annotations.SerializedName;
 import com.arangodb.velocypack.exception.VPackBuilderException;
 import com.arangodb.velocypack.exception.VPackException;
 import com.arangodb.velocypack.exception.VPackParserException;
@@ -2389,4 +2390,44 @@ public class VPackSerializeDeserializeTest {
 		Assert.assertNotNull(entity.s);
 		Assert.assertEquals(value, entity.s);
 	}
+
+	protected static class TestEntitySerializeAnnotation {
+
+		@SerializedName("abc")
+		private String test = "test";
+
+		public String getTest() {
+			return test;
+		}
+
+		public void setTest(final String test) {
+			this.test = test;
+		}
+
+	}
+
+	@Test
+	public void fromAnnotation() throws VPackParserException {
+		final TestEntitySerializeAnnotation entity = new TestEntitySerializeAnnotation();
+		final VPackSlice vpack = new VPack().serialize(entity);
+		Assert.assertTrue(vpack.isObject());
+		Assert.assertEquals(1, vpack.getLength());
+		final VPackSlice abc = vpack.get("abc");
+		Assert.assertTrue(abc.isString());
+		Assert.assertEquals("test", abc.getAsString());
+	}
+
+	@Test
+	public void toAnnotation() throws VPackBuilderException, VPackParserException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.OBJECT));
+		builder.add("abc", new Value("test2"));
+		builder.close();
+		final TestEntitySerializeAnnotation entity = new VPack().deserialize(builder.slice(),
+			TestEntitySerializeAnnotation.class);
+		Assert.assertNotNull(entity);
+		Assert.assertNotNull(entity.test);
+		Assert.assertEquals("test2", entity.test);
+	}
+
 }
