@@ -857,7 +857,7 @@ public class VPackSerializeDeserializeTest {
 	}
 
 	protected static class TestEntityArrayInArray {
-		private long[][] a1 = { { 1, 2, 3 }, { 4, 5, 6 } };
+		private long[][] a1;
 
 		public long[][] getA1() {
 			return a1;
@@ -871,6 +871,7 @@ public class VPackSerializeDeserializeTest {
 	@Test
 	public void fromArrayInArray() throws VPackParserException {
 		final TestEntityArrayInArray entity = new TestEntityArrayInArray();
+		entity.a1 = new long[][] { { 1, 2, 3 }, { 4, 5, 6 } };
 		final VPackSlice vpack = new VPack().serialize(entity);
 		Assert.assertNotNull(vpack);
 		Assert.assertTrue(vpack.isObject());
@@ -897,7 +898,7 @@ public class VPackSerializeDeserializeTest {
 		{
 			builder.add(new Value(ValueType.OBJECT));
 			{
-				builder.add(new Value(ValueType.ARRAY));
+				builder.add("a1", new Value(ValueType.ARRAY));
 				{
 					builder.add(new Value(ValueType.ARRAY));
 					builder.add(new Value(1));
@@ -931,6 +932,142 @@ public class VPackSerializeDeserializeTest {
 			Assert.assertEquals(4, entity.a1[1][0]);
 			Assert.assertEquals(5, entity.a1[1][1]);
 			Assert.assertEquals(6, entity.a1[1][2]);
+		}
+	}
+
+	protected static class TestEntityArrayInArrayInArray {
+		private double[][][] a1;
+
+		public double[][][] getA1() {
+			return a1;
+		}
+
+		public void setA1(final double[][][] a1) {
+			this.a1 = a1;
+		}
+
+	}
+
+	@Test
+	public void fromArrayInArrayInArray() throws VPackParserException {
+		final TestEntityArrayInArrayInArray entity = new TestEntityArrayInArrayInArray();
+		entity.setA1(new double[][][] { { { 1.5, 2.25 }, { 10.5, 20.25 } }, { { 100.5 }, { 200.25 } } });
+		final VPackSlice vpack = new VPack().serialize(entity);
+		Assert.assertNotNull(vpack);
+		Assert.assertTrue(vpack.isObject());
+		{
+			final VPackSlice a1 = vpack.get("a1");
+			Assert.assertTrue(a1.isArray());
+			Assert.assertEquals(entity.a1.length, a1.getLength());
+			for (int i = 0; i < a1.getLength(); i++) {
+				final VPackSlice at = a1.at(i);
+				Assert.assertTrue(at.isArray());
+				Assert.assertEquals(entity.a1[i].length, at.getLength());
+				for (int j = 0; j < at.getLength(); j++) {
+					final VPackSlice atat = at.at(j);
+					Assert.assertTrue(atat.isArray());
+					Assert.assertEquals(entity.a1[i][j].length, atat.getLength());
+					for (int k = 0; k < atat.getLength(); k++) {
+						final VPackSlice atatat = atat.at(k);
+						Assert.assertTrue(atatat.isDouble());
+						Assert.assertEquals(entity.a1[i][j][k], atatat.getAsDouble(), 0.);
+					}
+				}
+			}
+		}
+	}
+
+	@Test
+	public void toArrayInArrayInArray() throws VPackBuilderException, VPackParserException {
+		final VPackBuilder builder = new VPackBuilder();
+		{
+			builder.add(new Value(ValueType.OBJECT));
+			{
+				builder.add("a1", new Value(ValueType.ARRAY));
+				builder.add(new Value(ValueType.ARRAY));
+				{
+					builder.add(new Value(ValueType.ARRAY));
+					builder.add(new Value(1.5));
+					builder.add(new Value(2.5));
+					builder.add(new Value(3.5));
+					builder.close();
+				}
+				{
+					builder.add(new Value(ValueType.ARRAY));
+					builder.add(new Value(4.5));
+					builder.add(new Value(5.5));
+					builder.add(new Value(6.5));
+					builder.close();
+				}
+				{
+					builder.add(new Value(ValueType.ARRAY));
+					builder.add(new Value(7.5));
+					builder.add(new Value(8.5));
+					builder.add(new Value(9.5));
+					builder.close();
+				}
+				builder.close();
+				builder.add(new Value(ValueType.ARRAY));
+				{
+					builder.add(new Value(ValueType.ARRAY));
+					builder.add(new Value(1.5));
+					builder.add(new Value(2.5));
+					builder.add(new Value(3.5));
+					builder.close();
+				}
+				{
+					builder.add(new Value(ValueType.ARRAY));
+					builder.add(new Value(4.5));
+					builder.add(new Value(5.5));
+					builder.add(new Value(6.5));
+					builder.close();
+				}
+				{
+					builder.add(new Value(ValueType.ARRAY));
+					builder.add(new Value(7.5));
+					builder.add(new Value(8.5));
+					builder.add(new Value(9.5));
+					builder.close();
+				}
+				builder.close();
+				builder.close();
+			}
+			builder.close();
+		}
+		final VPackSlice vpack = builder.slice();
+		final TestEntityArrayInArrayInArray entity = new VPack().deserialize(vpack,
+			TestEntityArrayInArrayInArray.class);
+		Assert.assertNotNull(entity);
+		Assert.assertEquals(2, entity.a1.length);
+		{
+			Assert.assertEquals(3, entity.a1[0].length);
+			Assert.assertEquals(3, entity.a1[0][0].length);
+			Assert.assertEquals(1.5, entity.a1[0][0][0], 0.);
+			Assert.assertEquals(2.5, entity.a1[0][0][1], 0.);
+			Assert.assertEquals(3.5, entity.a1[0][0][2], 0.);
+			Assert.assertEquals(3, entity.a1[0][1].length);
+			Assert.assertEquals(4.5, entity.a1[0][1][0], 0.);
+			Assert.assertEquals(5.5, entity.a1[0][1][1], 0.);
+			Assert.assertEquals(6.5, entity.a1[0][1][2], 0.);
+			Assert.assertEquals(3, entity.a1[0][2].length);
+			Assert.assertEquals(7.5, entity.a1[0][2][0], 0.);
+			Assert.assertEquals(8.5, entity.a1[0][2][1], 0.);
+			Assert.assertEquals(9.5, entity.a1[0][2][2], 0.);
+		}
+		{
+			Assert.assertEquals(3, entity.a1[1].length);
+			Assert.assertEquals(3, entity.a1[1][0].length);
+			Assert.assertEquals(1.5, entity.a1[1][0][0], 0.);
+			Assert.assertEquals(2.5, entity.a1[1][0][1], 0.);
+			Assert.assertEquals(3.5, entity.a1[1][0][2], 0.);
+			Assert.assertEquals(3, entity.a1[1][1].length);
+			Assert.assertEquals(4.5, entity.a1[1][1][0], 0.);
+			Assert.assertEquals(5.5, entity.a1[1][1][1], 0.);
+			Assert.assertEquals(6.5, entity.a1[1][1][2], 0.);
+			Assert.assertEquals(3, entity.a1[1][2].length);
+			Assert.assertEquals(7.5, entity.a1[1][2][0], 0.);
+			Assert.assertEquals(8.5, entity.a1[1][2][1], 0.);
+			Assert.assertEquals(9.5, entity.a1[1][2][2], 0.);
 		}
 	}
 
