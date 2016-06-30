@@ -3,7 +3,6 @@ package com.arangodb.velocypack;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -17,9 +16,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.arangodb.velocypack.VPackBuilder.BuilderOptions;
+import com.arangodb.velocypack.VPackCache.FieldInfo;
 import com.arangodb.velocypack.VPackSlice.SliceOptions;
-import com.arangodb.velocypack.annotations.Expose;
-import com.arangodb.velocypack.annotations.SerializedName;
 import com.arangodb.velocypack.defaults.VPackDefaultOptions;
 import com.arangodb.velocypack.defaults.VPackDefautInstanceCreators;
 import com.arangodb.velocypack.exception.VPackBuilderException;
@@ -37,19 +35,6 @@ public class VPack {
 
 	public static interface VPackOptions extends SliceOptions, BuilderOptions {
 
-	}
-
-	private static class FieldInfo {
-		private final String fieldName;
-		private final boolean serialize;
-		private final boolean deserialize;
-
-		public FieldInfo(final String fieldName, final boolean serialize, final boolean deserialize) {
-			super();
-			this.fieldName = fieldName;
-			this.serialize = serialize;
-			this.deserialize = deserialize;
-		}
 	}
 
 	private static final String ATTR_KEY = "key";
@@ -76,8 +61,7 @@ public class VPack {
 	private final Map<Class<?>, VPackInstanceCreator<?>> instanceCreators;
 	private final VPackOptions options;
 
-	private final Map<Class<?>, Collection<Field>> fieldCache;
-	private final Map<Field, FieldInfo> fieldInfoCache;
+	private final VPackCache cache;
 
 	public VPack() {
 		this(new VPackDefaultOptions());
@@ -90,8 +74,7 @@ public class VPack {
 		deserializers = new HashMap<Class<?>, VPackDeserializer<?>>();
 		instanceCreators = new HashMap<Class<?>, VPackInstanceCreator<?>>();
 		VPackDefautInstanceCreators.registerInstanceCreators(this);
-		fieldCache = new HashMap<Class<?>, Collection<Field>>();
-		fieldInfoCache = new HashMap<Field, FieldInfo>();
+		cache = new VPackCache();
 	}
 
 	public VPackOptions getOptions() {
@@ -118,14 +101,14 @@ public class VPack {
 		setSliceOptions(vpack);
 		final T entity;
 		try {
-			entity = deserializeInternal(vpack, type);
+			entity = deserializeObject(vpack, type);
 		} catch (final Exception e) {
 			throw new VPackParserException(e);
 		}
 		return entity;
 	}
 
-	private <T> T deserializeInternal(final VPackSlice vpack, final Class<T> type) throws InstantiationException,
+	private <T> T deserializeObject(final VPackSlice vpack, final Class<T> type) throws InstantiationException,
 			IllegalAccessException, NoSuchMethodException, InvocationTargetException, VPackKeyTypeException {
 		final T entity;
 		final VPackDeserializer<T> deserializer = (VPackDeserializer<T>) deserializers.get(type);
@@ -151,16 +134,18 @@ public class VPack {
 
 	private void deserializeFields(final Object entity, final VPackSlice vpack) throws VPackKeyTypeException,
 			NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-		final Collection<Field> fields = getDeclaredFields(entity, false);
-		for (final Field field : fields) {
-			deserializeField(vpack, entity, field);
+		final Map<Field, FieldInfo> fields = getDeclaredFields(entity);
+		for (final Entry<Field, FieldInfo> field : fields.entrySet()) {
+			if (field.getValue().isDeserialize()) {
+				deserializeField(vpack, entity, field.getKey());
+			}
 		}
 	}
 
 	private void deserializeField(final VPackSlice vpack, final Object entity, final Field field)
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException,
 			VPackKeyTypeException {
-		final VPackSlice attr = vpack.get(getFieldName(field));
+		final VPackSlice attr = vpack.get(getFieldName(entity, field));
 		if (!attr.isNone()) {
 			final Object value = getValue(attr, field, field.getType());
 			setEntityValue(entity, field, value);
@@ -220,21 +205,20 @@ public class VPack {
 		} else if (type == Character.class || type == char.class) {
 			value = vpack.getAsChar();
 		} else if (type.isArray()) {
-			value = getArray(vpack, field, type);
+			value = deserializeArray(vpack, field, type);
 		} else if (type.isEnum()) {
-			final Class<? extends Enum> enumType = (Class<? extends Enum>) type;
-			value = Enum.valueOf(enumType, vpack.getAsString());
+			value = Enum.valueOf((Class<? extends Enum>) type, vpack.getAsString());
 		} else if (Collection.class.isAssignableFrom(type)) {
-			value = getCollection(vpack, field, type);
+			value = deserializeCollection(vpack, field, type);
 		} else if (Map.class.isAssignableFrom(type)) {
-			value = getMap(vpack, field, type);
+			value = deserializeMap(vpack, field, type);
 		} else {
-			value = deserializeInternal(vpack, type);
+			value = deserializeObject(vpack, type);
 		}
 		return value;
 	}
 
-	private <T> Object getArray(final VPackSlice vpack, final Field field, final Class<T> type)
+	private <T> Object deserializeArray(final VPackSlice vpack, final Field field, final Class<T> type)
 			throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException,
 			VPackKeyTypeException {
 		final int length = (int) vpack.getLength();
@@ -246,7 +230,7 @@ public class VPack {
 		return value;
 	}
 
-	private <T> Object getCollection(final VPackSlice vpack, final Field field, final Class<T> type)
+	private <T> Object deserializeCollection(final VPackSlice vpack, final Field field, final Class<T> type)
 			throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException,
 			VPackKeyTypeException {
 		final Collection value = (Collection) createInstance(type);
@@ -260,7 +244,7 @@ public class VPack {
 		return value;
 	}
 
-	private <T> Object getMap(final VPackSlice vpack, final Field field, final Class<T> type)
+	private <T> Object deserializeMap(final VPackSlice vpack, final Field field, final Class<T> type)
 			throws VPackKeyTypeException, InstantiationException, IllegalAccessException, NoSuchMethodException,
 			InvocationTargetException {
 		final int length = (int) vpack.getLength();
@@ -331,14 +315,14 @@ public class VPack {
 	public VPackSlice serialize(final Object entity) throws VPackParserException {
 		final VPackBuilder builder = new VPackBuilder(options);
 		try {
-			serializeInternal(null, entity, builder);
+			serializeObject(null, entity, builder);
 		} catch (final Exception e) {
 			throw new VPackParserException(e);
 		}
 		return builder.slice();
 	}
 
-	private void serializeInternal(final String name, final Object entity, final VPackBuilder builder)
+	private void serializeObject(final String name, final Object entity, final VPackBuilder builder)
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, VPackBuilderException {
 
 		add(name, new Value(ValueType.OBJECT), builder);
@@ -348,69 +332,34 @@ public class VPack {
 		} else {
 			serializeFields(entity, builder);
 		}
-		builder.close();
+		builder.close(false);
 	}
 
 	private void serializeFields(final Object entity, final VPackBuilder builder)
 			throws VPackBuilderException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-		final Collection<Field> fields = getDeclaredFields(entity, true);
-		for (final Field field : fields) {
-			serializeField(entity, builder, field);
-		}
-	}
-
-	private Collection<Field> getDeclaredFields(final Object entity, final boolean serialize) {
-
-		Collection<Field> fields = fieldCache.get(entity.getClass());
-		if (fields == null) {
-			fields = new ArrayList<Field>();
-			Class<?> tmp = entity.getClass();
-			while (tmp != null && tmp != Object.class) {
-				final Field[] declaredFields = tmp.getDeclaredFields();
-				for (final Field field : declaredFields) {
-					if (filterField(field, serialize)) {
-						fields.add(field);
-					}
-				}
-				tmp = tmp.getSuperclass();
+		final Map<Field, FieldInfo> fields = getDeclaredFields(entity);
+		for (final Entry<Field, FieldInfo> field : fields.entrySet()) {
+			if (field.getValue().isSerialize()) {
+				serializeField(entity, builder, field.getKey());
 			}
-			fieldCache.put(entity.getClass(), fields);
 		}
-		return fields;
 	}
 
-	private boolean filterField(final Field field, final boolean serialize) {
-		final FieldInfo fieldInfo = getFieldInfo(field);
-		final boolean dontExpose = fieldInfo != null ? serialize ? fieldInfo.serialize : fieldInfo.deserialize : true;
-		return !field.isSynthetic() && !Modifier.isStatic(field.getModifiers()) && dontExpose;
+	private Map<Field, FieldInfo> getDeclaredFields(final Object entity) {
+		return cache.getFields(entity.getClass());
 	}
 
 	private void serializeField(final Object entity, final VPackBuilder builder, final Field field)
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, VPackBuilderException {
 
-		final String fieldName = getFieldName(field);
+		final String fieldName = getFieldName(entity, field);
 		final Class<?> type = field.getType();
 		final Object value = getEntityValue(entity, field);
 		addValue(field, fieldName, type, value, builder);
 	}
 
-	private String getFieldName(final Field field) {
-		final FieldInfo fieldInfo = getFieldInfo(field);
-		return fieldInfo != null ? fieldInfo.fieldName : field.getName();
-	}
-
-	private FieldInfo getFieldInfo(final Field field) {
-		FieldInfo fieldInfo = fieldInfoCache.get(field);
-		if (fieldInfo == null) {
-			final SerializedName annotationName = field.getAnnotation(SerializedName.class);
-			final String fieldName = annotationName != null ? annotationName.value() : field.getName();
-			final Expose expose = field.getAnnotation(Expose.class);
-			final boolean serialize = expose != null ? expose.serialize() : true;
-			final boolean deserialize = expose != null ? expose.deserialize() : true;
-			fieldInfo = new FieldInfo(fieldName, serialize, deserialize);
-			fieldInfoCache.put(field, fieldInfo);
-		}
-		return fieldInfo;
+	private String getFieldName(final Object entity, final Field field) {
+		return cache.getFieldName(entity.getClass(), field);
 	}
 
 	private void addValue(
@@ -444,19 +393,19 @@ public class VPack {
 		} else if (type == Character.class || type == char.class) {
 			add(name, new Value(Character.class.cast(value)), builder);
 		} else if (type.isArray()) {
-			addArray(name, value, builder);
+			serializeArray(name, value, builder);
 		} else if (type.isEnum()) {
 			add(name, new Value(Enum.class.cast(value).name()), builder);
 		} else if (Iterable.class.isAssignableFrom(type)) {
-			addIterable(name, value, builder);
+			serializeIterable(name, value, builder);
 		} else if (Map.class.isAssignableFrom(type)) {
-			addMap(field, name, type, value, builder);
+			serializeMap(field, name, type, value, builder);
 		} else {
-			serializeInternal(name, value, builder);
+			serializeObject(name, value, builder);
 		}
 	}
 
-	private void addArray(final String name, final Object value, final VPackBuilder builder)
+	private void serializeArray(final String name, final Object value, final VPackBuilder builder)
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, VPackBuilderException {
 		add(name, new Value(ValueType.ARRAY), builder);
 		for (int i = 0; i < Array.getLength(value); i++) {
@@ -466,7 +415,7 @@ public class VPack {
 		builder.close();
 	}
 
-	private void addIterable(final String name, final Object value, final VPackBuilder builder)
+	private void serializeIterable(final String name, final Object value, final VPackBuilder builder)
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, VPackBuilderException {
 		add(name, new Value(ValueType.ARRAY), builder);
 		for (final Iterator iterator = Iterable.class.cast(value).iterator(); iterator.hasNext();) {
@@ -476,7 +425,7 @@ public class VPack {
 		builder.close();
 	}
 
-	private void addMap(
+	private void serializeMap(
 		final Field field,
 		final String name,
 		final Class<?> type,

@@ -49,9 +49,9 @@ public class VPackBuilder {
 	private final ArrayList<Byte> buffer; // Here we collect the result
 	private final ArrayList<Integer> stack; // Start positions of open
 											// objects/arrays
-	private final Map<Integer, ArrayList<Integer>> index; // Indices for starts
-															// of
-															// subindex
+	private final Map<Integer, List<Integer>> index; // Indices for starts
+														// of
+														// subindex
 	private boolean keyWritten; // indicates that in the current object the key
 								// has been written but the value not yet
 	private final BuilderOptions options;
@@ -65,7 +65,7 @@ public class VPackBuilder {
 		this.options = options;
 		buffer = new ArrayList<Byte>();
 		stack = new ArrayList<Integer>();
-		index = new HashMap<Integer, ArrayList<Integer>>();
+		index = new HashMap<Integer, List<Integer>>();
 	}
 
 	public BuilderOptions getOptions() {
@@ -329,17 +329,21 @@ public class VPackBuilder {
 	}
 
 	private void cleanupAdd() {
-		final ArrayList<Integer> depth = index.get(stack.size() - 1);
+		final List<Integer> depth = index.get(stack.size() - 1);
 		depth.remove(depth.size() - 1);
 	}
 
 	public VPackBuilder close() throws VPackBuilderNeedOpenCompoundException {
+		return close(true);
+	}
+
+	protected VPackBuilder close(final boolean sort) throws VPackBuilderNeedOpenCompoundException {
 		if (isClosed()) {
 			throw new VPackBuilderNeedOpenCompoundException();
 		}
 		final byte head = head();
 		final boolean isArray = head == 0x06 || head == 0x13;
-		final ArrayList<Integer> in = index.get(stack.size() - 1);
+		final List<Integer> in = index.get(stack.size() - 1);
 		final int tos = stack.get(stack.size() - 1);
 		if (in.isEmpty()) {
 			// empty Array or Object
@@ -404,7 +408,7 @@ public class VPackBuilder {
 		}
 		// Now build the table:
 		if (needIndexTable) {
-			if (buffer.get(tos) == 0x0b) {
+			if (sort && buffer.get(tos) == 0x0b) {
 				// Object
 				sortObjectIndex(tos, in);
 			}
@@ -458,7 +462,6 @@ public class VPackBuilder {
 				final VPackSlice key2 = new VPackSlice(vpack, start + o2 - 1, options);
 				final String key2AsString = getKeyAsString(key2);
 				return key1AsString.compareTo(key2AsString);
-
 			}
 		};
 		Collections.sort(offsets, c);
