@@ -38,11 +38,7 @@ public class VPackDefaultKeyTranslator implements VPackKeyTranslator {
 		register(TO, TO_ATTRIBUTE - ATTRIBUTE_BASE);
 	}
 
-	@Override
-	public void register(final String attribute, final int key) {
-		if (keyToAttribute.containsKey(key)) {
-			throw new IllegalArgumentException(String.format("attribute adaption with key %s already registered", key));
-		}
+	private void register(final String attribute, final int key) {
 		attributeToKey.put(attribute, key);
 		keyToAttribute.put(key, attribute);
 	}

@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.arangodb.velocypack.VPackSlice.SliceOptions;
 import com.arangodb.velocypack.defaults.VPackDefaultOptions;
 import com.arangodb.velocypack.exception.VPackBuilderException;
 import com.arangodb.velocypack.exception.VPackBuilderKeyAlreadyWrittenException;
@@ -31,7 +30,7 @@ import com.arangodb.velocypack.util.ValueType;
  */
 public class VPackBuilder {
 
-	public static interface BuilderOptions extends SliceOptions {
+	public static interface BuilderOptions {
 		boolean isBuildUnindexedArrays();
 
 		void setBuildUnindexedArrays(boolean buildUnindexedArrays);
@@ -140,8 +139,7 @@ public class VPackBuilder {
 			haveReported = true;
 		}
 		try {
-			final VPackKeyTranslator keyTranslator = options.getKeyTranslator();
-			final Integer key = keyTranslator != null ? keyTranslator.toKey(attribute) : null;
+			final Integer key = VPackSlice.keyTranslator.toKey(attribute);
 			final Value attr = key != null ? new Value(key, (key < -6 || key > 9) ? ValueType.INT : ValueType.SMALLINT)
 					: new Value(attribute);
 			set(attr);
@@ -691,9 +689,9 @@ public class VPackBuilder {
 		final Comparator<Integer> c = new Comparator<Integer>() {
 			@Override
 			public int compare(final Integer o1, final Integer o2) {
-				final VPackSlice key1 = new VPackSlice(buffer, start + o1, options);
+				final VPackSlice key1 = new VPackSlice(buffer, start + o1);
 				final String key1AsString = getKeyAsString(key1);
-				final VPackSlice key2 = new VPackSlice(buffer, start + o2, options);
+				final VPackSlice key2 = new VPackSlice(buffer, start + o2);
 				final String key2AsString = getKeyAsString(key2);
 				return key1AsString.compareTo(key2AsString);
 			}
@@ -706,7 +704,7 @@ public class VPackBuilder {
 		if (key.isString()) {
 			result = key.getAsString();
 		} else if (key.isInteger()) {
-			result = options.getKeyTranslator().fromKey(key.getAsInt());
+			result = VPackSlice.keyTranslator.fromKey(key.getAsInt());
 		} else {
 			result = "";
 		}
@@ -727,7 +725,7 @@ public class VPackBuilder {
 	}
 
 	public VPackSlice slice() {
-		return new VPackSlice(buffer, options);
+		return new VPackSlice(buffer);
 	}
 
 	public int getVpackSize() {

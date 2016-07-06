@@ -1135,46 +1135,6 @@ public class VPackSliceTest {
 	}
 
 	@Test
-	public void attributeAdapterCustom1Item() {
-		// {69:"a"}
-		final VPackSlice slice = new VPackSlice(new byte[] { 0x0b, 0x07, 0x01, 0x28, 0x45, 0x41, 0x61 });
-		final String attribute = "test";
-		slice.getOptions().getKeyTranslator().register(attribute, 69);
-		Assert.assertTrue(slice.isObject());
-		Assert.assertEquals(1, slice.getLength());
-		final VPackSlice test = slice.get(attribute);
-		Assert.assertTrue(test.isString());
-		Assert.assertEquals("a", test.getAsString());
-	}
-
-	@Test
-	public void attributeAdapterCustom2Items() {
-		// {69:"a",70:"b"}
-		final VPackSlice slice = new VPackSlice(
-				new byte[] { 0x0b, 0x0d, 0x02, 0x28, 0x45, 0x41, 0x61, 0x28, 0x46, 0x41, 0x62, 0x03, 0x07 });
-		slice.getOptions().getKeyTranslator().register("test", 69);
-		slice.getOptions().getKeyTranslator().register("test2", 70);
-		Assert.assertTrue(slice.isObject());
-		Assert.assertEquals(2, slice.getLength());
-		{
-			final VPackSlice test = slice.get("test");
-			Assert.assertTrue(test.isString());
-			Assert.assertEquals("a", test.getAsString());
-		}
-		{
-			final VPackSlice test = slice.get("test2");
-			Assert.assertTrue(test.isString());
-			Assert.assertEquals("b", test.getAsString());
-		}
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void attributeAdapterCustomFail() {
-		final VPackSlice slice = new VPackSlice();
-		slice.getOptions().getKeyTranslator().register("test", 1);
-	}
-
-	@Test
 	public void attributeAdapterObjectWithIndexTable() {
 		// {1:"a",2:"b",3:"c",4:"d",5:"e"}
 		// {"_key":"a","_rev":"b","_id":"c","_from":"d","_to":"e"}

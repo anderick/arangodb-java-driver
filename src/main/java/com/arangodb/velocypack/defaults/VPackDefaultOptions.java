@@ -1,15 +1,14 @@
 package com.arangodb.velocypack.defaults;
 
-import com.arangodb.velocypack.VPackKeyTranslator;
-import com.arangodb.velocypack.VPackBuilder.BuilderOptions;
 import com.arangodb.velocypack.VPack.VPackOptions;
-import com.arangodb.velocypack.VPackSlice.SliceOptions;
+import com.arangodb.velocypack.VPackBuilder.BuilderOptions;
+import com.arangodb.velocypack.VPackKeyTranslator;
 
 /**
  * @author Mark - mark@arangodb.com
  *
  */
-public class VPackDefaultOptions implements VPackOptions, SliceOptions, BuilderOptions {
+public class VPackDefaultOptions implements VPackOptions, BuilderOptions {
 
 	protected VPackKeyTranslator translator;
 	protected boolean buildUnindexedArrays;
@@ -20,16 +19,6 @@ public class VPackDefaultOptions implements VPackOptions, SliceOptions, BuilderO
 		translator = new VPackDefaultKeyTranslator();
 		buildUnindexedArrays = false;
 		buildUnindexedObjects = false;
-	}
-
-	@Override
-	public VPackKeyTranslator getKeyTranslator() {
-		return translator;
-	}
-
-	@Override
-	public void setKeyTranslator(final VPackKeyTranslator translator) {
-		this.translator = translator;
 	}
 
 	@Override

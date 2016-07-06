@@ -17,7 +17,6 @@ import java.util.Set;
 
 import com.arangodb.velocypack.VPackBuilder.BuilderOptions;
 import com.arangodb.velocypack.VPackCache.FieldInfo;
-import com.arangodb.velocypack.VPackSlice.SliceOptions;
 import com.arangodb.velocypack.defaults.VPackDefaultOptions;
 import com.arangodb.velocypack.defaults.VPackDefautInstanceCreators;
 import com.arangodb.velocypack.exception.VPackBuilderException;
@@ -33,7 +32,7 @@ import com.arangodb.velocypack.util.ValueType;
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class VPack {
 
-	public static interface VPackOptions extends SliceOptions, BuilderOptions {
+	public static interface VPackOptions extends BuilderOptions {
 
 	}
 
@@ -93,12 +92,7 @@ public class VPack {
 		instanceCreators.put(clazz, creator);
 	}
 
-	private void setSliceOptions(final VPackSlice slice) {
-		slice.getOptions().setKeyTranslator(options.getKeyTranslator());
-	}
-
 	public <T> T deserialize(final VPackSlice vpack, final Class<T> type) throws VPackParserException {
-		setSliceOptions(vpack);
 		final T entity;
 		try {
 			entity = deserializeObject(vpack, type);
@@ -274,7 +268,7 @@ public class VPack {
 		if (key.isString()) {
 			result = key.getAsString();
 		} else if (key.isInteger()) {
-			result = options.getKeyTranslator().fromKey(key.getAsInt());
+			result = VPackSlice.keyTranslator.fromKey(key.getAsInt());
 		} else {
 			throw new VPackKeyTypeException("Expecting type String oder Integer for key");
 		}

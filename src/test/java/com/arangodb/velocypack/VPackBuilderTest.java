@@ -728,9 +728,8 @@ public class VPackBuilderTest {
 		final VPackSlice vpackWithoutAttrAdapter;
 		{
 			final VPackBuilder builder = new VPackBuilder();
-			builder.getOptions().setKeyTranslator(null);
 			builder.add(new Value(ValueType.OBJECT));
-			builder.add("_key", new Value("a"));
+			builder.add("_kay", new Value("a"));
 			builder.close();
 			vpackWithoutAttrAdapter = builder.slice();
 			Assert.assertTrue(vpackWithoutAttrAdapter.isObject());

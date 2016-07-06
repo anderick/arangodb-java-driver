@@ -21,6 +21,4 @@ public interface VPackKeyTranslator {
 	 */
 	String fromKey(int key);
 
-	void register(String attribute, int key);
-
 }

@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.util.Iterator;
 
-import com.arangodb.velocypack.defaults.VPackDefaultOptions;
+import com.arangodb.velocypack.defaults.VPackDefaultKeyTranslator;
 import com.arangodb.velocypack.exception.VPackValueTypeException;
 import com.arangodb.velocypack.util.ArrayIterator;
 import com.arangodb.velocypack.util.BinaryUtil;
@@ -24,15 +24,13 @@ import com.arangodb.velocypack.util.ValueTypeUtil;
  */
 public class VPackSlice {
 
-	public static interface SliceOptions {
-		VPackKeyTranslator getKeyTranslator();
-
-		void setKeyTranslator(VPackKeyTranslator translator);
+	public static VPackKeyTranslator keyTranslator;
+	static {
+		keyTranslator = new VPackDefaultKeyTranslator();
 	}
 
 	private final byte[] vpack;
 	private final int start;
-	private final SliceOptions options;
 
 	protected VPackSlice() {
 		this(new byte[] { 0x00 }, 0);
@@ -42,23 +40,10 @@ public class VPackSlice {
 		this(vpack, 0);
 	}
 
-	public VPackSlice(final byte[] vpack, final SliceOptions options) {
-		this(vpack, 0, options);
-	}
-
 	public VPackSlice(final byte[] vpack, final int start) {
-		this(vpack, start, new VPackDefaultOptions());
-	}
-
-	public VPackSlice(final byte[] vpack, final int start, final SliceOptions options) {
 		super();
 		this.vpack = vpack;
 		this.start = start;
-		this.options = options;
-	}
-
-	public SliceOptions getOptions() {
-		return options;
 	}
 
 	public byte head() {
@@ -337,7 +322,7 @@ public class VPackSlice {
 				if (head <= 0x05) {
 					// array with no offset table or length
 					final int dataOffset = findDataOffset();
-					final VPackSlice first = new VPackSlice(vpack, start + dataOffset, options);
+					final VPackSlice first = new VPackSlice(vpack, start + dataOffset);
 					length = (end - dataOffset) / first.getByteSize();
 				} else if (offsetsize < 8) {
 					length = NumberUtil.toLongReversed(vpack, start + 1 + offsetsize, offsetsize);
@@ -451,11 +436,11 @@ public class VPackSlice {
 			}
 			if (n == 1) {
 				// Just one attribute, there is no index table!
-				final VPackSlice key = new VPackSlice(vpack, start + findDataOffset(), options);
+				final VPackSlice key = new VPackSlice(vpack, start + findDataOffset());
 
 				if ((key.isString() && key.isEqualString(attribute))
-						|| (key.isInteger() && attribute.equals(options.getKeyTranslator().fromKey(key.getAsInt())))) {
-					result = new VPackSlice(vpack, key.start + key.getByteSize(), options);
+						|| (key.isInteger() && attribute.equals(VPackSlice.keyTranslator.fromKey(key.getAsInt())))) {
+					result = new VPackSlice(vpack, key.start + key.getByteSize());
 				}
 			} else {
 				final long ieBase = end - n * offsetsize - (offsetsize == 8 ? 8 : 0);
@@ -484,13 +469,13 @@ public class VPackSlice {
 			final VPackSlice key = iterator.next();
 			if (key.isString()) {
 				if (key.isEqualString(attribute)) {
-					result = new VPackSlice(vpack, key.start + key.getByteSize(), options);
+					result = new VPackSlice(vpack, key.start + key.getByteSize());
 					break;
 				}
 			} else if (key.isInteger()) {
-				final String keyAsString = options.getKeyTranslator().fromKey(key.getAsInt());
+				final String keyAsString = VPackSlice.keyTranslator.fromKey(key.getAsInt());
 				if (attribute.equals(keyAsString)) {
-					result = new VPackSlice(vpack, key.start + key.getByteSize(), options);
+					result = new VPackSlice(vpack, key.start + key.getByteSize());
 					break;
 				}
 			}
@@ -512,12 +497,12 @@ public class VPackSlice {
 			final long index = l + ((r - l) / 2);
 			final long offset = ieBase + index * offsetsize;
 			final long keyIndex = NumberUtil.toLongReversed(vpack, (int) (start + offset), offsetsize);
-			final VPackSlice key = new VPackSlice(vpack, (int) (start + keyIndex), options);
+			final VPackSlice key = new VPackSlice(vpack, (int) (start + keyIndex));
 			int res = 0;
 			if (key.isString()) {
 				res = key.compareString(attribute);
 			} else if (key.isInteger()) {
-				final String keyAsString = options.getKeyTranslator().fromKey(key.getAsInt());
+				final String keyAsString = VPackSlice.keyTranslator.fromKey(key.getAsInt());
 				if (keyAsString != null) {
 					res = keyAsString.compareTo(attribute);
 				} else {
@@ -533,7 +518,7 @@ public class VPackSlice {
 			}
 			if (res == 0) {
 				// found
-				result = new VPackSlice(vpack, key.start + key.getByteSize(), options);
+				result = new VPackSlice(vpack, key.start + key.getByteSize());
 				break;
 			}
 			if (res > 0) {
@@ -562,13 +547,13 @@ public class VPackSlice {
 		for (long index = 0; index < n; index++) {
 			final long offset = ieBase + index * offsetsize;
 			final long keyIndex = NumberUtil.toLongReversed(vpack, (int) (start + offset), offsetsize);
-			final VPackSlice key = new VPackSlice(vpack, (int) (start + keyIndex), options);
+			final VPackSlice key = new VPackSlice(vpack, (int) (start + keyIndex));
 			if (key.isString()) {
 				if (!key.isEqualString(attribute)) {
 					continue;
 				}
 			} else if (key.isInteger()) {
-				final String keyAsString = options.getKeyTranslator().fromKey(key.getAsInt());
+				final String keyAsString = VPackSlice.keyTranslator.fromKey(key.getAsInt());
 				if (keyAsString != null) {
 					if (!keyAsString.equals(attribute)) {
 						continue;
@@ -584,7 +569,7 @@ public class VPackSlice {
 				break;
 			}
 			// key is identical. now return value
-			result = new VPackSlice(vpack, key.start + key.getByteSize(), options);
+			result = new VPackSlice(vpack, key.start + key.getByteSize());
 			break;
 		}
 		return result;
@@ -603,16 +588,16 @@ public class VPackSlice {
 			throw new VPackValueTypeException(ValueType.OBJECT);
 		}
 		final VPackSlice key = getNthKey(index);
-		return new VPackSlice(vpack, key.start + key.getByteSize(), options);
+		return new VPackSlice(vpack, key.start + key.getByteSize());
 	}
 
 	private VPackSlice getNthKey(final int index) {
-		final VPackSlice slice = new VPackSlice(vpack, start + getNthOffset(index), options);
+		final VPackSlice slice = new VPackSlice(vpack, start + getNthOffset(index));
 		return slice;
 	}
 
 	private VPackSlice getNth(final int index) {
-		return new VPackSlice(vpack, start + getNthOffset(index), options);
+		return new VPackSlice(vpack, start + getNthOffset(index));
 	}
 
 	/**
@@ -635,7 +620,7 @@ public class VPackSlice {
 			int dataOffset = findDataOffset();
 			if (head <= 0x05) {
 				// array with no offset table or length
-				final VPackSlice first = new VPackSlice(vpack, start + dataOffset, options);
+				final VPackSlice first = new VPackSlice(vpack, start + dataOffset);
 				n = (end - dataOffset) / first.getByteSize();
 			} else if (offsetsize < 8) {
 				n = NumberUtil.toLongReversed(vpack, start + 1 + offsetsize, offsetsize);
@@ -652,7 +637,7 @@ public class VPackSlice {
 				if (dataOffset == 0) {
 					dataOffset = findDataOffset();
 				}
-				offset = dataOffset + index * new VPackSlice(vpack, start + dataOffset, options).getByteSize();
+				offset = dataOffset + index * new VPackSlice(vpack, start + dataOffset).getByteSize();
 			} else {
 				final long ieBase = end - n * offsetsize + index * offsetsize - (offsetsize == 8 ? 8 : 0);
 				offset = (int) NumberUtil.toLongReversed(vpack, (int) (start + ieBase), offsetsize);
@@ -674,7 +659,7 @@ public class VPackSlice {
 		long offset = 1 + NumberUtil.getVariableValueLength(end);
 		long current = 0;
 		while (current != index) {
-			final long byteSize = new VPackSlice(vpack, (int) (start + offset), options).getByteSize();
+			final long byteSize = new VPackSlice(vpack, (int) (start + offset)).getByteSize();
 			offset += byteSize;
 			if (head == 0x14) {
 				offset += byteSize;
