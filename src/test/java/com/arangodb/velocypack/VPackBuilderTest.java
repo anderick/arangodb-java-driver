@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.Date;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.arangodb.velocypack.exception.VPackBuilderException;
@@ -220,14 +221,14 @@ public class VPackBuilderTest {
 	@Test(expected = VPackBuilderUnexpectedValueException.class)
 	public void addLongAsUIntNegative() throws VPackBuilderException {
 		final VPackBuilder builder = new VPackBuilder();
-		final long value = -1;
+		final long value = -10;
 		builder.add(new Value(value, ValueType.UINT));
 	}
 
 	@Test(expected = VPackBuilderUnexpectedValueException.class)
 	public void addBigIntegerAsUIntNegative() throws VPackBuilderException {
 		final VPackBuilder builder = new VPackBuilder();
-		final BigInteger value = BigInteger.valueOf(-1);
+		final BigInteger value = BigInteger.valueOf(-10);
 		builder.add(new Value(value, ValueType.UINT));
 	}
 
@@ -300,6 +301,30 @@ public class VPackBuilderTest {
 			Assert.assertTrue(at.isInteger());
 			Assert.assertEquals(expected[i], at.getAsLong());
 		}
+	}
+
+	@Test
+	@Ignore
+	public void arrayItemsSameLength() throws VPackBuilderException {
+		VPackSlice sliceNotSame;
+		{
+			final VPackBuilder builder = new VPackBuilder();
+			builder.add(new Value(ValueType.ARRAY));
+			builder.add(new Value("aa"));
+			builder.add(new Value("a"));
+			builder.close();
+			sliceNotSame = builder.slice();
+		}
+		VPackSlice sliceSame;
+		{
+			final VPackBuilder builder = new VPackBuilder();
+			builder.add(new Value(ValueType.ARRAY));
+			builder.add(new Value("aa"));
+			builder.add(new Value("aa"));
+			builder.close();
+			sliceSame = builder.slice();
+		}
+		Assert.assertTrue(sliceSame.getByteSize() < sliceNotSame.getByteSize());
 	}
 
 	@Test
@@ -680,14 +705,14 @@ public class VPackBuilderTest {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.OBJECT));
 		for (int i = 0; i < keysUnsorted.length; i++) {
-			builder.add(String.valueOf(i), new Value("test"));
+			builder.add(String.valueOf(keysUnsorted[i]), new Value("test"));
 		}
 		builder.close();
 		final VPackSlice vpack = builder.slice();
 		Assert.assertTrue(vpack.isObject());
 		Assert.assertEquals(keys.length, vpack.getLength());
 		for (int i = 0; i < keys.length; i++) {
-			Assert.assertEquals(String.valueOf(i), vpack.keyAt(i).getAsString());
+			Assert.assertEquals(String.valueOf(keys[i]), vpack.keyAt(i).getAsString());
 		}
 	}
 

@@ -72,6 +72,10 @@ public class VPackBuilder {
 		return options;
 	}
 
+	public void reserve(final int space) {
+		buffer.ensureCapacity(space);
+	}
+
 	public VPackBuilder add(final Value sub) throws VPackBuilderException {
 		addInternal(sub);
 		return this;
@@ -163,6 +167,8 @@ public class VPackBuilder {
 				vSmallInt = item.getInteger();
 			} else if (clazz == BigInteger.class) {
 				vSmallInt = item.getBigInteger().longValue();
+			} else if (clazz == Short.class) {
+				vSmallInt = item.getShort();
 			} else {
 				throw new VPackBuilderUnexpectedValueException(ValueType.SMALLINT, Long.class, Integer.class,
 						BigInteger.class);
@@ -317,6 +323,10 @@ public class VPackBuilder {
 		stack.add(buffer.size());
 		index.put(stack.size() - 1, new ArrayList<Integer>());
 		buffer.add(head);
+		for (int i = 0; i < 8; i++) {
+			// Will be filled later with bytelength and nr subs
+			buffer.add((byte) 0x00);
+		}
 	}
 
 	private void appendLength(final long length) {
@@ -325,7 +335,7 @@ public class VPackBuilder {
 
 	private void reportAdd() {
 		final Collection<Integer> depth = index.get(stack.size() - 1);
-		depth.add(buffer.size() - stack.get(stack.size() - 1) + 1);
+		depth.add(buffer.size() - stack.get(stack.size() - 1));
 	}
 
 	private void cleanupAdd() {
@@ -346,51 +356,27 @@ public class VPackBuilder {
 		final List<Integer> in = index.get(stack.size() - 1);
 		final int tos = stack.get(stack.size() - 1);
 		if (in.isEmpty()) {
-			// empty Array or Object
-			buffer.set(tos, (byte) (isArray ? 0x01 : 0x0a));
-			stack.remove(stack.size() - 1);
-			return this;
-		} else if (in.size() > 1 && (head == 0x13 || head == 0x14 || (head == 0x06 && options.isBuildUnindexedArrays())
-				|| head == 0x0b && options.isBuildUnindexedObjects())) {
-			// use the compact Array / Object format
-			final long nLen = NumberUtil.getVariableValueLength(in.size());
-			long byteSize = buffer.size() - tos + nLen;
-			long bLen = NumberUtil.getVariableValueLength(byteSize);
-			byteSize += bLen;
-			if (NumberUtil.getVariableValueLength(byteSize) != bLen) {
-				byteSize += 1;
-				bLen += 1;
-			}
-			if (bLen < 9) {
-				// can only use compact notation if total byte length is at most
-				// 8 bytes long
-				buffer.set(tos, (byte) (isArray ? 0x13 : 0x14));
-				// store byte length
-				NumberUtil.storeVariableValueLength(buffer, tos + 1, byteSize, false);
-				// store number of values
-				NumberUtil.storeVariableValueLength(buffer, (int) (tos + byteSize - 1), in.size(), true);
-				stack.remove(stack.size() - 1);
+			return closeEmptyArrayOrObject(tos, isArray);
+		}
+		if (head == 0x13 || head == 0x14 || (head == 0x06 && options.isBuildUnindexedArrays())
+				|| head == 0x0b && (options.isBuildUnindexedObjects() || in.size() == 1)) {
+			if (closeCompactArrayOrObject(tos, isArray, in)) {
 				return this;
 			}
+			// This might fall through, if closeCompactArrayOrObject gave up!
+		}
+		if (isArray) {
+			return closeArray(tos, in);
 		}
 		// fix head byte in case a compact Array / Object was originally
 		// requested
-		buffer.set(tos, (byte) (isArray ? 0x06 : 0x0b));
+		buffer.set(tos, (byte) 0x0b);
 
-		boolean needIndexTable = true;
-		boolean needNrSubs = true;
-		if (in.size() == 1) {
-			needIndexTable = false;
-			if (isArray) {
-				// For objects we leave needNrSubs at true here!
-				needNrSubs = false;
-			}
-		}
 		// First determine byte length and its format:
 		final int offsetSize;
 		// can be 1, 2, 4 or 8 for the byte width of the offsets,
 		// the byte length and the number of subvalues:
-		if ((buffer.size() - 1 - tos) + (needIndexTable ? in.size() : 0) - (needNrSubs ? 6 : 7) <= 0xff) {
+		if ((buffer.size() - 1 - tos) + in.size() - 6 <= 0xff) {
 			// We have so far used _pos - tos bytes, including the reserved 8
 			// bytes for byte length and number of subvalues. In the 1-byte
 			// number
@@ -398,27 +384,42 @@ public class VPackBuilder {
 			// subvalue
 			// for the index table
 			offsetSize = 1;
-		} else if ((buffer.size() - 1 - tos) + (needIndexTable ? 2 * in.size() : 0) <= 0xffff) {
+		} else if ((buffer.size() - 1 - tos) + 2 * in.size() <= 0xffff) {
 			offsetSize = 2;
-		} else if (((buffer.size() - 1 - tos) / 2)
-				+ ((needIndexTable ? 4 * in.size() : 0) / 2) <= Integer.MAX_VALUE/* 0xffffffffu */) {
+		} else if (((buffer.size() - 1 - tos) / 2) + 4 * in.size() / 2 <= Integer.MAX_VALUE/* 0xffffffffu */) {
 			offsetSize = 4;
 		} else {
 			offsetSize = 8;
 		}
+		// Maybe we need to move down data
+		if (offsetSize == 1) {
+			final int targetPos = 3;
+			if ((buffer.size() - 1) > (tos + 9)) {
+				for (int i = tos + targetPos; i < tos + 9; i++) {
+					buffer.remove(tos + targetPos);
+				}
+			}
+			final int diff = 9 - targetPos;
+			final int n = in.size();
+			for (int i = 0; i < n; i++) {
+				in.set(i, in.get(i) - diff);
+			}
+		}
+		// One could move down things in the offsetSize == 2 case as well,
+		// since we only need 4 bytes in the beginning. However, saving these
+		// 4 bytes has been sacrificed on the Altar of Performance.
+
 		// Now build the table:
-		if (needIndexTable) {
-			if (sort && buffer.get(tos) == 0x0b) {
-				// Object
-				sortObjectIndex(tos, in);
-			}
-			for (int i = 0; i < in.size(); i++) {
-				final long value = in.get(i) + (offsetSize == 1 ? offsetSize : offsetSize + 1);
-				NumberUtil.appendReversed(buffer, value, offsetSize);
-			}
-		} else { // no index table
-			if (buffer.get(tos) == 0x06) {
-				buffer.set(tos, (byte) 0x02);
+		if (sort && in.size() >= 2) {
+			// Object
+			sortObjectIndex(tos, in);
+		}
+		// final int tableBase = buffer.size();
+		for (int i = 0; i < in.size(); i++) {
+			long x = in.get(i);
+			for (int j = 0; j < offsetSize; j++) {
+				buffer.add(/* tableBase + offsetSize * i + j, */ (byte) (x & 0xff));
+				x >>= 8;
 			}
 		}
 		// Finally fix the byte width in the type byte:
@@ -429,24 +430,185 @@ public class VPackBuilder {
 				buffer.set(tos, (byte) (buffer.get(tos) + 2));
 			} else { // offsetSize == 8
 				buffer.set(tos, (byte) (buffer.get(tos) + 3));
-				if (needNrSubs) {
-					appendLength(in.size());
-				}
+				appendLength(in.size());
 			}
 		}
+		// Fix the byte length in the beginning
+		long x = buffer.size() - tos;
+		for (int i = 1; i <= offsetSize; i++) {
+			buffer.set(tos + i, (byte) (x & 0xff));
+			x >>= 8;
+		}
 		// set the number of items in the beginning
-		if (offsetSize < 8 && needNrSubs) {
-			int x = in.size();
-			for (int i = 1; i <= offsetSize; i++) {
-				buffer.add(tos + i, (byte) (x & 0xff));
+		if (offsetSize < 8) {
+			x = in.size();
+			for (int i = offsetSize + 1; i <= 2 * offsetSize; i++) {
+				buffer.set(tos + i, (byte) (x & 0xff));
 				x >>= 8;
 			}
 		}
-		// set the byte length in the beginning
-		long x = buffer.size() - tos + offsetSize;
+		stack.remove(stack.size() - 1);
+		return this;
+	}
+
+	private VPackBuilder closeEmptyArrayOrObject(final int tos, final boolean isArray) {
+		// empty Array or Object
+		buffer.set(tos, (byte) (isArray ? 0x01 : 0x0a));
+		// no bytelength and number subvalues needed
+		for (int i = 1; i <= 8; i++) {
+			buffer.remove(tos + 1);
+		}
+		stack.remove(stack.size() - 1);
+		return this;
+	}
+
+	private boolean closeCompactArrayOrObject(final int tos, final boolean isArray, final List<Integer> in) {
+		// use the compact Array / Object format
+		final long nLen = NumberUtil.getVariableValueLength(in.size());
+		long byteSize = buffer.size() - (tos + 8) + nLen;
+		long bLen = NumberUtil.getVariableValueLength(byteSize);
+		byteSize += bLen;
+		if (NumberUtil.getVariableValueLength(byteSize) != bLen) {
+			byteSize += 1;
+			bLen += 1;
+		}
+		if (bLen < 9) {
+			// can only use compact notation if total byte length is at most
+			// 8 bytes long
+			buffer.set(tos, (byte) (isArray ? 0x13 : 0x14));
+			final int targetPos = (int) (1 + bLen);
+			if (buffer.size() - 1 > (tos + 9)) {
+				for (int i = tos + targetPos; i < tos + 9; i++) {
+					buffer.remove(tos + targetPos);
+				}
+			}
+			// store byte length
+			NumberUtil.storeVariableValueLength(buffer, tos, byteSize, false);
+			// reserve space for number of values
+			for (int i = 0; i < nLen; i++) {
+				buffer.add((byte) 0x00);
+			}
+			// store number of values
+			NumberUtil.storeVariableValueLength(buffer, (int) (tos + byteSize), in.size(), true);
+			stack.remove(stack.size() - 1);
+			return true;
+		}
+		return false;
+	}
+
+	private VPackBuilder closeArray(final int tos, final List<Integer> in) {
+		// fix head byte in case a compact Array / Object was originally
+		// requested
+		buffer.set(tos, (byte) 0x06);
+
+		boolean needIndexTable = true;
+		boolean needNrSubs = true;
+		final int n = in.size();
+		if (n == 1) {
+			needIndexTable = false;
+			needNrSubs = false;
+		} else if ((buffer.size() - 1 - tos) - in.get(0) == n * (in.get(1) - in.get(0))) {
+			// In this case it could be that all entries have the same length
+			// and we do not need an offset table at all:
+			boolean noTable = true;
+			final int subLen = in.get(1) - in.get(0);
+			if ((buffer.size() - 1 - tos) - in.get(n - 1) != subLen) {
+				noTable = false;
+			} else {
+				for (int i = 1; i < n - 1; i++) {
+					if (in.get(i + 1) - in.get(i) != subLen) {
+						noTable = false;
+						break;
+					}
+				}
+			}
+			if (noTable) {
+				needIndexTable = false;
+				needNrSubs = false;
+			}
+		}
+
+		// First determine byte length and its format:
+		final int offsetSize;
+		// can be 1, 2, 4 or 8 for the byte width of the offsets,
+		// the byte length and the number of subvalues:
+		if ((buffer.size() - 1 - tos) + (needIndexTable ? n : 0) - (needNrSubs ? 6 : 7) <= 0xff) {
+			// We have so far used _pos - tos bytes, including the reserved 8
+			// bytes for byte length and number of subvalues. In the 1-byte
+			// number
+			// case we would win back 6 bytes but would need one byte per
+			// subvalue
+			// for the index table
+			offsetSize = 1;
+		} else if ((buffer.size() - 1 - tos) + (needIndexTable ? 2 * n : 0) <= 0xffff) {
+			offsetSize = 2;
+		} else if (((buffer.size() - 1 - tos) / 2)
+				+ ((needIndexTable ? 4 * n : 0) / 2) <= Integer.MAX_VALUE/* 0xffffffffu */) {
+			offsetSize = 4;
+		} else {
+			offsetSize = 8;
+		}
+		// Maybe we need to move down data
+		if (offsetSize == 1) {
+			int targetPos = 3;
+			if (!needIndexTable) {
+				targetPos = 2;
+			}
+			if ((buffer.size() - 1) > (tos + 9)) {
+				for (int i = tos + targetPos; i < tos + 9; i++) {
+					buffer.remove(tos + targetPos);
+				}
+			}
+			final int diff = 9 - targetPos;
+			if (needIndexTable) {
+				for (int i = 0; i < n; i++) {
+					in.set(i, in.get(i) - diff);
+				}
+			} // Note: if !needIndexTable the index is now wrong!
+		}
+		// One could move down things in the offsetSize == 2 case as well,
+		// since we only need 4 bytes in the beginning. However, saving these
+		// 4 bytes has been sacrificed on the Altar of Performance.
+
+		// Now build the table:
+		if (needIndexTable) {
+			// final int tableBase = buffer.size();
+			for (int i = 0; i < n; i++) {
+				long x = in.get(i);
+				for (int j = 0; j < offsetSize; j++) {
+					buffer.add(/* tableBase + offsetSize * i + j, */ (byte) (x & 0xff));
+					x >>= 8;
+				}
+			}
+		} else { // no index table
+			buffer.set(tos, (byte) 0x02);
+		}
+		// Finally fix the byte width in the type byte:
+		if (offsetSize > 1) {
+			if (offsetSize == 2) {
+				buffer.set(tos, (byte) (buffer.get(tos) + 1));
+			} else if (offsetSize == 4) {
+				buffer.set(tos, (byte) (buffer.get(tos) + 2));
+			} else { // offsetSize == 8
+				buffer.set(tos, (byte) (buffer.get(tos) + 3));
+				if (needNrSubs) {
+					appendLength(n);
+				}
+			}
+		}
+		// Fix the byte length in the beginning
+		long x = buffer.size() - tos;
 		for (int i = 1; i <= offsetSize; i++) {
-			buffer.add(tos + i, (byte) (x & 0xff));
+			buffer.set(tos + i, (byte) (x & 0xff));
 			x >>= 8;
+		}
+		// set the number of items in the beginning
+		if (offsetSize < 8 && needNrSubs) {
+			x = n;
+			for (int i = offsetSize + 1; i <= 2 * offsetSize; i++) {
+				buffer.set(tos + i, (byte) (x & 0xff));
+				x >>= 8;
+			}
 		}
 		stack.remove(stack.size() - 1);
 		return this;
@@ -457,9 +619,9 @@ public class VPackBuilder {
 		final Comparator<Integer> c = new Comparator<Integer>() {
 			@Override
 			public int compare(final Integer o1, final Integer o2) {
-				final VPackSlice key1 = new VPackSlice(vpack, start + o1 - 1, options);
+				final VPackSlice key1 = new VPackSlice(vpack, start + o1, options);
 				final String key1AsString = getKeyAsString(key1);
-				final VPackSlice key2 = new VPackSlice(vpack, start + o2 - 1, options);
+				final VPackSlice key2 = new VPackSlice(vpack, start + o2, options);
 				final String key2AsString = getKeyAsString(key2);
 				return key1AsString.compareTo(key2AsString);
 			}

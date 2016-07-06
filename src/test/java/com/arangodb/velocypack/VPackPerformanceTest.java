@@ -132,7 +132,7 @@ public class VPackPerformanceTest {
 	}
 
 	@Test
-	public void test08_deserializeSmallVpack() throws VPackParserException {
+	public void test08_deserializeSmallVpack() throws VPackParserException, IOException {
 		final InputStream in = getClass().getResourceAsStream(SMALL_JSON);
 		final InputStreamReader reader = new InputStreamReader(in);
 		final Features entity = new Gson().fromJson(reader, Features.class);

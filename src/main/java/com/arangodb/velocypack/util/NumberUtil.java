@@ -77,19 +77,19 @@ public class NumberUtil {
 	 */
 	public static long readVariableValueLength(final byte[] array, final int offset, final boolean reverse) {
 		long len = 0;
-		long v;
+		byte v;
 		long p = 0;
 		int i = offset;
 		do {
 			v = array[i];
-			len += (v & 0x7f) << p;
+			len += ((long) (v & (byte) 0x7f)) << p;
 			p += 7;
 			if (reverse) {
 				--i;
 			} else {
 				++i;
 			}
-		} while (v >= 0x80);
+		} while ((v & (byte) 0x80) != 0);
 		return len;
 	}
 
@@ -116,17 +116,17 @@ public class NumberUtil {
 		int index = offset;
 		long val = value;
 		if (reverse) {
-			while (value >= 0x80) {
-				buffer.add(index, (byte) (val | 0x80));
+			while (val >= 0x80) {
+				buffer.set(--index, (byte) ((byte) (val & 0x7f) | (byte) 0x80));
 				val >>= 7;
 			}
-			buffer.add(index, (byte) (val & 0x7f));
+			buffer.set(--index, (byte) (val & 0x7f));
 		} else {
-			while (value >= 0x80) {
-				buffer.add(index++, (byte) (val | 0x80));
+			while (val >= 0x80) {
+				buffer.set(++index, (byte) ((byte) (val & 0x7f) | (byte) 0x80));
 				val >>= 7;
 			}
-			buffer.add(index, (byte) (val & 0x7f));
+			buffer.set(++index, (byte) (val & 0x7f));
 		}
 	}
 

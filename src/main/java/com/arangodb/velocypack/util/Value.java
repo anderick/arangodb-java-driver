@@ -65,18 +65,13 @@ public class Value {
 		b = value;
 	}
 
-	public Value(final Double value) {
-		this(checkNull(value, ValueType.DOUBLE), Double.class);
-		d = value;
-	}
-
 	public Value(final Long value) {
-		this(checkNull(value, ValueType.INT), Long.class);
+		this(checkSmallInt(value, ValueType.INT), Long.class);
 		l = value;
 	}
 
 	public Value(final Long value, final ValueType type) throws VPackValueTypeException {
-		this(checkNull(value, type), Long.class);
+		this(checkSmallInt(value, type), Long.class);
 		if (type != ValueType.INT && type != ValueType.UINT && type != ValueType.SMALLINT) {
 			throw new VPackValueTypeException(ValueType.INT, ValueType.UINT, ValueType.SMALLINT);
 		}
@@ -84,39 +79,44 @@ public class Value {
 	}
 
 	public Value(final Integer value) {
-		this(checkNull(value, ValueType.INT), Integer.class);
+		this(checkSmallInt(value, ValueType.INT), Integer.class);
 		i = value;
 	}
 
 	public Value(final Integer value, final ValueType type) throws VPackValueTypeException {
-		this(checkNull(value, type), Integer.class);
+		this(checkSmallInt(value, type), Integer.class);
 		if (type != ValueType.INT && type != ValueType.UINT && type != ValueType.SMALLINT) {
 			throw new VPackValueTypeException(ValueType.INT, ValueType.UINT, ValueType.SMALLINT);
 		}
 		i = value;
+	}
+
+	public Value(final Short value) {
+		this(checkSmallInt(value, ValueType.INT), Short.class);
+		sh = value;
+	}
+
+	public Value(final BigInteger value) {
+		this(checkSmallInt(value, ValueType.INT), BigInteger.class);
+		bi = value;
+	}
+
+	public Value(final BigInteger value, final ValueType type) throws VPackValueTypeException {
+		this(checkSmallInt(value, type), BigInteger.class);
+		if (type != ValueType.INT && type != ValueType.UINT && type != ValueType.SMALLINT) {
+			throw new VPackValueTypeException(ValueType.INT, ValueType.UINT, ValueType.SMALLINT);
+		}
+		bi = value;
+	}
+
+	public Value(final Double value) {
+		this(checkNull(value, ValueType.DOUBLE), Double.class);
+		d = value;
 	}
 
 	public Value(final Float value) {
 		this(checkNull(value, ValueType.DOUBLE), Float.class);
 		f = value;
-	}
-
-	public Value(final Short value) {
-		this(checkNull(value, ValueType.INT), Short.class);
-		sh = value;
-	}
-
-	public Value(final BigInteger value) {
-		this(checkNull(value, ValueType.INT), BigInteger.class);
-		bi = value;
-	}
-
-	public Value(final BigInteger value, final ValueType type) throws VPackValueTypeException {
-		this(checkNull(value, type), BigInteger.class);
-		if (type != ValueType.INT && type != ValueType.UINT && type != ValueType.SMALLINT) {
-			throw new VPackValueTypeException(ValueType.INT, ValueType.UINT, ValueType.SMALLINT);
-		}
-		bi = value;
 	}
 
 	public Value(final BigDecimal value) {
@@ -137,6 +137,11 @@ public class Value {
 	public Value(final Date value) {
 		this(checkNull(value, ValueType.UTC_DATE), Date.class);
 		date = value;
+	}
+
+	private static ValueType checkSmallInt(final Number value, final ValueType type) {
+		return value != null ? value.longValue() <= 9 && value.longValue() >= -6 ? ValueType.SMALLINT : type
+				: ValueType.NULL;
 	}
 
 	private static ValueType checkNull(final Object obj, final ValueType type) {
