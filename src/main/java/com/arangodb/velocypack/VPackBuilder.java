@@ -615,13 +615,13 @@ public class VPackBuilder {
 	}
 
 	private void sortObjectIndex(final int start, final List<Integer> offsets) {
-		final byte[] vpack = getVpack();
+		final byte[] vpack = getVpack(buffer.subList(start, buffer.size() - 1));
 		final Comparator<Integer> c = new Comparator<Integer>() {
 			@Override
 			public int compare(final Integer o1, final Integer o2) {
-				final VPackSlice key1 = new VPackSlice(vpack, start + o1, options);
+				final VPackSlice key1 = new VPackSlice(vpack, o1, options);
 				final String key1AsString = getKeyAsString(key1);
-				final VPackSlice key2 = new VPackSlice(vpack, start + o2, options);
+				final VPackSlice key2 = new VPackSlice(vpack, o2, options);
 				final String key2AsString = getKeyAsString(key2);
 				return key1AsString.compareTo(key2AsString);
 			}
@@ -665,6 +665,10 @@ public class VPackBuilder {
 	}
 
 	private byte[] getVpack() {
+		return getVpack(buffer);
+	}
+
+	private byte[] getVpack(final List<Byte> buffer) {
 		final byte[] vpack = new byte[buffer.size()];
 		int i = 0;
 		for (final byte b : buffer) {
