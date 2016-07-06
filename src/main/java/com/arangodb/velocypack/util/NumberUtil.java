@@ -1,8 +1,6 @@
 package com.arangodb.velocypack.util;
 
 import java.math.BigInteger;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -18,10 +16,6 @@ public class NumberUtil {
 
 	public static double toDouble(final byte[] array, final int offset, final int length) {
 		return Double.longBitsToDouble(toLong(array, offset, DOUBLE_BYTES));
-	}
-
-	public static void append(final Collection<Byte> buffer, final double value) {
-		append(buffer, Double.doubleToRawLongBits(value), DOUBLE_BYTES);
 	}
 
 	public static long toLong(final byte[] array, final int offset, final int length) {
@@ -42,20 +36,6 @@ public class NumberUtil {
 		return result;
 	}
 
-	public static void append(final Collection<Byte> buffer, final long value, final int length) {
-		final long l = value;
-		for (int i = 0; i < length; i++) {
-			buffer.add((byte) (l >> (length - i - 1 << 3)));
-		}
-	}
-
-	public static void appendReversed(final Collection<Byte> buffer, final long value, final int length) {
-		final long l = value;
-		for (int i = length - 1; i >= 0; i--) {
-			buffer.add((byte) (l >> (length - i - 1 << 3)));
-		}
-	}
-
 	public static BigInteger toBigInteger(final byte[] array, final int offset, final int length) {
 		BigInteger result = new BigInteger(1, new byte[] {});
 		for (int i = offset; i < (offset + length); i++) {
@@ -63,13 +43,6 @@ public class NumberUtil {
 			result = result.or(BigInteger.valueOf(array[i] & 0xFF));
 		}
 		return result;
-	}
-
-	public static void append(final Collection<Byte> buffer, final BigInteger value, final int length) {
-		final BigInteger l = value;
-		for (int i = 0; i < length; ++i) {
-			buffer.add(l.shiftRight(length - i - 1 << 3).byteValue());
-		}
 	}
 
 	/**
@@ -105,29 +78,6 @@ public class NumberUtil {
 			++len;
 		}
 		return len;
-	}
-
-	public static void storeVariableValueLength(
-		final List<Byte> buffer,
-		final int offset,
-		final long value,
-		final boolean reverse) {
-
-		int index = offset;
-		long val = value;
-		if (reverse) {
-			while (val >= 0x80) {
-				buffer.set(--index, (byte) ((byte) (val & 0x7f) | (byte) 0x80));
-				val >>= 7;
-			}
-			buffer.set(--index, (byte) (val & 0x7f));
-		} else {
-			while (val >= 0x80) {
-				buffer.set(++index, (byte) ((byte) (val & 0x7f) | (byte) 0x80));
-				val >>= 7;
-			}
-			buffer.set(++index, (byte) (val & 0x7f));
-		}
 	}
 
 }

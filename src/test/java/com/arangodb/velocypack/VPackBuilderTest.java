@@ -274,7 +274,6 @@ public class VPackBuilderTest {
 		final VPackSlice slice = builder.slice();
 		Assert.assertTrue(slice.isArray());
 		Assert.assertEquals(0, slice.getLength());
-		Assert.assertEquals(1, slice.getVpack().length);
 		try {
 			slice.at(0);
 			Assert.fail();
@@ -474,7 +473,6 @@ public class VPackBuilderTest {
 		final VPackSlice slice = builder.slice();
 		Assert.assertTrue(slice.isObject());
 		Assert.assertEquals(0, slice.getLength());
-		Assert.assertEquals(1, slice.getVpack().length);
 		final VPackSlice a = slice.get("a");
 		Assert.assertTrue(a.isNone());
 		try {
