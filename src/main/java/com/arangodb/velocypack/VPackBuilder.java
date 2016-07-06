@@ -46,9 +46,9 @@ public class VPackBuilder {
 	private static final int INT_BYTES = 4;
 	private static final int SHORT_BYTES = 2;
 
-	private final ArrayList<Byte> buffer; // Here we collect the result
-	private final ArrayList<Integer> stack; // Start positions of open
-											// objects/arrays
+	private final List<Byte> buffer; // Here we collect the result
+	private final List<Integer> stack; // Start positions of open
+										// objects/arrays
 	private final Map<Integer, List<Integer>> index; // Indices for starts
 														// of
 														// subindex
@@ -70,10 +70,6 @@ public class VPackBuilder {
 
 	public BuilderOptions getOptions() {
 		return options;
-	}
-
-	public void reserve(final int space) {
-		buffer.ensureCapacity(space);
 	}
 
 	public VPackBuilder add(final Value sub) throws VPackBuilderException {
