@@ -7,8 +7,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import com.arangodb.velocypack.TestBuilder.TestEntity;
-import com.arangodb.velocypack.exception.VPackBuilderException;
-import com.arangodb.velocypack.exception.VPackParserException;
+import com.arangodb.velocypack.exception.VPackException;
 import com.google.gson.Gson;
 
 /**
@@ -34,36 +33,36 @@ public class VPackPerformanceTest {
 	private static final int VERY_SMALL_DOCUMENTS_SIZE = 5;
 
 	@Test
-	public void test02_serializeVerySmallVpack() throws VPackParserException {
+	public void test02_serializeVerySmallVpack() throws VPackException {
 		serializeVpack(VERY_SMALL_DOCUMENTS_DESCRIPTION, VERY_SMALL_DOCUMENTS_ITERATIONS, VERY_SMALL_DOCUMENTS_DEPTH,
 			VERY_SMALL_DOCUMENTS_SIZE);
 	}
 
 	@Test
-	public void test04_deserializeVerySmallVpack() throws VPackParserException, VPackBuilderException {
+	public void test04_deserializeVerySmallVpack() throws VPackException {
 		deserializeVpack(VERY_SMALL_DOCUMENTS_DESCRIPTION, VERY_SMALL_DOCUMENTS_ITERATIONS, VERY_SMALL_DOCUMENTS_DEPTH,
 			VERY_SMALL_DOCUMENTS_SIZE);
 	}
 
 	@Test
-	public void test06_serializeSmallVpack() throws VPackParserException {
+	public void test06_serializeSmallVpack() throws VPackException {
 		serializeVpack(SMALL_DOCUMENTS_DESCRIPTION, SMALL_DOCUMENTS_ITERATIONS, SMALL_DOCUMENTS_DEPTH,
 			SMALL_DOCUMENTS_SIZE);
 	}
 
 	@Test
-	public void test08_deserializeSmallVpack() throws VPackParserException, VPackBuilderException {
+	public void test08_deserializeSmallVpack() throws VPackException {
 		deserializeVpack(SMALL_DOCUMENTS_DESCRIPTION, SMALL_DOCUMENTS_ITERATIONS, SMALL_DOCUMENTS_DEPTH,
 			SMALL_DOCUMENTS_SIZE);
 	}
 
 	@Test
-	public void test10_serializeBigVpack() throws VPackParserException {
+	public void test10_serializeBigVpack() throws VPackException {
 		serializeVpack(BIG_DOCUMENTS_DESCRIPTION, BIG_DOCUMENTS_ITERATIONS, BIG_DOCUMENTS_DEPTH, BIG_DOCUMENTS_SIZE);
 	}
 
 	@Test
-	public void test12_deserializeBigVpack() throws VPackParserException, VPackBuilderException {
+	public void test12_deserializeBigVpack() throws VPackException {
 		deserializeVpack(BIG_DOCUMENTS_DESCRIPTION, BIG_DOCUMENTS_ITERATIONS, BIG_DOCUMENTS_DEPTH, BIG_DOCUMENTS_SIZE);
 	}
 
@@ -102,7 +101,7 @@ public class VPackPerformanceTest {
 	}
 
 	private static void serializeVpack(final String description, final int iterations, final int depth, final int size)
-			throws VPackParserException {
+			throws VPackException {
 		final VPack vpack = new VPack();
 		final TestEntity entity = TestBuilder.buildEntity(depth, size);
 
@@ -118,7 +117,7 @@ public class VPackPerformanceTest {
 		final String description,
 		final int iterations,
 		final int depth,
-		final int size) throws VPackBuilderException, VPackParserException {
+		final int size) throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		TestBuilder.buildVpack(builder, depth, size);
 		final VPack vpack = new VPack();

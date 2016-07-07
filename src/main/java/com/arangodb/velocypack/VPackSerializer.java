@@ -1,6 +1,6 @@
 package com.arangodb.velocypack;
 
-import com.arangodb.velocypack.exception.VPackBuilderException;
+import com.arangodb.velocypack.exception.VPackException;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -8,6 +8,6 @@ import com.arangodb.velocypack.exception.VPackBuilderException;
  */
 public interface VPackSerializer<T> {
 
-	void serialize(VPackBuilder builder, T entity) throws VPackBuilderException;
+	void serialize(VPackBuilder builder, T entity) throws VPackException;
 
 }

@@ -1,11 +1,13 @@
 package com.arangodb.velocypack;
 
+import com.arangodb.velocypack.exception.VPackException;
+
 /**
  * @author Mark - mark@arangodb.com
  *
  */
 public interface VPackDeserializer<T> {
 
-	T deserialize(VPackSlice vpack);
+	T deserialize(VPackSlice vpack) throws VPackException;
 
 }

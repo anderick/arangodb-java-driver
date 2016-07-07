@@ -2,7 +2,6 @@ package com.arangodb.velocypack.defaults;
 
 import com.arangodb.velocypack.VPack.VPackOptions;
 import com.arangodb.velocypack.VPackBuilder.BuilderOptions;
-import com.arangodb.velocypack.VPackKeyTranslator;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -10,13 +9,11 @@ import com.arangodb.velocypack.VPackKeyTranslator;
  */
 public class VPackDefaultOptions implements VPackOptions, BuilderOptions {
 
-	protected VPackKeyTranslator translator;
 	protected boolean buildUnindexedArrays;
 	protected boolean buildUnindexedObjects;
 
 	public VPackDefaultOptions() {
 		super();
-		translator = new VPackDefaultKeyTranslator();
 		buildUnindexedArrays = false;
 		buildUnindexedObjects = false;
 	}

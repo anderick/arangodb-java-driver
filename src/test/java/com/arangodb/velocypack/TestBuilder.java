@@ -5,7 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-import com.arangodb.velocypack.exception.VPackBuilderException;
+import com.arangodb.velocypack.exception.VPackException;
 import com.arangodb.velocypack.util.Value;
 import com.arangodb.velocypack.util.ValueType;
 import com.google.gson.Gson;
@@ -48,18 +48,18 @@ public class TestBuilder {
 	}
 
 	private static void recurse(final VPackBuilder builder, final int curdepth, final int depth, final int size)
-			throws VPackBuilderException {
+			throws VPackException {
 		if (curdepth >= depth) {
 			return;
 		}
-		builder.add("attr1", new Value("TextTextText" + depth));
-		builder.add("attr2", new Value(depth));
-		// for (int i = 0; i < size; i++) {
-		// builder.add("Hallo" + i, new Value(i));
-		// }
-		// for (int i = 0; i < size; i++) {
-		// builder.add("String" + i, new Value("TextTextText" + i));
-		// }
+		// builder.add("attr1", new Value("TextTextText" + depth));
+		// builder.add("attr2", new Value(depth));
+		for (int i = 0; i < size; i++) {
+			builder.add("Hallo" + i, new Value(i));
+		}
+		for (int i = 0; i < size; i++) {
+			builder.add("String" + i, new Value("TextTextText" + i));
+		}
 		builder.add("sub1", new Value(ValueType.OBJECT));
 		recurse(builder, curdepth + 1, depth, size);
 		builder.close();
@@ -75,8 +75,7 @@ public class TestBuilder {
 		builder.close();
 	}
 
-	public static void buildVpack(final VPackBuilder builder, final int depth, final int size)
-			throws VPackBuilderException {
+	public static void buildVpack(final VPackBuilder builder, final int depth, final int size) throws VPackException {
 		builder.add(new Value(ValueType.OBJECT));
 		recurse(builder, 0, depth, size);
 		builder.close();
@@ -113,7 +112,7 @@ public class TestBuilder {
 		return new Gson().toJson(obj);
 	}
 
-	public static void main(final String[] args) throws VPackBuilderException, IOException {
+	public static void main(final String[] args) throws VPackException, IOException {
 		if (args.length < 3) {
 			System.out.println("Usage: DEPTH SIZE TARGETFILE");
 			return;

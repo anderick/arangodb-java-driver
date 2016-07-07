@@ -20,6 +20,8 @@ import com.arangodb.velocypack.exception.VPackBuilderNeedOpenCompoundException;
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenObjectException;
 import com.arangodb.velocypack.exception.VPackBuilderNumberOutOfRangeException;
 import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
+import com.arangodb.velocypack.exception.VPackKeyTypeException;
+import com.arangodb.velocypack.exception.VPackNeedAttributeTranslatorException;
 import com.arangodb.velocypack.util.NumberUtil;
 import com.arangodb.velocypack.util.Value;
 import com.arangodb.velocypack.util.ValueType;
@@ -139,10 +141,20 @@ public class VPackBuilder {
 			haveReported = true;
 		}
 		try {
-			final Integer key = VPackSlice.keyTranslator.toKey(attribute);
-			final Value attr = key != null ? new Value(key, (key < -6 || key > 9) ? ValueType.INT : ValueType.SMALLINT)
-					: new Value(attribute);
-			set(attr);
+			if (VPackSlice.attributeTranslator != null) {
+				final VPackSlice translate = VPackSlice.attributeTranslator.translate(attribute);
+				if (translate != null) {
+					final byte[] value = translate.getValue();
+					for (int i = 0; i < value.length; i++) {
+						add(value[i]);
+					}
+					keyWritten = true;
+					set(sub);
+					return;
+				}
+				// otherwise fall through to regular behavior
+			}
+			set(new Value(attribute));
 			keyWritten = true;
 			set(sub);
 		} catch (final VPackBuilderException e) {
@@ -396,11 +408,13 @@ public class VPackBuilder {
 		depth.remove(depth.size() - 1);
 	}
 
-	public VPackBuilder close() throws VPackBuilderNeedOpenCompoundException {
+	public VPackBuilder close()
+			throws VPackBuilderNeedOpenCompoundException, VPackKeyTypeException, VPackNeedAttributeTranslatorException {
 		return close(true);
 	}
 
-	protected VPackBuilder close(final boolean sort) throws VPackBuilderNeedOpenCompoundException {
+	protected VPackBuilder close(final boolean sort)
+			throws VPackBuilderNeedOpenCompoundException, VPackKeyTypeException, VPackNeedAttributeTranslatorException {
 		if (isClosed()) {
 			throw new VPackBuilderNeedOpenCompoundException();
 		}
@@ -685,30 +699,34 @@ public class VPackBuilder {
 		return this;
 	}
 
-	private void sortObjectIndex(final int start, final List<Integer> offsets) {
-		final Comparator<Integer> c = new Comparator<Integer>() {
-			@Override
-			public int compare(final Integer o1, final Integer o2) {
-				final VPackSlice key1 = new VPackSlice(buffer, start + o1);
-				final String key1AsString = getKeyAsString(key1);
-				final VPackSlice key2 = new VPackSlice(buffer, start + o2);
-				final String key2AsString = getKeyAsString(key2);
-				return key1AsString.compareTo(key2AsString);
-			}
-		};
-		Collections.sort(offsets, c);
+	private class SortEntry {
+		private final VPackSlice slice;
+		private final int offset;
+
+		public SortEntry(final VPackSlice slice, final int offset) {
+			super();
+			this.slice = slice;
+			this.offset = offset;
+		}
 	}
 
-	private String getKeyAsString(final VPackSlice key) {
-		final String result;
-		if (key.isString()) {
-			result = key.getAsString();
-		} else if (key.isInteger()) {
-			result = VPackSlice.keyTranslator.fromKey(key.getAsInt());
-		} else {
-			result = "";
+	private void sortObjectIndex(final int start, final List<Integer> offsets)
+			throws VPackKeyTypeException, VPackNeedAttributeTranslatorException {
+		final List<VPackBuilder.SortEntry> attributes = new ArrayList<VPackBuilder.SortEntry>();
+		for (final Integer offset : offsets) {
+			attributes.add(new SortEntry(new VPackSlice(buffer, start + offset).makeKey(), offset));
 		}
-		return result;
+		final Comparator<SortEntry> comparator = new Comparator<SortEntry>() {
+			@Override
+			public int compare(final SortEntry o1, final SortEntry o2) {
+				return o1.slice.getAsString().compareTo(o2.slice.getAsString());
+			}
+		};
+		Collections.sort(attributes, comparator);
+		offsets.clear();
+		for (final SortEntry sortEntry : attributes) {
+			offsets.add(sortEntry.offset);
+		}
 	}
 
 	private boolean isClosed() {

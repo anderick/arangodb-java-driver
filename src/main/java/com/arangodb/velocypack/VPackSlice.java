@@ -2,10 +2,14 @@ package com.arangodb.velocypack;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 
-import com.arangodb.velocypack.defaults.VPackDefaultKeyTranslator;
+import com.arangodb.velocypack.defaults.VPackDefaultAttributeTranslator;
+import com.arangodb.velocypack.exception.VPackException;
+import com.arangodb.velocypack.exception.VPackKeyTypeException;
+import com.arangodb.velocypack.exception.VPackNeedAttributeTranslatorException;
 import com.arangodb.velocypack.exception.VPackValueTypeException;
 import com.arangodb.velocypack.util.ArrayIterator;
 import com.arangodb.velocypack.util.BinaryUtil;
@@ -24,9 +28,9 @@ import com.arangodb.velocypack.util.ValueTypeUtil;
  */
 public class VPackSlice {
 
-	public static VPackKeyTranslator keyTranslator;
+	public static VPackAttributeTranslator attributeTranslator;
 	static {
-		keyTranslator = new VPackDefaultKeyTranslator();
+		attributeTranslator = new VPackDefaultAttributeTranslator();
 	}
 
 	private final byte[] vpack;
@@ -413,7 +417,7 @@ public class VPackSlice {
 		return getNth(index);
 	}
 
-	public VPackSlice get(final String attribute) {
+	public VPackSlice get(final String attribute) throws VPackException {
 		if (!isObject()) {
 			throw new VPackValueTypeException(ValueType.OBJECT);
 		}
@@ -438,9 +442,27 @@ public class VPackSlice {
 				// Just one attribute, there is no index table!
 				final VPackSlice key = new VPackSlice(vpack, start + findDataOffset());
 
-				if ((key.isString() && key.isEqualString(attribute))
-						|| (key.isInteger() && attribute.equals(VPackSlice.keyTranslator.fromKey(key.getAsInt())))) {
-					result = new VPackSlice(vpack, key.start + key.getByteSize());
+				if (key.isString()) {
+					if (key.isEqualString(attribute)) {
+						result = new VPackSlice(vpack, key.start + key.getByteSize());
+					} else {
+						// no match
+						result = new VPackSlice();
+					}
+				} else if (key.isInteger()) {
+					// translate key
+					if (VPackSlice.attributeTranslator == null) {
+						throw new VPackNeedAttributeTranslatorException();
+					}
+					if (key.translateUnchecked().isEqualString(attribute)) {
+						result = new VPackSlice(vpack, key.start + key.getByteSize());
+					} else {
+						// no match
+						result = new VPackSlice();
+					}
+				} else {
+					// no match
+					result = new VPackSlice();
 				}
 			} else {
 				final long ieBase = end - n * offsetsize - (offsetsize == 8 ? 8 : 0);
@@ -463,31 +485,46 @@ public class VPackSlice {
 		return result;
 	}
 
-	private VPackSlice getFromCompactObject(final String attribute) {
-		VPackSlice result = new VPackSlice();
+	/**
+	 * translates an integer key into a string, without checks
+	 */
+	private VPackSlice translateUnchecked() {
+		final VPackSlice result = attributeTranslator.translate(getAsInt());
+		return result != null ? result : new VPackSlice();
+	}
+
+	protected VPackSlice makeKey() throws VPackKeyTypeException, VPackNeedAttributeTranslatorException {
+		if (isString()) {
+			return this;
+		}
+		if (isInteger()) {
+			if (VPackSlice.attributeTranslator == null) {
+				throw new VPackNeedAttributeTranslatorException();
+			}
+			return translateUnchecked();
+		}
+		throw new VPackKeyTypeException("Cannot translate key of this type");
+	}
+
+	private VPackSlice getFromCompactObject(final String attribute)
+			throws VPackKeyTypeException, VPackNeedAttributeTranslatorException {
 		for (final Iterator<VPackSlice> iterator = iterator(); iterator.hasNext();) {
 			final VPackSlice key = iterator.next();
-			if (key.isString()) {
-				if (key.isEqualString(attribute)) {
-					result = new VPackSlice(vpack, key.start + key.getByteSize());
-					break;
-				}
-			} else if (key.isInteger()) {
-				final String keyAsString = VPackSlice.keyTranslator.fromKey(key.getAsInt());
-				if (attribute.equals(keyAsString)) {
-					result = new VPackSlice(vpack, key.start + key.getByteSize());
-					break;
-				}
+			if (key.makeKey().isEqualString(attribute)) {
+				return new VPackSlice(vpack, key.start + key.getByteSize());
 			}
 		}
-		return result;
+		// not found
+		return new VPackSlice();
 	}
 
 	private VPackSlice searchObjectKeyBinary(
 		final String attribute,
 		final long ieBase,
 		final int offsetsize,
-		final long n) throws VPackValueTypeException {
+		final long n) throws VPackValueTypeException, VPackNeedAttributeTranslatorException {
+
+		final boolean useTranslator = VPackSlice.attributeTranslator != null;
 		VPackSlice result;
 		long l = 0;
 		long r = n - 1;
@@ -502,15 +539,12 @@ public class VPackSlice {
 			if (key.isString()) {
 				res = key.compareString(attribute);
 			} else if (key.isInteger()) {
-				final String keyAsString = VPackSlice.keyTranslator.fromKey(key.getAsInt());
-				if (keyAsString != null) {
-					res = keyAsString.compareTo(attribute);
-				} else {
-					// invalid key
-					result = new VPackSlice();
-					break;
-
+				// translate key
+				if (!useTranslator) {
+					// no attribute translator
+					throw new VPackNeedAttributeTranslatorException();
 				}
+				res = key.translateUnchecked().compareString(attribute);
 			} else {
 				// invalid key
 				result = new VPackSlice();
@@ -542,7 +576,9 @@ public class VPackSlice {
 		final String attribute,
 		final long ieBase,
 		final int offsetsize,
-		final long n) throws VPackValueTypeException {
+		final long n) throws VPackValueTypeException, VPackNeedAttributeTranslatorException {
+
+		final boolean useTranslator = VPackSlice.attributeTranslator != null;
 		VPackSlice result = new VPackSlice();
 		for (long index = 0; index < n; index++) {
 			final long offset = ieBase + index * offsetsize;
@@ -553,15 +589,13 @@ public class VPackSlice {
 					continue;
 				}
 			} else if (key.isInteger()) {
-				final String keyAsString = VPackSlice.keyTranslator.fromKey(key.getAsInt());
-				if (keyAsString != null) {
-					if (!keyAsString.equals(attribute)) {
-						continue;
-					}
-				} else {
-					// invalid key type
-					result = new VPackSlice();
-					break;
+				// translate key
+				if (!useTranslator) {
+					// no attribute translator
+					throw new VPackNeedAttributeTranslatorException();
+				}
+				if (!key.translateUnchecked().isEqualString(attribute)) {
+					continue;
 				}
 			} else {
 				// invalid key type
@@ -689,5 +723,9 @@ public class VPackSlice {
 			throw new VPackValueTypeException(ValueType.ARRAY, ValueType.OBJECT);
 		}
 		return iterator;
+	}
+
+	protected byte[] getValue() {
+		return Arrays.copyOfRange(vpack, start, start + getByteSize());
 	}
 }

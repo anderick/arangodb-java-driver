@@ -7,10 +7,10 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.arangodb.velocypack.exception.VPackBuilderException;
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenCompoundException;
 import com.arangodb.velocypack.exception.VPackBuilderNumberOutOfRangeException;
 import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
+import com.arangodb.velocypack.exception.VPackException;
 import com.arangodb.velocypack.util.Value;
 import com.arangodb.velocypack.util.ValueType;
 
@@ -27,7 +27,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addNull() throws VPackBuilderException {
+	public void addNull() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.NULL));
 
@@ -36,7 +36,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addBooleanTrue() throws VPackBuilderException {
+	public void addBooleanTrue() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(true));
 
@@ -46,7 +46,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addBooleanFalse() throws VPackBuilderException {
+	public void addBooleanFalse() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(false));
 
@@ -56,7 +56,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addBooleanNull() throws VPackBuilderException {
+	public void addBooleanNull() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final Boolean b = null;
 		builder.add(new Value(b));
@@ -66,7 +66,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addDouble() throws VPackBuilderException {
+	public void addDouble() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final double value = Double.MAX_VALUE;
 		builder.add(new Value(value));
@@ -77,7 +77,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addIntegerAsSmallIntMin() throws VPackBuilderException {
+	public void addIntegerAsSmallIntMin() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final int value = -6;
 		builder.add(new Value(value, ValueType.SMALLINT));
@@ -88,7 +88,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addIntegerAsSmallIntMax() throws VPackBuilderException {
+	public void addIntegerAsSmallIntMax() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final int value = 9;
 		builder.add(new Value(value, ValueType.SMALLINT));
@@ -99,14 +99,14 @@ public class VPackBuilderTest {
 	}
 
 	@Test(expected = VPackBuilderNumberOutOfRangeException.class)
-	public void addIntegerAsSmallIntOutofRange() throws VPackBuilderException {
+	public void addIntegerAsSmallIntOutofRange() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final int value = Integer.MAX_VALUE;
 		builder.add(new Value(value, ValueType.SMALLINT));
 	}
 
 	@Test
-	public void addLongAsSmallIntMin() throws VPackBuilderException {
+	public void addLongAsSmallIntMin() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final long value = -6;
 		builder.add(new Value(value, ValueType.SMALLINT));
@@ -117,7 +117,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addLongAsSmallIntMax() throws VPackBuilderException {
+	public void addLongAsSmallIntMax() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final long value = 9;
 		builder.add(new Value(value, ValueType.SMALLINT));
@@ -128,14 +128,14 @@ public class VPackBuilderTest {
 	}
 
 	@Test(expected = VPackBuilderNumberOutOfRangeException.class)
-	public void addLongAsSmallIntOutofRange() throws VPackBuilderException {
+	public void addLongAsSmallIntOutofRange() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final long value = Long.MAX_VALUE;
 		builder.add(new Value(value, ValueType.SMALLINT));
 	}
 
 	@Test
-	public void addBigIntegerAsSmallIntMin() throws VPackBuilderException {
+	public void addBigIntegerAsSmallIntMin() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final BigInteger value = BigInteger.valueOf(-6);
 		builder.add(new Value(value, ValueType.SMALLINT));
@@ -146,7 +146,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addBigIntegerAsSmallIntMax() throws VPackBuilderException {
+	public void addBigIntegerAsSmallIntMax() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final BigInteger value = BigInteger.valueOf(9);
 		builder.add(new Value(value, ValueType.SMALLINT));
@@ -157,14 +157,14 @@ public class VPackBuilderTest {
 	}
 
 	@Test(expected = VPackBuilderNumberOutOfRangeException.class)
-	public void addBigIntegerAsSmallIntOutofRange() throws VPackBuilderException {
+	public void addBigIntegerAsSmallIntOutofRange() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final BigInteger value = BigInteger.valueOf(Long.MAX_VALUE);
 		builder.add(new Value(value, ValueType.SMALLINT));
 	}
 
 	@Test
-	public void addIntegerAsInt() throws VPackBuilderException {
+	public void addIntegerAsInt() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final int value = Integer.MAX_VALUE;
 		builder.add(new Value(value, ValueType.INT));
@@ -175,7 +175,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addLongAsInt() throws VPackBuilderException {
+	public void addLongAsInt() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final long value = Long.MAX_VALUE;
 		builder.add(new Value(value, ValueType.INT));
@@ -186,7 +186,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addBigIntegerAsInt() throws VPackBuilderException {
+	public void addBigIntegerAsInt() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final BigInteger value = BigInteger.valueOf(Long.MAX_VALUE);
 		builder.add(new Value(value, ValueType.INT));
@@ -197,7 +197,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addLongAsUInt() throws VPackBuilderException {
+	public void addLongAsUInt() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final long value = Long.MAX_VALUE;
 		builder.add(new Value(value, ValueType.UINT));
@@ -208,7 +208,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addBigIntegerAsUInt() throws VPackBuilderException {
+	public void addBigIntegerAsUInt() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final BigInteger value = BigInteger.valueOf(Long.MAX_VALUE);
 		builder.add(new Value(value, ValueType.UINT));
@@ -219,21 +219,21 @@ public class VPackBuilderTest {
 	}
 
 	@Test(expected = VPackBuilderUnexpectedValueException.class)
-	public void addLongAsUIntNegative() throws VPackBuilderException {
+	public void addLongAsUIntNegative() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final long value = -10;
 		builder.add(new Value(value, ValueType.UINT));
 	}
 
 	@Test(expected = VPackBuilderUnexpectedValueException.class)
-	public void addBigIntegerAsUIntNegative() throws VPackBuilderException {
+	public void addBigIntegerAsUIntNegative() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final BigInteger value = BigInteger.valueOf(-10);
 		builder.add(new Value(value, ValueType.UINT));
 	}
 
 	@Test
-	public void addUTCDate() throws VPackBuilderException {
+	public void addUTCDate() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final Date date = new Date();
 		builder.add(new Value(date));
@@ -244,7 +244,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addStringShort() throws VPackBuilderException {
+	public void addStringShort() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final String s = "Hallo Welt!";
 		builder.add(new Value(s));
@@ -255,7 +255,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void addStringLong() throws VPackBuilderException {
+	public void addStringLong() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		final String s = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus.";
 		builder.add(new Value(s));
@@ -266,7 +266,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void emptyArray() throws VPackBuilderException {
+	public void emptyArray() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.ARRAY));
 		builder.close();
@@ -283,7 +283,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void compactArray() throws VPackBuilderException {
+	public void compactArray() throws VPackException {
 		final long[] expected = { 1, 16 };
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.ARRAY, true));
@@ -304,7 +304,7 @@ public class VPackBuilderTest {
 
 	@Test
 	@Ignore
-	public void arrayItemsSameLength() throws VPackBuilderException {
+	public void arrayItemsSameLength() throws VPackException {
 		VPackSlice sliceNotSame;
 		{
 			final VPackBuilder builder = new VPackBuilder();
@@ -327,7 +327,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void unindexedArray() throws VPackBuilderException {
+	public void unindexedArray() throws VPackException {
 		final long[] expected = { 1, 16 };
 		final VPackBuilder builder = new VPackBuilder();
 		builder.getOptions().setBuildUnindexedArrays(true);
@@ -348,7 +348,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void indexedArray() throws VPackBuilderException {
+	public void indexedArray() throws VPackException {
 		final long[] values = { 1, 2, 3 };
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.ARRAY));
@@ -363,7 +363,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void indexedArray2ByteLength() throws VPackBuilderException {
+	public void indexedArray2ByteLength() throws VPackException {
 		final long valueCount = 100;
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.ARRAY));
@@ -380,7 +380,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void indexedArray4ByteLength() throws VPackBuilderException {
+	public void indexedArray4ByteLength() throws VPackException {
 		final long valueCount = 200;
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.ARRAY));
@@ -397,7 +397,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void arrayInArray() throws VPackBuilderException {
+	public void arrayInArray() throws VPackException {
 		final long[][] values = { { 1, 2, 3 }, { 1, 2, 3 } };
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.ARRAY));
@@ -426,7 +426,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void arrayInArrayInArray() throws VPackBuilderException {
+	public void arrayInArrayInArray() throws VPackException {
 		final long[][][] values = { { { 1, 2, 3 } } };
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.ARRAY));
@@ -465,7 +465,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void emptyObject() throws VPackBuilderException {
+	public void emptyObject() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.OBJECT));
 		builder.close();
@@ -490,7 +490,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void compactObject() throws VPackBuilderException {
+	public void compactObject() throws VPackException {
 		// {"a": 12, "b": true, "c": "xyz"}
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.OBJECT, true));
@@ -508,7 +508,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void unindexedObject() throws VPackBuilderException {
+	public void unindexedObject() throws VPackException {
 		// {"a": 12, "b": true, "c": "xyz"}
 		final VPackBuilder builder = new VPackBuilder();
 		builder.getOptions().setBuildUnindexedObjects(true);
@@ -527,7 +527,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void indexedObject() throws VPackBuilderException {
+	public void indexedObject() throws VPackException {
 		// {"a": 12, "b": true, "c": "xyz"}
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.OBJECT));
@@ -545,7 +545,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void objectInObject() throws VPackBuilderException {
+	public void objectInObject() throws VPackException {
 		// {"a":{"a1":1,"a2":2},"b":{"b1":1,"b2":1}}
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.OBJECT));
@@ -583,7 +583,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void objectInObjectInObject() throws VPackBuilderException {
+	public void objectInObjectInObject() throws VPackException {
 		// {"a":{"b":{"c":{"d":true}}}
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.OBJECT));
@@ -614,7 +614,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void objectAttributeNotFound() throws VPackBuilderException {
+	public void objectAttributeNotFound() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.OBJECT));
 		builder.add("a", new Value("a"));
@@ -626,7 +626,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void object1ByteOffset() throws VPackBuilderException {
+	public void object1ByteOffset() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.OBJECT));
 		final int size = 5;
@@ -652,7 +652,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void object2ByteOffset() throws VPackBuilderException {
+	public void object2ByteOffset() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.OBJECT));
 		final int size = 10;
@@ -678,7 +678,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void sortObjectAttr() throws VPackBuilderException {
+	public void sortObjectAttr() throws VPackException {
 		final int min = 0;
 		final int max = 9;
 		final VPackBuilder builder = new VPackBuilder();
@@ -696,7 +696,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void sortObjectAttr2() throws VPackBuilderException {
+	public void sortObjectAttr2() throws VPackException {
 		final String[] keys = { "a", "b", "c", "d", "e", "f", "g", "h" };
 		final String[] keysUnsorted = { "b", "d", "c", "e", "g", "f", "h", "a" };
 		Assert.assertEquals(keys.length, keysUnsorted.length);
@@ -715,7 +715,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	public void attributeAdapterDefaults() throws VPackBuilderException {
+	public void attributeAdapterDefaults() throws VPackException {
 		final VPackSlice vpackWithAttrAdapter;
 		{
 			final VPackBuilder builder = new VPackBuilder();
@@ -738,7 +738,7 @@ public class VPackBuilderTest {
 	}
 
 	@Test(expected = VPackBuilderNeedOpenCompoundException.class)
-	public void closeClosed() throws VPackBuilderException {
+	public void closeClosed() throws VPackException {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.OBJECT));
 		builder.close();
