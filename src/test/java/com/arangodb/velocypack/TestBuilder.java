@@ -8,6 +8,9 @@ import java.util.Arrays;
 import com.arangodb.velocypack.exception.VPackBuilderException;
 import com.arangodb.velocypack.util.Value;
 import com.arangodb.velocypack.util.ValueType;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -15,30 +18,99 @@ import com.arangodb.velocypack.util.ValueType;
  */
 public class TestBuilder {
 
-	public static void recurse(final VPackBuilder b, final int curdepth, final int depth, final int size)
+	@SuppressWarnings("unused")
+	protected static class TestEntity {
+		private String attr1;
+		private int attr2;
+		private TestEntity sub1;
+		private TestEntity sub2;
+		private int[] arr1;
+	}
+
+	private static TestEntity recurse(final int curdeph, final int depth, final int size) {
+		if (curdeph >= depth) {
+			return null;
+		}
+		final TestEntity entity = new TestEntity();
+		entity.attr1 = "TextTextText" + depth;
+		entity.attr2 = depth;
+		entity.arr1 = new int[size];
+		for (int i = 0; i < size; i++) {
+			entity.arr1[i] = i;
+		}
+		entity.sub1 = recurse(curdeph + 1, depth, size);
+		entity.sub2 = recurse(curdeph + 1, depth, size);
+		return entity;
+	}
+
+	public static TestEntity buildEntity(final int depth, final int size) {
+		return recurse(0, depth, size);
+	}
+
+	private static void recurse(final VPackBuilder builder, final int curdepth, final int depth, final int size)
 			throws VPackBuilderException {
 		if (curdepth >= depth) {
 			return;
 		}
-		for (int i = 0; i < size; i++) {
-			b.add("Hallo" + i, new Value(i));
-		}
-		for (int i = 0; i < size; i++) {
-			b.add("String" + i, new Value("TextTextText" + i));
-		}
-		b.add("sub1", new Value(ValueType.OBJECT));
-		recurse(b, curdepth + 1, depth, size);
-		b.close();
+		builder.add("attr1", new Value("TextTextText" + depth));
+		builder.add("attr2", new Value(depth));
+		// for (int i = 0; i < size; i++) {
+		// builder.add("Hallo" + i, new Value(i));
+		// }
+		// for (int i = 0; i < size; i++) {
+		// builder.add("String" + i, new Value("TextTextText" + i));
+		// }
+		builder.add("sub1", new Value(ValueType.OBJECT));
+		recurse(builder, curdepth + 1, depth, size);
+		builder.close();
 
-		b.add("sub2", new Value(ValueType.OBJECT));
-		recurse(b, curdepth + 1, depth, size);
-		b.close();
+		builder.add("sub2", new Value(ValueType.OBJECT));
+		recurse(builder, curdepth + 1, depth, size);
+		builder.close();
 
-		b.add("arr1", new Value(ValueType.ARRAY));
+		builder.add("arr1", new Value(ValueType.ARRAY));
 		for (int i = 0; i < size; i++) {
-			b.add(new Value(i));
+			builder.add(new Value(i));
 		}
-		b.close();
+		builder.close();
+	}
+
+	public static void buildVpack(final VPackBuilder builder, final int depth, final int size)
+			throws VPackBuilderException {
+		builder.add(new Value(ValueType.OBJECT));
+		recurse(builder, 0, depth, size);
+		builder.close();
+	}
+
+	private static void recurse(final JsonObject obj, final int curdepth, final int depth, final int size) {
+		if (curdepth >= depth) {
+			return;
+		}
+		for (int i = 0; i < size; i++) {
+			obj.addProperty("Hallo" + i, i);
+		}
+		for (int i = 0; i < size; i++) {
+			obj.addProperty("String" + i, "TextTextText" + i);
+		}
+		final JsonObject subObj1 = new JsonObject();
+		recurse(subObj1, curdepth + 1, depth, size);
+		obj.add("sub1", subObj1);
+
+		final JsonObject subObj2 = new JsonObject();
+		recurse(subObj2, curdepth + 1, depth, size);
+		obj.add("sub2", subObj1);
+
+		final JsonArray arr1 = new JsonArray();
+		for (int i = 0; i < size; i++) {
+			arr1.add(i);
+		}
+		obj.add("arr1", arr1);
+	}
+
+	public static String buildJson(final int depth, final int size) {
+		final JsonObject obj = new JsonObject();
+		recurse(obj, 0, depth, size);
+		return new Gson().toJson(obj);
 	}
 
 	public static void main(final String[] args) throws VPackBuilderException, IOException {
@@ -53,9 +125,7 @@ public class TestBuilder {
 		final long start = System.currentTimeMillis();
 
 		final VPackBuilder b = new VPackBuilder();
-		b.add(new Value(ValueType.OBJECT));
-		recurse(b, 0, depth, size);
-		b.close();
+		buildVpack(b, depth, size);
 
 		final long end = System.currentTimeMillis();
 		System.out.println("Runtime: " + (end - start));
