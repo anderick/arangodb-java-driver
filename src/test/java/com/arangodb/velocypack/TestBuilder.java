@@ -52,14 +52,14 @@ public class TestBuilder {
 		if (curdepth >= depth) {
 			return;
 		}
-		// builder.add("attr1", new Value("TextTextText" + depth));
-		// builder.add("attr2", new Value(depth));
-		for (int i = 0; i < size; i++) {
-			builder.add("Hallo" + i, new Value(i));
-		}
-		for (int i = 0; i < size; i++) {
-			builder.add("String" + i, new Value("TextTextText" + i));
-		}
+		builder.add("attr1", new Value("TextTextText" + depth));
+		builder.add("attr2", new Value(depth));
+		// for (int i = 0; i < size; i++) {
+		// builder.add("Hallo" + i, new Value(i));
+		// }
+		// for (int i = 0; i < size; i++) {
+		// builder.add("String" + i, new Value("TextTextText" + i));
+		// }
 		builder.add("sub1", new Value(ValueType.OBJECT));
 		recurse(builder, curdepth + 1, depth, size);
 		builder.close();
