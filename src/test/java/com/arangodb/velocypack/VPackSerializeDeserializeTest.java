@@ -21,7 +21,6 @@ import org.junit.Test;
 import com.arangodb.velocypack.annotations.Expose;
 import com.arangodb.velocypack.annotations.SerializedName;
 import com.arangodb.velocypack.exception.VPackException;
-import com.arangodb.velocypack.exception.VPackParserException;
 import com.arangodb.velocypack.util.Value;
 import com.arangodb.velocypack.util.ValueType;
 
@@ -2485,10 +2484,10 @@ public class VPackSerializeDeserializeTest {
 		final String value = "abc";
 		final VPack vp = new VPack();
 		vp.registerSerializer(TestEntityString.class, new VPackSerializer<TestEntityString>() {
-
 			@Override
 			public void serialize(
 				final VPackBuilder builder,
+				final String attribute,
 				final TestEntityString entity,
 				final VPackSerializationContext context) throws VPackException {
 				builder.add("not-s", new Value(entity.s));
@@ -2539,8 +2538,9 @@ public class VPackSerializeDeserializeTest {
 			@Override
 			public void serialize(
 				final VPackBuilder builder,
+				final String attribute,
 				final TestEntityObject entity,
-				final VPackSerializationContext context) throws VPackParserException {
+				final VPackSerializationContext context) throws VPackException {
 				context.serialize(builder, "test", entity.o1);
 			}
 		});

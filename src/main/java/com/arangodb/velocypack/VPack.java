@@ -339,7 +339,7 @@ public class VPack {
 		add(name, new Value(ValueType.OBJECT), builder);
 		final VPackSerializer<Object> serializer = (VPackSerializer<Object>) serializers.get(entity.getClass());
 		if (serializer != null) {
-			serializer.serialize(builder, entity, serializationContext);
+			serializer.serialize(builder, name, entity, serializationContext);
 		} else {
 			serializeFields(entity, builder);
 		}

@@ -8,6 +8,7 @@ import com.arangodb.velocypack.exception.VPackException;
  */
 public interface VPackSerializer<T> {
 
-	void serialize(VPackBuilder builder, T entity, VPackSerializationContext context) throws VPackException;
+	void serialize(VPackBuilder builder, String attribute, T entity, VPackSerializationContext context)
+			throws VPackException;
 
 }
