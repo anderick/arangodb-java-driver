@@ -4,7 +4,6 @@ import java.math.BigInteger;
 import java.util.Date;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenCompoundException;
@@ -303,7 +302,6 @@ public class VPackBuilderTest {
 	}
 
 	@Test
-	@Ignore
 	public void arrayItemsSameLength() throws VPackException {
 		VPackSlice sliceNotSame;
 		{
@@ -368,13 +366,30 @@ public class VPackBuilderTest {
 		final VPackBuilder builder = new VPackBuilder();
 		builder.add(new Value(ValueType.ARRAY));
 		for (long i = 0; i < valueCount; i++) {
+			builder.add(new Value(i
+					+ "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus."));
+		}
+		builder.close();
+
+		final VPackSlice slice = builder.slice();
+		Assert.assertEquals(0x07, slice.head());
+		Assert.assertTrue(slice.isArray());
+		Assert.assertEquals(valueCount, slice.getLength());
+	}
+
+	@Test
+	public void indexedArray2ByteLengthNoIndexTable() throws VPackException {
+		final long valueCount = 100;
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.ARRAY));
+		for (long i = 0; i < valueCount; i++) {
 			builder.add(new Value(
 					"Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus."));
 		}
 		builder.close();
 
 		final VPackSlice slice = builder.slice();
-		Assert.assertEquals(0x07, slice.head());
+		Assert.assertEquals(0x03, slice.head());
 		Assert.assertTrue(slice.isArray());
 		Assert.assertEquals(valueCount, slice.getLength());
 	}
@@ -387,6 +402,23 @@ public class VPackBuilderTest {
 		for (long i = 0; i < valueCount; i++) {
 			builder.add(new Value(
 					"Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus."));
+		}
+		builder.close();
+
+		final VPackSlice slice = builder.slice();
+		Assert.assertEquals(0x04, slice.head());
+		Assert.assertTrue(slice.isArray());
+		Assert.assertEquals(valueCount, slice.getLength());
+	}
+
+	@Test
+	public void indexedArray4ByteLengthNoIndexTable() throws VPackException {
+		final long valueCount = 200;
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.ARRAY));
+		for (long i = 0; i < valueCount; i++) {
+			builder.add(new Value(i
+					+ "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus."));
 		}
 		builder.close();
 

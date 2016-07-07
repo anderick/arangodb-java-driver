@@ -583,7 +583,7 @@ public class VPackBuilder {
 	}
 
 	private VPackBuilder closeArray(final int tos, final List<Integer> in) {
-		// fix head byte in case a compact Array / Object was originally
+		// fix head byte in case a compact Array was originally
 		// requested
 		buffer[tos] = (byte) 0x06;
 
@@ -593,12 +593,12 @@ public class VPackBuilder {
 		if (n == 1) {
 			needIndexTable = false;
 			needNrSubs = false;
-		} else if ((size - 1 - tos) - in.get(0) == n * (in.get(1) - in.get(0))) {
+		} else if ((size - tos) - in.get(0) == n * (in.get(1) - in.get(0))) {
 			// In this case it could be that all entries have the same length
 			// and we do not need an offset table at all:
 			boolean noTable = true;
 			final int subLen = in.get(1) - in.get(0);
-			if ((size - 1 - tos) - in.get(n - 1) != subLen) {
+			if ((size - tos) - in.get(n - 1) != subLen) {
 				noTable = false;
 			} else {
 				for (int i = 1; i < n - 1; i++) {
