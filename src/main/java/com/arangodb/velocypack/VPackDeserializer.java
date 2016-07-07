@@ -8,6 +8,6 @@ import com.arangodb.velocypack.exception.VPackException;
  */
 public interface VPackDeserializer<T> {
 
-	T deserialize(VPackSlice vpack) throws VPackException;
+	T deserialize(VPackSlice vpack, VPackDeserializationContext context) throws VPackException;
 
 }

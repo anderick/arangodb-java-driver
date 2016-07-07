@@ -62,6 +62,8 @@ public class VPack {
 	private final VPackOptions options;
 
 	private final VPackCache cache;
+	private final VPackSerializationContext serializationContext;
+	private final VPackDeserializationContext deserializationContext;
 
 	public VPack() {
 		this(new VPackDefaultOptions());
@@ -75,6 +77,32 @@ public class VPack {
 		instanceCreators = new HashMap<Class<?>, VPackInstanceCreator<?>>();
 		VPackDefautInstanceCreators.registerInstanceCreators(this);
 		cache = new VPackCache();
+		serializationContext = new VPackSerializationContext() {
+			@Override
+			public void serialize(final VPackBuilder builder, final Object entity) throws VPackParserException {
+				try {
+					serializeObject(null, entity, builder);
+				} catch (final Exception e) {
+					throw new VPackParserException(e);
+				}
+			}
+
+			@Override
+			public void serialize(final VPackBuilder builder, final String attribute, final Object entity)
+					throws VPackParserException {
+				try {
+					serializeObject(attribute, entity, builder);
+				} catch (final Exception e) {
+					throw new VPackParserException(e);
+				}
+			}
+		};
+		deserializationContext = new VPackDeserializationContext() {
+			@Override
+			public <T> T deserialize(final VPackSlice vpack, final Class<T> type) throws VPackParserException {
+				return VPack.this.deserialize(vpack, type);
+			}
+		};
 	}
 
 	public VPackOptions getOptions() {
@@ -108,7 +136,7 @@ public class VPack {
 		final T entity;
 		final VPackDeserializer<T> deserializer = (VPackDeserializer<T>) deserializers.get(type);
 		if (deserializer != null) {
-			entity = deserializer.deserialize(vpack);
+			entity = deserializer.deserialize(vpack, deserializationContext);
 		} else {
 			entity = createInstance(type);
 			deserializeFields(entity, vpack);
@@ -311,7 +339,7 @@ public class VPack {
 		add(name, new Value(ValueType.OBJECT), builder);
 		final VPackSerializer<Object> serializer = (VPackSerializer<Object>) serializers.get(entity.getClass());
 		if (serializer != null) {
-			serializer.serialize(builder, entity);
+			serializer.serialize(builder, entity, serializationContext);
 		} else {
 			serializeFields(entity, builder);
 		}

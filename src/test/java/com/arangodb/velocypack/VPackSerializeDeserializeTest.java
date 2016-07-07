@@ -21,6 +21,7 @@ import org.junit.Test;
 import com.arangodb.velocypack.annotations.Expose;
 import com.arangodb.velocypack.annotations.SerializedName;
 import com.arangodb.velocypack.exception.VPackException;
+import com.arangodb.velocypack.exception.VPackParserException;
 import com.arangodb.velocypack.util.Value;
 import com.arangodb.velocypack.util.ValueType;
 
@@ -2484,8 +2485,12 @@ public class VPackSerializeDeserializeTest {
 		final String value = "abc";
 		final VPack vp = new VPack();
 		vp.registerSerializer(TestEntityString.class, new VPackSerializer<TestEntityString>() {
+
 			@Override
-			public void serialize(final VPackBuilder builder, final TestEntityString entity) throws VPackException {
+			public void serialize(
+				final VPackBuilder builder,
+				final TestEntityString entity,
+				final VPackSerializationContext context) throws VPackException {
 				builder.add("not-s", new Value(entity.s));
 			}
 		});
@@ -2511,7 +2516,8 @@ public class VPackSerializeDeserializeTest {
 		final VPack vp = new VPack();
 		vp.registerDeserializer(TestEntityString.class, new VPackDeserializer<TestEntityString>() {
 			@Override
-			public TestEntityString deserialize(final VPackSlice vpack) throws VPackException {
+			public TestEntityString deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+					throws VPackException {
 				final TestEntityString entity = new TestEntityString();
 				final VPackSlice nots = vpack.get("not-s");
 				if (nots.isString()) {
@@ -2524,6 +2530,55 @@ public class VPackSerializeDeserializeTest {
 		Assert.assertNotNull(entity);
 		Assert.assertNotNull(entity.s);
 		Assert.assertEquals(value, entity.s);
+	}
+
+	@Test
+	public void customSerializerWithContext() throws VPackException {
+		final VPack vp = new VPack();
+		vp.registerSerializer(TestEntityObject.class, new VPackSerializer<TestEntityObject>() {
+			@Override
+			public void serialize(
+				final VPackBuilder builder,
+				final TestEntityObject entity,
+				final VPackSerializationContext context) throws VPackParserException {
+				context.serialize(builder, "test", entity.o1);
+			}
+		});
+		final TestEntityObject entity = new TestEntityObject();
+		final VPackSlice vpack = vp.serialize(entity);
+		Assert.assertNotNull(vpack);
+		Assert.assertTrue(vpack.isObject());
+		{
+			final VPackSlice test = vpack.get("test");
+			Assert.assertTrue(test.isObject());
+			final VPackSlice l1 = test.get("l1");
+			Assert.assertTrue(l1.isInteger());
+			Assert.assertEquals(1, l1.getAsInt());
+		}
+	}
+
+	@Test
+	public void customDeserializerWithContext() throws VPackException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.OBJECT));
+		builder.add("test", new Value(ValueType.OBJECT));
+		builder.add("l1", new Value(5));
+		builder.close();
+		builder.close();
+		final VPack vp = new VPack();
+		vp.registerDeserializer(TestEntityObject.class, new VPackDeserializer<TestEntityObject>() {
+			@Override
+			public TestEntityObject deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+					throws VPackException {
+				final TestEntityObject entity = new TestEntityObject();
+				entity.o1 = context.deserialize(vpack.get("test"), TestEntityLong.class);
+				return entity;
+			}
+		});
+		final TestEntityObject entity = vp.deserialize(builder.slice(), TestEntityObject.class);
+		Assert.assertNotNull(entity);
+		Assert.assertNotNull(entity.o1);
+		Assert.assertEquals(5, entity.o1.l1);
 	}
 
 	protected static class TestEntitySerializeAnnotation {
