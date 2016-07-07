@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.arangodb.velocypack.annotations.Expose;
 import com.arangodb.velocypack.annotations.SerializedName;
@@ -51,7 +52,7 @@ public class VPackCache {
 
 	public VPackCache() {
 		super();
-		cache = new HashMap<Class<?>, Map<Field, FieldInfo>>();
+		cache = new ConcurrentHashMap<Class<?>, Map<Field, FieldInfo>>();
 		fieldComparator = new Comparator<Entry<Field, FieldInfo>>() {
 			@Override
 			public int compare(final Entry<Field, FieldInfo> o1, final Entry<Field, FieldInfo> o2) {
