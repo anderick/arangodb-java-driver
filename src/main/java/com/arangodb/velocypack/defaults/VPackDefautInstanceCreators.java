@@ -2,8 +2,10 @@ package com.arangodb.velocypack.defaults;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.arangodb.velocypack.VPack;
@@ -24,6 +26,7 @@ public class VPackDefautInstanceCreators {
 		parser.regitserInstanceCreator(Collection.class, new CollectionInstanceCreator());
 		parser.regitserInstanceCreator(List.class, new ListInstanceCreator());
 		parser.regitserInstanceCreator(Set.class, new SetInstanceCreator());
+		parser.regitserInstanceCreator(Map.class, new MapInstanceCreator());
 	}
 
 	protected static class CollectionInstanceCreator implements VPackInstanceCreator<Collection> {
@@ -45,6 +48,14 @@ public class VPackDefautInstanceCreators {
 		public Set createInstance() {
 			return new HashSet();
 		}
+	}
+
+	protected static class MapInstanceCreator implements VPackInstanceCreator<Map> {
+		@Override
+		public Map createInstance() {
+			return new HashMap();
+		}
+
 	}
 
 }

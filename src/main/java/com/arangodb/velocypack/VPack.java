@@ -271,7 +271,7 @@ public class VPack {
 			throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException,
 			VPackException {
 		final int length = (int) vpack.getLength();
-		final Map value = new HashMap();
+		final Map value = (Map) createInstance(type);
 		if (length > 0) {
 			final Class<?> keyType = getComponentKeyType(field, type);
 			final Class<?> valueType = getComponentValueType(field, type);
