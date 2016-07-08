@@ -4,7 +4,7 @@
 
 	<groupId>com.arangodb</groupId>
 	<artifactId>arangodb-java-driver</artifactId>
-	<version>3.0.1-SNAPSHOT</version>
+	<version>3.0.2-SNAPSHOT</version>
 	<inceptionYear>2012</inceptionYear>
 	<packaging>jar</packaging>
 
@@ -254,7 +254,7 @@
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
-			<version>20151123</version>
+			<version>20140107</version>
 			<scope>test</scope>
 		</dependency>
 		
