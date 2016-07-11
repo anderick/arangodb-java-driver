@@ -171,7 +171,7 @@ public class VPack {
 		final VPackSlice attr = vpack.get(getFieldName(entity, field));
 		if (!attr.isNone()) {
 			final Object value = getValue(attr, field, field.getType());
-			setEntityValue(entity, field, value);
+			field.set(entity, value);
 		}
 	}
 
@@ -365,7 +365,7 @@ public class VPack {
 
 		final String fieldName = getFieldName(entity, field);
 		final Class<?> type = field.getType();
-		final Object value = getEntityValue(entity, field);
+		final Object value = field.get(entity);
 		addValue(field, fieldName, type, value, builder);
 	}
 
@@ -484,17 +484,6 @@ public class VPack {
 		} else {
 			builder.add(value);
 		}
-	}
-
-	private Object getEntityValue(final Object entity, final Field field) throws IllegalAccessException {
-		field.setAccessible(true);
-		return field.get(entity);
-	}
-
-	private void setEntityValue(final Object entity, final Field field, final Object value)
-			throws IllegalAccessException {
-		field.setAccessible(true);
-		field.set(entity, value);
 	}
 
 }

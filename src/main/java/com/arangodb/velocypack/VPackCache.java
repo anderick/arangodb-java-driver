@@ -86,6 +86,7 @@ public class VPackCache {
 				final Field[] declaredFields = tmp.getDeclaredFields();
 				for (final Field field : declaredFields) {
 					if (!field.isSynthetic() && !Modifier.isStatic(field.getModifiers())) {
+						field.setAccessible(true);
 						fields.put(field, createFieldInfo(field));
 					}
 				}
