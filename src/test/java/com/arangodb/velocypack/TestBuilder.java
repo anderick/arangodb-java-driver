@@ -22,6 +22,9 @@ public class TestBuilder {
 	protected static class TestEntity {
 		private String attr1;
 		private int attr2;
+		private long attr3;
+		private double attr4;
+		private boolean attr5;
 		private TestEntity sub1;
 		private TestEntity sub2;
 		private int[] arr1;
@@ -34,6 +37,9 @@ public class TestBuilder {
 		final TestEntity entity = new TestEntity();
 		entity.attr1 = "TextTextText" + depth;
 		entity.attr2 = depth;
+		entity.attr3 = depth;
+		entity.attr4 = depth + 0.5;
+		entity.attr5 = true;
 		entity.arr1 = new int[size];
 		for (int i = 0; i < size; i++) {
 			entity.arr1[i] = i;
@@ -54,6 +60,9 @@ public class TestBuilder {
 		}
 		builder.add("attr1", new Value("TextTextText" + depth));
 		builder.add("attr2", new Value(depth));
+		builder.add("attr3", new Value(depth));
+		builder.add("attr4", new Value(depth + 0.5));
+		builder.add("attr5", new Value(true));
 		// for (int i = 0; i < size; i++) {
 		// builder.add("Hallo" + i, new Value(i));
 		// }
@@ -85,12 +94,11 @@ public class TestBuilder {
 		if (curdepth >= depth) {
 			return;
 		}
-		for (int i = 0; i < size; i++) {
-			obj.addProperty("Hallo" + i, i);
-		}
-		for (int i = 0; i < size; i++) {
-			obj.addProperty("String" + i, "TextTextText" + i);
-		}
+		obj.addProperty("attr1", "TextTextText" + depth);
+		obj.addProperty("attr2", depth);
+		obj.addProperty("attr3", depth);
+		obj.addProperty("attr4", depth + 0.5);
+		obj.addProperty("attr5", true);
 		final JsonObject subObj1 = new JsonObject();
 		recurse(subObj1, curdepth + 1, depth, size);
 		obj.add("sub1", subObj1);

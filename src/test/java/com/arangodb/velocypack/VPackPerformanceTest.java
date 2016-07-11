@@ -25,12 +25,12 @@ public class VPackPerformanceTest {
 	private static final String SMALL_DOCUMENTS_DESCRIPTION = "1mb";
 	private static final int SMALL_DOCUMENTS_ITERATIONS = BIG_DOCUMENTS_ITERATIONS * 100;
 	private static final int SMALL_DOCUMENTS_DEPTH = 11;
-	private static final int SMALL_DOCUMENTS_SIZE = 70;
+	private static final int SMALL_DOCUMENTS_SIZE = 65;
 
 	private static final String VERY_SMALL_DOCUMENTS_DESCRIPTION = "1kb";
 	private static final int VERY_SMALL_DOCUMENTS_ITERATIONS = SMALL_DOCUMENTS_ITERATIONS * 1000;
 	private static final int VERY_SMALL_DOCUMENTS_DEPTH = 2;
-	private static final int VERY_SMALL_DOCUMENTS_SIZE = 5;
+	private static final int VERY_SMALL_DOCUMENTS_SIZE = 45;
 
 	@Test
 	public void test02_serializeVerySmallVpack() throws VPackException {
