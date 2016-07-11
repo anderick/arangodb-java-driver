@@ -58,10 +58,10 @@ public class TestBuilder {
 		if (curdepth >= depth) {
 			return;
 		}
-		builder.add("attr1", new Value("TextTextText" + depth));
-		builder.add("attr2", new Value(depth));
-		builder.add("attr3", new Value(depth));
-		builder.add("attr4", new Value(depth + 0.5));
+		builder.add("attr1", new Value("TextTextText" + curdepth));
+		builder.add("attr2", new Value(curdepth));
+		builder.add("attr3", new Value(curdepth));
+		builder.add("attr4", new Value(curdepth + 0.5));
 		builder.add("attr5", new Value(true));
 		// for (int i = 0; i < size; i++) {
 		// builder.add("Hallo" + i, new Value(i));
@@ -94,10 +94,10 @@ public class TestBuilder {
 		if (curdepth >= depth) {
 			return;
 		}
-		obj.addProperty("attr1", "TextTextText" + depth);
-		obj.addProperty("attr2", depth);
-		obj.addProperty("attr3", depth);
-		obj.addProperty("attr4", depth + 0.5);
+		obj.addProperty("attr1", "TextTextText" + curdepth);
+		obj.addProperty("attr2", curdepth);
+		obj.addProperty("attr3", curdepth);
+		obj.addProperty("attr4", curdepth + 0.5);
 		obj.addProperty("attr5", true);
 		final JsonObject subObj1 = new JsonObject();
 		recurse(subObj1, curdepth + 1, depth, size);
