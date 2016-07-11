@@ -1,4 +1,4 @@
-package com.arangodb.velocypack.defaults;
+package com.arangodb.velocypack.internal;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +14,7 @@ import com.arangodb.velocypack.util.ValueType;
  * @author Mark - mark@arangodb.com
  *
  */
-public class VPackDefaultAttributeTranslator implements VPackAttributeTranslator {
+public class VPackAttributeTranslatorImpl implements VPackAttributeTranslator {
 
 	private static final String KEY = "_key";
 	private static final String REV = "_rev";
@@ -33,7 +33,7 @@ public class VPackDefaultAttributeTranslator implements VPackAttributeTranslator
 	private final Map<String, VPackSlice> attributeToKey;
 	private final Map<Integer, VPackSlice> keyToAttribute;
 
-	public VPackDefaultAttributeTranslator() {
+	public VPackAttributeTranslatorImpl() {
 		super();
 		builder = null;
 		attributeToKey = new HashMap<String, VPackSlice>();

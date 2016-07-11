@@ -1,4 +1,4 @@
-package com.arangodb.velocypack;
+package com.arangodb.velocypack.internal;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -22,7 +22,7 @@ import com.arangodb.velocypack.annotations.SerializedName;
  */
 public class VPackCache {
 
-	protected static class FieldInfo {
+	public static class FieldInfo {
 		private final String fieldName;
 		private final boolean serialize;
 		private final boolean deserialize;
@@ -61,19 +61,7 @@ public class VPackCache {
 		};
 	}
 
-	public String getFieldName(final Class<?> entityClass, final Field field) {
-		return getFieldInfo(entityClass, field).getFieldName();
-	}
-
-	public boolean isSerialize(final Class<?> entityClass, final Field field) {
-		return getFieldInfo(entityClass, field).isSerialize();
-	}
-
-	public boolean isDeserialize(final Class<?> entityClass, final Field field) {
-		return getFieldInfo(entityClass, field).isDeserialize();
-	}
-
-	private FieldInfo getFieldInfo(final Class<?> entityClass, final Field field) {
+	public FieldInfo getFieldInfo(final Class<?> entityClass, final Field field) {
 		return getFields(entityClass).get(field);
 	}
 

@@ -1,4 +1,4 @@
-package com.arangodb.velocypack.defaults;
+package com.arangodb.velocypack.internal;
 
 import com.arangodb.velocypack.VPack.VPackOptions;
 import com.arangodb.velocypack.VPackBuilder.BuilderOptions;
@@ -7,12 +7,12 @@ import com.arangodb.velocypack.VPackBuilder.BuilderOptions;
  * @author Mark - mark@arangodb.com
  *
  */
-public class VPackDefaultOptions implements VPackOptions, BuilderOptions {
+public class VPackOptionsImpl implements VPackOptions, BuilderOptions {
 
 	protected boolean buildUnindexedArrays;
 	protected boolean buildUnindexedObjects;
 
-	public VPackDefaultOptions() {
+	public VPackOptionsImpl() {
 		super();
 		buildUnindexedArrays = false;
 		buildUnindexedObjects = false;

@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.arangodb.velocypack.defaults.VPackDefaultOptions;
 import com.arangodb.velocypack.exception.VPackBuilderException;
 import com.arangodb.velocypack.exception.VPackBuilderKeyAlreadyWrittenException;
 import com.arangodb.velocypack.exception.VPackBuilderNeedOpenCompoundException;
@@ -22,7 +21,8 @@ import com.arangodb.velocypack.exception.VPackBuilderNumberOutOfRangeException;
 import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
 import com.arangodb.velocypack.exception.VPackKeyTypeException;
 import com.arangodb.velocypack.exception.VPackNeedAttributeTranslatorException;
-import com.arangodb.velocypack.util.NumberUtil;
+import com.arangodb.velocypack.internal.VPackOptionsImpl;
+import com.arangodb.velocypack.internal.util.NumberUtil;
 import com.arangodb.velocypack.util.Value;
 import com.arangodb.velocypack.util.ValueType;
 
@@ -59,7 +59,7 @@ public class VPackBuilder {
 	private final BuilderOptions options;
 
 	public VPackBuilder() {
-		this(new VPackDefaultOptions());
+		this(new VPackOptionsImpl());
 	}
 
 	public VPackBuilder(final BuilderOptions options) {
@@ -106,7 +106,11 @@ public class VPackBuilder {
 	}
 
 	public VPackBuilder add(final String attribute, final Value sub) throws VPackBuilderException {
-		addInternal(attribute, sub);
+		if (attribute != null) {
+			addInternal(attribute, sub);
+		} else {
+			addInternal(sub);
+		}
 		return this;
 	}
 
@@ -699,7 +703,7 @@ public class VPackBuilder {
 		return this;
 	}
 
-	private class SortEntry {
+	private static class SortEntry {
 		private final VPackSlice slice;
 		private final int offset;
 
@@ -720,6 +724,9 @@ public class VPackBuilder {
 			@Override
 			public int compare(final SortEntry o1, final SortEntry o2) {
 				return o1.slice.getAsString().compareTo(o2.slice.getAsString());
+				// return compareTo(o1.slice.getValue(), 1,
+				// o1.slice.getValue().length - 1, o2.slice.getValue(), 1,
+				// o2.slice.getValue().length - 1);
 			}
 		};
 		Collections.sort(attributes, comparator);
@@ -727,6 +734,27 @@ public class VPackBuilder {
 		for (final SortEntry sortEntry : attributes) {
 			offsets.add(sortEntry.offset);
 		}
+	}
+
+	public static int compareTo(
+		final byte[] b1,
+		final int b1Index,
+		final int b1Length,
+		final byte[] b2,
+		final int b2Index,
+		final int b2Length) {
+		final int commonLength = Math.min(b1Length, b2Length);
+		for (int i = 0; i < commonLength; i++) {
+			final byte byte1 = b1[b1Index + i];
+			final byte byte2 = b2[b2Index + i];
+			if (byte1 != byte2) {
+				return (byte1 < byte2) ? -1 : 1;
+			}
+		}
+		if (b1Length != b2Length) {
+			return (b1Length < b2Length) ? -2 : 2;
+		}
+		return 0;
 	}
 
 	private boolean isClosed() {

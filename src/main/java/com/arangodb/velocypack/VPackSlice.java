@@ -6,21 +6,21 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 
-import com.arangodb.velocypack.defaults.VPackDefaultAttributeTranslator;
 import com.arangodb.velocypack.exception.VPackException;
 import com.arangodb.velocypack.exception.VPackKeyTypeException;
 import com.arangodb.velocypack.exception.VPackNeedAttributeTranslatorException;
 import com.arangodb.velocypack.exception.VPackValueTypeException;
+import com.arangodb.velocypack.internal.VPackAttributeTranslatorImpl;
+import com.arangodb.velocypack.internal.util.BinaryUtil;
+import com.arangodb.velocypack.internal.util.DateUtil;
+import com.arangodb.velocypack.internal.util.NumberUtil;
+import com.arangodb.velocypack.internal.util.ObjectArrayUtil;
+import com.arangodb.velocypack.internal.util.StringUtil;
+import com.arangodb.velocypack.internal.util.ValueLengthUtil;
+import com.arangodb.velocypack.internal.util.ValueTypeUtil;
 import com.arangodb.velocypack.util.ArrayIterator;
-import com.arangodb.velocypack.util.BinaryUtil;
-import com.arangodb.velocypack.util.DateUtil;
-import com.arangodb.velocypack.util.NumberUtil;
-import com.arangodb.velocypack.util.ObjectArrayUtil;
 import com.arangodb.velocypack.util.ObjectIterator;
-import com.arangodb.velocypack.util.StringUtil;
-import com.arangodb.velocypack.util.ValueLengthUtil;
 import com.arangodb.velocypack.util.ValueType;
-import com.arangodb.velocypack.util.ValueTypeUtil;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -30,7 +30,7 @@ public class VPackSlice {
 
 	public static VPackAttributeTranslator attributeTranslator;
 	static {
-		attributeTranslator = new VPackDefaultAttributeTranslator();
+		attributeTranslator = new VPackAttributeTranslatorImpl();
 	}
 
 	private final byte[] vpack;
