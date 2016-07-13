@@ -238,7 +238,7 @@ public class VPackBuilderTest {
 		builder.add(new Value(date));
 
 		final VPackSlice slice = builder.slice();
-		Assert.assertTrue(slice.isUTCDate());
+		Assert.assertTrue(slice.isDate());
 		Assert.assertEquals(date, slice.getAsDate());
 	}
 

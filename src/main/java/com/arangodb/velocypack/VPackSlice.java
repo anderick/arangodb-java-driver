@@ -110,7 +110,7 @@ public class VPackSlice {
 		return isType(ValueType.DOUBLE);
 	}
 
-	public boolean isUTCDate() {
+	public boolean isDate() {
 		return isType(ValueType.UTC_DATE);
 	}
 
@@ -246,7 +246,7 @@ public class VPackSlice {
 	}
 
 	public Date getAsDate() {
-		if (!isUTCDate()) {
+		if (!isDate()) {
 			throw new VPackValueTypeException(ValueType.UTC_DATE);
 		}
 		return DateUtil.toDate(vpack, start + 1, length());

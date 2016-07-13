@@ -106,7 +106,7 @@ public class VPackSliceTest {
 	public void isUTCDate() {
 		final byte[] vpack = { 0x1c };
 		final VPackSlice slice = new VPackSlice(vpack);
-		Assert.assertTrue(slice.isUTCDate());
+		Assert.assertTrue(slice.isDate());
 	}
 
 	@Test
