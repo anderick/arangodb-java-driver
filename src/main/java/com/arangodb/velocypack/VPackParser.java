@@ -1,6 +1,7 @@
 package com.arangodb.velocypack;
 
 import java.text.DateFormat;
+import java.util.Iterator;
 import java.util.Locale;
 
 /**
@@ -15,7 +16,7 @@ public class VPackParser {
 	private static final String ARRAY_CLOSE = "]";
 	private static final String STRING = "\"";
 	private static final String FIELD = ":";
-	private static final String SEPERATOR = ",";
+	private static final String SEPARATOR = ",";
 	private static final DateFormat DATEFORMAT = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT,
 		Locale.US);
 
@@ -57,11 +58,14 @@ public class VPackParser {
 
 	private static void parseObject(final VPackSlice value, final StringBuilder json) {
 		json.append(OBJECT_OPEN);
-		for (int i = 0; i < value.getLength(); i++) {
-			if (i > 0) {
-				json.append(SEPERATOR);
+		int i = 0;
+		for (final Iterator<VPackSlice> iterator = value.iterator(); iterator.hasNext();) {
+			if (i++ > 0) {
+				json.append(SEPARATOR);
 			}
-			parse(value.keyAt(i), value.valueAt(i), json);
+			final VPackSlice nextAttr = iterator.next();
+			final VPackSlice nextValue = new VPackSlice(nextAttr.getVpack(), nextAttr.getStart() + nextAttr.getByteSize());
+			parse(nextAttr, nextValue, json);
 		}
 		json.append(OBJECT_CLOSE);
 	}
@@ -70,7 +74,7 @@ public class VPackParser {
 		json.append(ARRAY_OPEN);
 		for (int i = 0; i < value.getLength(); i++) {
 			if (i > 0) {
-				json.append(SEPERATOR);
+				json.append(SEPARATOR);
 			}
 			parse(null, value.at(i), json);
 		}
