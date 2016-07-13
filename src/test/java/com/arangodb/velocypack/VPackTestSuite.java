@@ -13,7 +13,7 @@ import com.arangodb.velocypack.util.ValueTest;
  */
 @RunWith(Suite.class)
 @SuiteClasses({ VPackSerializeDeserializeTest.class, VPackBuilderTest.class, VPackSliceTest.class, ValueTest.class,
-		SliceIteratorTest.class })
+		SliceIteratorTest.class, VPackParserTest.class })
 public class VPackTestSuite {
 
 }
