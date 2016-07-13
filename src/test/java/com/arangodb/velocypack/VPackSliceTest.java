@@ -46,6 +46,7 @@ public class VPackSliceTest {
 		Assert.assertTrue(slice.isBoolean());
 		Assert.assertTrue(slice.isTrue());
 		Assert.assertFalse(slice.isFalse());
+		Assert.assertEquals(1, slice.getByteSize());
 	}
 
 	@Test
@@ -55,6 +56,7 @@ public class VPackSliceTest {
 		Assert.assertTrue(slice.isBoolean());
 		Assert.assertTrue(slice.isFalse());
 		Assert.assertFalse(slice.isTrue());
+		Assert.assertEquals(1, slice.getByteSize());
 	}
 
 	@Test
@@ -635,6 +637,7 @@ public class VPackSliceTest {
 	private void checkStringLength(final int expected, final byte[] vpack) throws VPackException {
 		final VPackSlice slice = new VPackSlice(vpack);
 		Assert.assertEquals(expected, slice.getLength());
+		Assert.assertEquals(vpack.length, slice.getByteSize());
 	}
 
 	@Test(expected = VPackValueTypeException.class)
@@ -659,6 +662,7 @@ public class VPackSliceTest {
 	private void checkBinary(final byte[] expected, final byte[] vpack) throws VPackException {
 		final VPackSlice slice = new VPackSlice(vpack);
 		Assert.assertArrayEquals(expected, slice.getAsBinary());
+		Assert.assertEquals(vpack.length, slice.getByteSize());
 	}
 
 	@Test
@@ -677,6 +681,7 @@ public class VPackSliceTest {
 	private void checkBinary(final int expected, final byte[] vpack) throws VPackException {
 		final VPackSlice slice = new VPackSlice(vpack);
 		Assert.assertEquals(expected, slice.getBinaryLength());
+		Assert.assertEquals(vpack.length, slice.getByteSize());
 	}
 
 	@Test(expected = VPackValueTypeException.class)
@@ -891,6 +896,7 @@ public class VPackSliceTest {
 	private void checkLength(final int expected, final byte[] vpack) throws VPackException {
 		final VPackSlice slice = new VPackSlice(vpack);
 		Assert.assertEquals(expected, slice.getLength());
+		Assert.assertEquals(vpack.length, slice.getByteSize());
 	}
 
 	@Test

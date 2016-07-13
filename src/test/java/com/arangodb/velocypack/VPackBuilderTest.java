@@ -776,4 +776,17 @@ public class VPackBuilderTest {
 		builder.close();
 		builder.close();
 	}
+
+	@Test
+	public void addBinary() throws VPackException {
+		final byte[] expected = new byte[] { 49, 50, 51, 52, 53, 54, 55, 56, 57 };
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(expected));
+		final VPackSlice slice = builder.slice();
+
+		Assert.assertTrue(slice.isBinary());
+		Assert.assertEquals(expected.length, slice.getBinaryLength());
+		Assert.assertArrayEquals(expected, slice.getAsBinary());
+		Assert.assertEquals(1 + 4 + expected.length, slice.getByteSize());
+	}
 }

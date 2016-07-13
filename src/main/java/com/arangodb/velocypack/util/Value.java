@@ -23,6 +23,7 @@ public class Value {
 	private String s;
 	private Character c;
 	private Date date;
+	private byte[] blob;
 
 	private final ValueType type;
 	private final Class<?> clazz;
@@ -139,6 +140,11 @@ public class Value {
 		date = value;
 	}
 
+	public Value(final byte[] value) {
+		this(checkNull(value, ValueType.BINARY), null);
+		blob = value;
+	}
+
 	private static ValueType checkSmallInt(final Number value, final ValueType type) {
 		return value != null ? value.longValue() <= 9 && value.longValue() >= -6 ? ValueType.SMALLINT : type
 				: ValueType.NULL;
@@ -202,6 +208,10 @@ public class Value {
 
 	public Date getDate() {
 		return date;
+	}
+
+	public byte[] getBinary() {
+		return blob;
 	}
 
 }

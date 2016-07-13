@@ -268,6 +268,14 @@ public class VPackBuilder {
 		case OBJECT:
 			addObject(item.isUnindexed());
 			break;
+		case BINARY:
+			add((byte) 0xc3);
+			final byte[] binary = item.getBinary();
+			append(binary.length, INT_BYTES);
+			ensureCapacity(size + binary.length);
+			System.arraycopy(binary, 0, buffer, size, binary.length);
+			size += binary.length;
+			break;
 		default:
 			break;
 		}
