@@ -862,6 +862,21 @@ public class VPackSliceTest {
 		}
 	}
 
+	@Test
+	public void objectIterator() throws VPackException {
+		// {"a":"test","b":"test","c":"test"}
+		final String[] fields = new String[] { "a", "b", "c" };
+		final VPackSlice slice = new VPackSlice(new byte[] { 0x0b, 0x1b, 0x03, 0x41, 0x61, 0x44, 0x74, 0x65, 0x73, 0x74,
+				0x41, 0x62, 0x44, 0x74, 0x65, 0x73, 0x74, 0x41, 0x63, 0x44, 0x74, 0x65, 0x73, 0x74, 0x03, 0x0a, 0x11 });
+		int i = 0;
+		for (final Iterator<VPackSlice> iterator = slice.iterator(); iterator.hasNext();) {
+			final VPackSlice next = iterator.next();
+			Assert.assertEquals(fields[i++], next.getAsString());
+			final VPackSlice v = new VPackSlice(next.getVpack(), next.getStart() + next.getByteSize());
+			Assert.assertEquals("test", v.getAsString());
+		}
+	}
+
 	@Test(expected = VPackValueTypeException.class)
 	public void nonArrayNonObjectIterator() {
 		final VPackSlice vpack = new VPackSlice(new byte[] { 0x1a });

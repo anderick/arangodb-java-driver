@@ -21,10 +21,7 @@ public class ObjectIterator extends SliceIterator {
 			throw new VPackValueTypeException(ValueType.OBJECT);
 		}
 		if (size > 0) {
-			final byte head = slice.head();
-			if (head == 0x14) {
-				current = slice.keyAt(0).getStart();
-			}
+			current = slice.keyAt(0).getStart();
 		}
 	}
 
