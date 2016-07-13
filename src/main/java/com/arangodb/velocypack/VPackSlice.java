@@ -370,7 +370,7 @@ public class VPackSlice {
 					// compact Array or Object
 					size = NumberUtil.readVariableValueLength(vpack, start + 1, false);
 				} else /* if (head <= 0x14) */ {
-					size = NumberUtil.toLong(vpack, start + 1, ObjectArrayUtil.getOffsetSize(head));
+					size = NumberUtil.toLongReversed(vpack, start + 1, ObjectArrayUtil.getOffsetSize(head));
 				}
 				break;
 			case STRING:
@@ -378,7 +378,7 @@ public class VPackSlice {
 				size = getLongStringLength() + 1 + 8;
 				break;
 			case BINARY:
-				size = 1 + head - getBinaryLengthUnchecked();
+				size = 1 + head - ((byte) 0xbf) + getBinaryLengthUnchecked();
 				break;
 			case BCD:
 				if (head <= 0xcf) {
