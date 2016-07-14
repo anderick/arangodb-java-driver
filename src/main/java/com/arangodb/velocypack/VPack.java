@@ -1,7 +1,6 @@
 package com.arangodb.velocypack;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -212,9 +211,8 @@ public class VPack {
 			VPackException {
 		final VPackSlice attr = new VPackSlice(vpack.getVpack(), vpack.getStart() + vpack.getByteSize());
 		if (!attr.isNone()) {
-			final Field field = fieldInfo.getField();
-			final Object value = getValue(attr, field.getType(), fieldInfo);
-			field.set(entity, value);
+			final Object value = getValue(attr, fieldInfo.getType(), fieldInfo);
+			fieldInfo.set(entity, value);
 		}
 	}
 
@@ -366,14 +364,12 @@ public class VPack {
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, VPackException {
 
 		final String fieldName = fieldInfo.getFieldName();
-		final Field field = fieldInfo.getField();
-		final Class<?> type = field.getType();
-		final Object value = field.get(entity);
-		addValue(field, fieldName, type, value, builder, fieldInfo);
+		final Class<?> type = fieldInfo.getType();
+		final Object value = fieldInfo.get(entity);
+		addValue(fieldName, type, value, builder, fieldInfo);
 	}
 
 	private void addValue(
-		final Field field,
 		final String name,
 		final Class<?> type,
 		final Object value,
@@ -394,7 +390,7 @@ public class VPack {
 			} else if (Iterable.class.isAssignableFrom(type)) {
 				serializeIterable(name, value, builder);
 			} else if (Map.class.isAssignableFrom(type)) {
-				serializeMap(name, type, value, builder, fieldInfo);
+				serializeMap(name, value, builder, fieldInfo);
 			} else {
 				serializeObject(name, value, builder);
 			}
@@ -407,7 +403,7 @@ public class VPack {
 		builder.add(name, new Value(ValueType.ARRAY));
 		for (int i = 0; i < Array.getLength(value); i++) {
 			final Object element = Array.get(value, i);
-			addValue(null, null, element.getClass(), element, builder, null);
+			addValue(null, element.getClass(), element, builder, null);
 		}
 		builder.close();
 	}
@@ -417,14 +413,13 @@ public class VPack {
 		builder.add(name, new Value(ValueType.ARRAY));
 		for (final Iterator iterator = Iterable.class.cast(value).iterator(); iterator.hasNext();) {
 			final Object element = iterator.next();
-			addValue(null, null, element.getClass(), element, builder, null);
+			addValue(null, element.getClass(), element, builder, null);
 		}
 		builder.close();
 	}
 
 	private void serializeMap(
 		final String name,
-		final Class<?> type,
 		final Object value,
 		final VPackBuilder builder,
 		final FieldInfo fieldInfo)
@@ -436,8 +431,7 @@ public class VPack {
 				builder.add(name, new Value(ValueType.OBJECT));
 				final Set<Entry<?, ?>> entrySet = map.entrySet();
 				for (final Entry<?, ?> entry : entrySet) {
-					addValue(null, keyToString(entry.getKey()), entry.getValue().getClass(), entry.getValue(), builder,
-						null);
+					addValue(keyToString(entry.getKey()), entry.getValue().getClass(), entry.getValue(), builder, null);
 				}
 				builder.close();
 			} else {
@@ -445,8 +439,8 @@ public class VPack {
 				final Set<Entry<?, ?>> entrySet = map.entrySet();
 				for (final Entry<?, ?> entry : entrySet) {
 					builder.add(null, new Value(ValueType.OBJECT));
-					addValue(null, ATTR_KEY, entry.getKey().getClass(), entry.getKey(), builder, null);
-					addValue(null, ATTR_VALUE, entry.getValue().getClass(), entry.getValue(), builder, null);
+					addValue(ATTR_KEY, entry.getKey().getClass(), entry.getKey(), builder, null);
+					addValue(ATTR_VALUE, entry.getValue().getClass(), entry.getValue(), builder, null);
 					builder.close();
 				}
 				builder.close();

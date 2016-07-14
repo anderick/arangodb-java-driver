@@ -25,29 +25,29 @@ import com.arangodb.velocypack.annotations.SerializedName;
  */
 public class VPackCache {
 
-	public static class FieldInfo {
+	public abstract static class FieldInfo {
+		private final Class<?> type;
 		private final String fieldName;
-		private final Field field;
 		private final boolean serialize;
 		private final boolean deserialize;
 		private final Class<?>[] parameterizedTypes;
 
-		private FieldInfo(final String fieldName, final Field field, final boolean serialize, final boolean deserialize,
-			final Class<?>[] parameterizedTypes) {
+		private FieldInfo(final Class<?> type, final String fieldName, final boolean serialize,
+			final boolean deserialize, final Class<?>[] parameterizedTypes) {
 			super();
+			this.type = type;
 			this.fieldName = fieldName;
-			this.field = field;
 			this.serialize = serialize;
 			this.deserialize = deserialize;
 			this.parameterizedTypes = parameterizedTypes;
 		}
 
-		public String getFieldName() {
-			return fieldName;
+		public Class<?> getType() {
+			return type;
 		}
 
-		public Field getField() {
-			return field;
+		public String getFieldName() {
+			return fieldName;
 		}
 
 		public boolean isSerialize() {
@@ -61,6 +61,10 @@ public class VPackCache {
 		public Class<?>[] getParameterizedTypes() {
 			return parameterizedTypes;
 		}
+
+		public abstract void set(Object obj, Object value) throws IllegalAccessException;
+
+		public abstract Object get(Object obj) throws IllegalAccessException;
 	}
 
 	private final Map<Class<?>, Map<String, FieldInfo>> cache;
@@ -92,7 +96,9 @@ public class VPackCache {
 					if (!field.isSynthetic() && !Modifier.isStatic(field.getModifiers())) {
 						field.setAccessible(true);
 						final FieldInfo fieldInfo = createFieldInfo(field);
-						fields.put(fieldInfo.getFieldName(), fieldInfo);
+						if (fieldInfo.serialize || fieldInfo.deserialize) {
+							fields.put(fieldInfo.getFieldName(), fieldInfo);
+						}
 					}
 				}
 				tmp = tmp.getSuperclass();
@@ -139,7 +145,17 @@ public class VPackCache {
 					? ParameterizedType.class.cast(argValueType).getRawType() : argValueType);
 			parameterizedTypes = new Class<?>[] { key, value };
 		}
-		return new FieldInfo(fieldName, field, serialize, deserialize, parameterizedTypes);
+		return new FieldInfo(field.getType(), fieldName, serialize, deserialize, parameterizedTypes) {
+			@Override
+			public void set(final Object obj, final Object value) throws IllegalAccessException {
+				field.set(obj, value);
+			}
+
+			@Override
+			public Object get(final Object obj) throws IllegalAccessException {
+				return field.get(obj);
+			}
+		};
 	}
 
 }
