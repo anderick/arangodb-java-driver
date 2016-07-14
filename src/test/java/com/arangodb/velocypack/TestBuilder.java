@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import com.arangodb.velocypack.exception.VPackException;
-import com.arangodb.velocypack.util.Value;
-import com.arangodb.velocypack.util.ValueType;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
