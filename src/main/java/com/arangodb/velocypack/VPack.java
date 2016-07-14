@@ -200,9 +200,11 @@ public class VPack {
 	private void deserializeFields(final Object entity, final VPackSlice vpack) throws NoSuchMethodException,
 			IllegalAccessException, InvocationTargetException, InstantiationException, VPackException {
 		final Map<String, FieldInfo> fields = cache.getFields(entity.getClass());
-		for (final FieldInfo fieldInfo : fields.values()) {
-			if (fieldInfo.isDeserialize()) {
-				deserializeField(vpack, entity, fieldInfo);
+		for (final Iterator<VPackSlice> iterator = vpack.iterator(); iterator.hasNext();) {
+			final VPackSlice attr = iterator.next();
+			final FieldInfo fieldInfo = fields.get(attr.makeKey().getAsString());
+			if (fieldInfo != null && fieldInfo.isDeserialize()) {
+				deserializeField(attr, entity, fieldInfo);
 			}
 		}
 	}
@@ -210,7 +212,7 @@ public class VPack {
 	private void deserializeField(final VPackSlice vpack, final Object entity, final FieldInfo fieldInfo)
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException,
 			VPackException {
-		final VPackSlice attr = vpack.get(fieldInfo.getFieldName());
+		final VPackSlice attr = new VPackSlice(vpack.getVpack(), vpack.getStart() + vpack.getByteSize());
 		if (!attr.isNone()) {
 			final Field field = fieldInfo.getField();
 			final Object value = getValue(attr, field, field.getType());
