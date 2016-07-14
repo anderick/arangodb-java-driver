@@ -2,7 +2,10 @@ package com.arangodb.velocypack.internal;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -27,14 +30,16 @@ public class VPackCache {
 		private final Field field;
 		private final boolean serialize;
 		private final boolean deserialize;
+		private final Class<?>[] parameterizedTypes;
 
-		private FieldInfo(final String fieldName, final Field field, final boolean serialize,
-			final boolean deserialize) {
+		private FieldInfo(final String fieldName, final Field field, final boolean serialize, final boolean deserialize,
+			final Class<?>[] parameterizedTypes) {
 			super();
 			this.fieldName = fieldName;
 			this.field = field;
 			this.serialize = serialize;
 			this.deserialize = deserialize;
+			this.parameterizedTypes = parameterizedTypes;
 		}
 
 		public String getFieldName() {
@@ -51,6 +56,10 @@ public class VPackCache {
 
 		public boolean isDeserialize() {
 			return deserialize;
+		}
+
+		public Class<?>[] getParameterizedTypes() {
+			return parameterizedTypes;
 		}
 	}
 
@@ -110,7 +119,27 @@ public class VPackCache {
 		final Expose expose = field.getAnnotation(Expose.class);
 		final boolean serialize = expose != null ? expose.serialize() : true;
 		final boolean deserialize = expose != null ? expose.deserialize() : true;
-		return new FieldInfo(fieldName, field, serialize, deserialize);
+		final Class<?> type = field.getType();
+		Class<?>[] parameterizedTypes = null;
+		if (type.isArray()) {
+			parameterizedTypes = new Class<?>[] { type.getComponentType() };
+		} else if (Collection.class.isAssignableFrom(type)) {
+			final ParameterizedType genericType = (ParameterizedType) field.getGenericType();
+			final Type argType = genericType.getActualTypeArguments()[0];
+			parameterizedTypes = new Class<?>[] {
+					(Class<?>) (ParameterizedType.class.isAssignableFrom(argType.getClass())
+							? ParameterizedType.class.cast(argType).getRawType() : argType) };
+		} else if (Map.class.isAssignableFrom(type)) {
+			final ParameterizedType genericType = (ParameterizedType) field.getGenericType();
+			final Type argKeyType = genericType.getActualTypeArguments()[0];
+			final Class<?> key = (Class<?>) (ParameterizedType.class.isAssignableFrom(argKeyType.getClass())
+					? ParameterizedType.class.cast(argKeyType).getRawType() : argKeyType);
+			final Type argValueType = genericType.getActualTypeArguments()[1];
+			final Class<?> value = (Class<?>) (ParameterizedType.class.isAssignableFrom(argValueType.getClass())
+					? ParameterizedType.class.cast(argValueType).getRawType() : argValueType);
+			parameterizedTypes = new Class<?>[] { key, value };
+		}
+		return new FieldInfo(fieldName, field, serialize, deserialize, parameterizedTypes);
 	}
 
 }
