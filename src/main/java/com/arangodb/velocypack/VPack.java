@@ -4,7 +4,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -15,12 +14,12 @@ import java.util.Set;
 
 import com.arangodb.velocypack.VPackBuilder.BuilderOptions;
 import com.arangodb.velocypack.exception.VPackException;
-import com.arangodb.velocypack.exception.VPackKeyTypeException;
 import com.arangodb.velocypack.exception.VPackParserException;
 import com.arangodb.velocypack.internal.VPackCache;
 import com.arangodb.velocypack.internal.VPackCache.FieldInfo;
 import com.arangodb.velocypack.internal.VPackDeserializers;
 import com.arangodb.velocypack.internal.VPackInstanceCreators;
+import com.arangodb.velocypack.internal.VPackKeyMapAdapters;
 import com.arangodb.velocypack.internal.VPackOptionsImpl;
 import com.arangodb.velocypack.internal.VPackSerializers;
 
@@ -37,26 +36,11 @@ public class VPack {
 
 	private static final String ATTR_KEY = "key";
 	private static final String ATTR_VALUE = "value";
-	private static final Collection<Class<?>> KEY_TYPES;
-	static {
-		KEY_TYPES = new ArrayList<Class<?>>();
-		KEY_TYPES.add(Boolean.class);
-		KEY_TYPES.add(Integer.class);
-		KEY_TYPES.add(Long.class);
-		KEY_TYPES.add(Float.class);
-		KEY_TYPES.add(Short.class);
-		KEY_TYPES.add(Double.class);
-		KEY_TYPES.add(Number.class);
-		KEY_TYPES.add(BigInteger.class);
-		KEY_TYPES.add(BigDecimal.class);
-		KEY_TYPES.add(String.class);
-		KEY_TYPES.add(Character.class);
-		KEY_TYPES.add(Enum.class);
-	}
 
 	private final Map<Class<?>, VPackSerializer<?>> serializers;
 	private final Map<Class<?>, VPackDeserializer<?>> deserializers;
 	private final Map<Class<?>, VPackInstanceCreator<?>> instanceCreators;
+	private final Map<Class<?>, VPackKeyMapAdapter<?>> keyMapAdapters;
 	private final VPackOptions options;
 
 	private final VPackCache cache;
@@ -73,6 +57,7 @@ public class VPack {
 		serializers = new HashMap<Class<?>, VPackSerializer<?>>();
 		deserializers = new HashMap<Class<?>, VPackDeserializer<?>>();
 		instanceCreators = new HashMap<Class<?>, VPackInstanceCreator<?>>();
+		keyMapAdapters = new HashMap<Class<?>, VPackKeyMapAdapter<?>>();
 		cache = new VPackCache();
 		serializationContext = new VPackSerializationContext() {
 			@Override
@@ -142,6 +127,18 @@ public class VPack {
 		deserializers.put(Number.class, VPackDeserializers.NUMBER);
 		deserializers.put(Character.class, VPackDeserializers.CHARACTER);
 		deserializers.put(char.class, VPackDeserializers.CHARACTER);
+
+		keyMapAdapters.put(String.class, VPackKeyMapAdapters.STRING);
+		keyMapAdapters.put(Boolean.class, VPackKeyMapAdapters.BOOLEAN);
+		keyMapAdapters.put(Integer.class, VPackKeyMapAdapters.INTEGER);
+		keyMapAdapters.put(Long.class, VPackKeyMapAdapters.LONG);
+		keyMapAdapters.put(Short.class, VPackKeyMapAdapters.SHORT);
+		keyMapAdapters.put(Double.class, VPackKeyMapAdapters.DOUBLE);
+		keyMapAdapters.put(Float.class, VPackKeyMapAdapters.FLOAT);
+		keyMapAdapters.put(BigInteger.class, VPackKeyMapAdapters.BIG_INTEGER);
+		keyMapAdapters.put(BigDecimal.class, VPackKeyMapAdapters.BIG_DECIMAL);
+		keyMapAdapters.put(Number.class, VPackKeyMapAdapters.NUMBER);
+		keyMapAdapters.put(Character.class, VPackKeyMapAdapters.CHARACTER);
 	}
 
 	public VPackOptions getOptions() {
@@ -277,11 +274,12 @@ public class VPack {
 			final Class<?>[] parameterizedTypes = fieldInfo.getParameterizedTypes();
 			final Class<?> keyType = parameterizedTypes[0];
 			final Class<?> valueType = parameterizedTypes[1];
-			if (isStringableKeyType(keyType)) {
+			final VPackKeyMapAdapter<Object> keyMapAdapter = getKeyMapAdapter(keyType);
+			if (keyMapAdapter != null) {
 				for (final Iterator<VPackSlice> iterator = vpack.iterator(); iterator.hasNext();) {
 					final VPackSlice key = iterator.next();
 					final VPackSlice valueAt = new VPackSlice(key.getVpack(), key.getStart() + key.getByteSize());
-					value.put(getKeyfromString(key.makeKey().getAsString(), keyType),
+					value.put(keyMapAdapter.deserialize(key.makeKey().getAsString()),
 						getValue(valueAt, valueType, null));
 				}
 			} else {
@@ -294,37 +292,6 @@ public class VPack {
 			}
 		}
 		return value;
-	}
-
-	private Object getKeyfromString(final String key, final Class<?> type) throws VPackKeyTypeException {
-		final Object result;
-		if (type == String.class) {
-			result = key;
-		} else if (type == Integer.class) {
-			result = Integer.valueOf(key);
-		} else if (type == Long.class) {
-			result = Long.valueOf(key);
-		} else if (type == Float.class) {
-			result = Float.valueOf(key);
-		} else if (type == Short.class) {
-			result = Short.valueOf(key);
-		} else if (type == Double.class || type == Number.class) {
-			result = Double.valueOf(key);
-		} else if (type == BigInteger.class) {
-			result = new BigInteger(key);
-		} else if (type == BigDecimal.class) {
-			result = new BigDecimal(key);
-		} else if (type == Character.class && key.length() == 1) {
-			result = key.charAt(0);
-		} else if (Enum.class.isAssignableFrom(type)) {
-			final Class<? extends Enum> enumType = (Class<? extends Enum>) type;
-			result = Enum.valueOf(enumType, key);
-		} else if (type == Boolean.class) {
-			result = Boolean.valueOf(key);
-		} else {
-			throw new VPackKeyTypeException(String.format("can not convert key: %s in type: %s", key, type.getName()));
-		}
-		return result;
 	}
 
 	public VPackSlice serialize(final Object entity) throws VPackParserException {
@@ -427,11 +394,13 @@ public class VPack {
 		final Map map = Map.class.cast(value);
 		if (map.size() > 0) {
 			final Class<?> keyType = fieldInfo.getParameterizedTypes()[0];
-			if (isStringableKeyType(keyType)) {
+			final VPackKeyMapAdapter<Object> keyMapAdapter = getKeyMapAdapter(keyType);
+			if (keyMapAdapter != null) {
 				builder.add(name, new Value(ValueType.OBJECT));
 				final Set<Entry<?, ?>> entrySet = map.entrySet();
 				for (final Entry<?, ?> entry : entrySet) {
-					addValue(keyToString(entry.getKey()), entry.getValue().getClass(), entry.getValue(), builder, null);
+					addValue(keyMapAdapter.serialize(entry.getKey()), entry.getValue().getClass(), entry.getValue(),
+						builder, null);
 				}
 				builder.close();
 			} else {
@@ -451,12 +420,12 @@ public class VPack {
 		}
 	}
 
-	private boolean isStringableKeyType(final Class<?> type) {
-		return KEY_TYPES.contains(type) || Enum.class.isAssignableFrom(type);
-	}
-
-	private String keyToString(final Object key) {
-		return Enum.class.isAssignableFrom(key.getClass()) ? Enum.class.cast(key).name() : key.toString();
+	private VPackKeyMapAdapter<Object> getKeyMapAdapter(final Class<?> type) {
+		VPackKeyMapAdapter<?> adapter = keyMapAdapters.get(type);
+		if (adapter == null && Enum.class.isAssignableFrom(type)) {
+			adapter = VPackKeyMapAdapters.createEnumAdapter(type);
+		}
+		return (VPackKeyMapAdapter<Object>) adapter;
 	}
 
 }
