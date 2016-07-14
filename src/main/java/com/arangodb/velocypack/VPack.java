@@ -26,8 +26,6 @@ import com.arangodb.velocypack.internal.VPackDeserializers;
 import com.arangodb.velocypack.internal.VPackInstanceCreators;
 import com.arangodb.velocypack.internal.VPackOptionsImpl;
 import com.arangodb.velocypack.internal.VPackSerializers;
-import com.arangodb.velocypack.util.Value;
-import com.arangodb.velocypack.util.ValueType;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -201,20 +199,20 @@ public class VPack {
 
 	private void deserializeFields(final Object entity, final VPackSlice vpack) throws NoSuchMethodException,
 			IllegalAccessException, InvocationTargetException, InstantiationException, VPackException {
-		final Map<Field, FieldInfo> fields = getDeclaredFields(entity);
-		for (final Entry<Field, FieldInfo> field : fields.entrySet()) {
-			if (field.getValue().isDeserialize()) {
-				deserializeField(vpack, entity, field);
+		final Map<String, FieldInfo> fields = cache.getFields(entity.getClass());
+		for (final FieldInfo fieldInfo : fields.values()) {
+			if (fieldInfo.isDeserialize()) {
+				deserializeField(vpack, entity, fieldInfo);
 			}
 		}
 	}
 
-	private void deserializeField(final VPackSlice vpack, final Object entity, final Entry<Field, FieldInfo> fieldEntry)
+	private void deserializeField(final VPackSlice vpack, final Object entity, final FieldInfo fieldInfo)
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException,
 			VPackException {
-		final VPackSlice attr = vpack.get(fieldEntry.getValue().getFieldName());
+		final VPackSlice attr = vpack.get(fieldInfo.getFieldName());
 		if (!attr.isNone()) {
-			final Field field = fieldEntry.getKey();
+			final Field field = fieldInfo.getField();
 			final Object value = getValue(attr, field, field.getType());
 			field.set(entity, value);
 		}
@@ -366,26 +364,19 @@ public class VPack {
 
 	private void serializeFields(final Object entity, final VPackBuilder builder)
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, VPackException {
-		final Map<Field, FieldInfo> fields = getDeclaredFields(entity);
-		for (final Entry<Field, FieldInfo> field : fields.entrySet()) {
-			if (field.getValue().isSerialize()) {
-				serializeField(entity, builder, field);
+		final Map<String, FieldInfo> fields = cache.getFields(entity.getClass());
+		for (final FieldInfo fieldInfo : fields.values()) {
+			if (fieldInfo.isSerialize()) {
+				serializeField(entity, builder, fieldInfo);
 			}
 		}
 	}
 
-	private Map<Field, FieldInfo> getDeclaredFields(final Object entity) {
-		return cache.getFields(entity.getClass());
-	}
-
-	private void serializeField(
-		final Object entity,
-		final VPackBuilder builder,
-		final Entry<Field, FieldInfo> fieldEntry)
+	private void serializeField(final Object entity, final VPackBuilder builder, final FieldInfo fieldInfo)
 			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, VPackException {
 
-		final String fieldName = fieldEntry.getValue().getFieldName();
-		final Field field = fieldEntry.getKey();
+		final String fieldName = fieldInfo.getFieldName();
+		final Field field = fieldInfo.getField();
 		final Class<?> type = field.getType();
 		final Object value = field.get(entity);
 		addValue(field, fieldName, type, value, builder);

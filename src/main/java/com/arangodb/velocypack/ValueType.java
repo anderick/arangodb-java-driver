@@ -1,4 +1,4 @@
-package com.arangodb.velocypack.util;
+package com.arangodb.velocypack;
 
 /**
  * @author Mark - mark@arangodb.com

@@ -1,8 +1,7 @@
-package com.arangodb.velocypack.util;
+package com.arangodb.velocypack;
 
 import java.util.NoSuchElementException;
 
-import com.arangodb.velocypack.VPackSlice;
 import com.arangodb.velocypack.exception.VPackValueTypeException;
 
 /**
@@ -21,15 +20,15 @@ public class ObjectIterator extends SliceIterator {
 			throw new VPackValueTypeException(ValueType.OBJECT);
 		}
 		if (size > 0) {
-			current = slice.keyAt(0).getStart();
+			final byte head = slice.head();
+			if (head == 0x14) {
+				current = slice.keyAt(0).getStart();
+			} else {
+				current = slice.getStart() + slice.findDataOffset();
+			}
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.util.Iterator#next()
-	 */
 	@Override
 	public VPackSlice next() {
 		if (position++ > 0) {

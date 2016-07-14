@@ -1,8 +1,7 @@
-package com.arangodb.velocypack.util;
+package com.arangodb.velocypack;
 
 import java.util.Iterator;
 
-import com.arangodb.velocypack.VPackSlice;
 import com.arangodb.velocypack.exception.VPackValueTypeException;
 
 /**

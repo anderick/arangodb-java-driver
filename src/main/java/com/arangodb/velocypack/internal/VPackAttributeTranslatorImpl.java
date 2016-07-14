@@ -6,9 +6,9 @@ import java.util.Map;
 import com.arangodb.velocypack.VPackAttributeTranslator;
 import com.arangodb.velocypack.VPackBuilder;
 import com.arangodb.velocypack.VPackSlice;
+import com.arangodb.velocypack.Value;
+import com.arangodb.velocypack.ValueType;
 import com.arangodb.velocypack.exception.VPackException;
-import com.arangodb.velocypack.util.Value;
-import com.arangodb.velocypack.util.ValueType;
 
 /**
  * @author Mark - mark@arangodb.com

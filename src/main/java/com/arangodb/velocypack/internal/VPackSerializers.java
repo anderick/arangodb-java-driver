@@ -6,8 +6,8 @@ import java.math.BigInteger;
 import com.arangodb.velocypack.VPackBuilder;
 import com.arangodb.velocypack.VPackSerializationContext;
 import com.arangodb.velocypack.VPackSerializer;
+import com.arangodb.velocypack.Value;
 import com.arangodb.velocypack.exception.VPackException;
-import com.arangodb.velocypack.util.Value;
 
 /**
  * @author Mark - mark@arangodb.com

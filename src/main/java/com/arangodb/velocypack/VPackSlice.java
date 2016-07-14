@@ -18,9 +18,6 @@ import com.arangodb.velocypack.internal.util.ObjectArrayUtil;
 import com.arangodb.velocypack.internal.util.StringUtil;
 import com.arangodb.velocypack.internal.util.ValueLengthUtil;
 import com.arangodb.velocypack.internal.util.ValueTypeUtil;
-import com.arangodb.velocypack.util.ArrayIterator;
-import com.arangodb.velocypack.util.ObjectIterator;
-import com.arangodb.velocypack.util.ValueType;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -341,7 +338,7 @@ public class VPackSlice {
 	/**
 	 * Must be called for a nonempty array or object at start():
 	 */
-	private int findDataOffset() {
+	protected int findDataOffset() {
 		final int fsm = ObjectArrayUtil.getFirstSubMap(head());
 		final int offset;
 		if (fsm <= 2 && vpack[start + 2] != 0) {
@@ -488,7 +485,7 @@ public class VPackSlice {
 	/**
 	 * translates an integer key into a string, without checks
 	 */
-	private VPackSlice translateUnchecked() {
+	protected VPackSlice translateUnchecked() {
 		final VPackSlice result = attributeTranslator.translate(getAsInt());
 		return result != null ? result : new VPackSlice();
 	}
@@ -626,8 +623,7 @@ public class VPackSlice {
 	}
 
 	private VPackSlice getNthKey(final int index) {
-		final VPackSlice slice = new VPackSlice(vpack, start + getNthOffset(index));
-		return slice;
+		return new VPackSlice(vpack, start + getNthOffset(index));
 	}
 
 	private VPackSlice getNth(final int index) {

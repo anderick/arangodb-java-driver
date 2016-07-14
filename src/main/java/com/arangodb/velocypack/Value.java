@@ -1,4 +1,4 @@
-package com.arangodb.velocypack.util;
+package com.arangodb.velocypack;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

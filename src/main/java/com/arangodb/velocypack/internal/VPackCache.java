@@ -24,18 +24,25 @@ public class VPackCache {
 
 	public static class FieldInfo {
 		private final String fieldName;
+		private final Field field;
 		private final boolean serialize;
 		private final boolean deserialize;
 
-		public FieldInfo(final String fieldName, final boolean serialize, final boolean deserialize) {
+		private FieldInfo(final String fieldName, final Field field, final boolean serialize,
+			final boolean deserialize) {
 			super();
 			this.fieldName = fieldName;
+			this.field = field;
 			this.serialize = serialize;
 			this.deserialize = deserialize;
 		}
 
 		public String getFieldName() {
 			return fieldName;
+		}
+
+		public Field getField() {
+			return field;
 		}
 
 		public boolean isSerialize() {
@@ -47,16 +54,16 @@ public class VPackCache {
 		}
 	}
 
-	private final Map<Class<?>, Map<Field, FieldInfo>> cache;
-	private final Comparator<Entry<Field, FieldInfo>> fieldComparator;
+	private final Map<Class<?>, Map<String, FieldInfo>> cache;
+	private final Comparator<Entry<String, FieldInfo>> fieldComparator;
 
 	public VPackCache() {
 		super();
-		cache = new ConcurrentHashMap<Class<?>, Map<Field, FieldInfo>>();
-		fieldComparator = new Comparator<Entry<Field, FieldInfo>>() {
+		cache = new ConcurrentHashMap<Class<?>, Map<String, FieldInfo>>();
+		fieldComparator = new Comparator<Map.Entry<String, FieldInfo>>() {
 			@Override
-			public int compare(final Entry<Field, FieldInfo> o1, final Entry<Field, FieldInfo> o2) {
-				return o1.getValue().getFieldName().compareTo(o2.getValue().getFieldName());
+			public int compare(final Entry<String, FieldInfo> o1, final Entry<String, FieldInfo> o2) {
+				return o1.getKey().compareTo(o2.getKey());
 			}
 		};
 	}
@@ -65,17 +72,18 @@ public class VPackCache {
 		return getFields(entityClass).get(field);
 	}
 
-	public Map<Field, FieldInfo> getFields(final Class<?> entityClass) {
-		Map<Field, FieldInfo> fields = cache.get(entityClass);
+	public Map<String, FieldInfo> getFields(final Class<?> entityClass) {
+		Map<String, FieldInfo> fields = cache.get(entityClass);
 		if (fields == null) {
-			fields = new HashMap<Field, VPackCache.FieldInfo>();
+			fields = new HashMap<String, VPackCache.FieldInfo>();
 			Class<?> tmp = entityClass;
 			while (tmp != null && tmp != Object.class) {
 				final Field[] declaredFields = tmp.getDeclaredFields();
 				for (final Field field : declaredFields) {
 					if (!field.isSynthetic() && !Modifier.isStatic(field.getModifiers())) {
 						field.setAccessible(true);
-						fields.put(field, createFieldInfo(field));
+						final FieldInfo fieldInfo = createFieldInfo(field);
+						fields.put(fieldInfo.getFieldName(), fieldInfo);
 					}
 				}
 				tmp = tmp.getSuperclass();
@@ -86,11 +94,11 @@ public class VPackCache {
 		return fields;
 	}
 
-	private Map<Field, FieldInfo> sort(final Set<Entry<Field, FieldInfo>> entrySet) {
-		final Map<Field, FieldInfo> sorted = new LinkedHashMap<Field, VPackCache.FieldInfo>();
-		final List<Entry<Field, FieldInfo>> tmp = new ArrayList<Entry<Field, FieldInfo>>(entrySet);
+	private Map<String, FieldInfo> sort(final Set<Entry<String, FieldInfo>> entrySet) {
+		final Map<String, FieldInfo> sorted = new LinkedHashMap<String, VPackCache.FieldInfo>();
+		final List<Entry<String, FieldInfo>> tmp = new ArrayList<Entry<String, FieldInfo>>(entrySet);
 		Collections.sort(tmp, fieldComparator);
-		for (final Entry<Field, FieldInfo> entry : tmp) {
+		for (final Entry<String, FieldInfo> entry : tmp) {
 			sorted.put(entry.getKey(), entry.getValue());
 		}
 		return sorted;
@@ -102,7 +110,7 @@ public class VPackCache {
 		final Expose expose = field.getAnnotation(Expose.class);
 		final boolean serialize = expose != null ? expose.serialize() : true;
 		final boolean deserialize = expose != null ? expose.deserialize() : true;
-		return new FieldInfo(fieldName, serialize, deserialize);
+		return new FieldInfo(fieldName, field, serialize, deserialize);
 	}
 
 }

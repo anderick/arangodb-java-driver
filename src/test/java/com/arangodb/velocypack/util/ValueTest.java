@@ -4,6 +4,8 @@ import java.math.BigInteger;
 
 import org.junit.Test;
 
+import com.arangodb.velocypack.Value;
+import com.arangodb.velocypack.ValueType;
 import com.arangodb.velocypack.exception.VPackValueTypeException;
 
 /**

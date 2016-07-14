@@ -5,6 +5,8 @@ import java.util.NoSuchElementException;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.arangodb.velocypack.ArrayIterator;
+import com.arangodb.velocypack.ObjectIterator;
 import com.arangodb.velocypack.VPackSlice;
 import com.arangodb.velocypack.exception.VPackValueTypeException;
 

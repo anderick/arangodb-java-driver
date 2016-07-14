@@ -1,6 +1,6 @@
 package com.arangodb.velocypack.exception;
 
-import com.arangodb.velocypack.util.ValueType;
+import com.arangodb.velocypack.ValueType;
 
 /**
  * @author Mark - mark@arangodb.com

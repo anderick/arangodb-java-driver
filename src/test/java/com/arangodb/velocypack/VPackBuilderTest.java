@@ -10,8 +10,6 @@ import com.arangodb.velocypack.exception.VPackBuilderNeedOpenCompoundException;
 import com.arangodb.velocypack.exception.VPackBuilderNumberOutOfRangeException;
 import com.arangodb.velocypack.exception.VPackBuilderUnexpectedValueException;
 import com.arangodb.velocypack.exception.VPackException;
-import com.arangodb.velocypack.util.Value;
-import com.arangodb.velocypack.util.ValueType;
 
 /**
  * @author Mark - mark@arangodb.com

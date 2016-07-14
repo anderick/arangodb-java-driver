@@ -3,7 +3,7 @@ package com.arangodb.velocypack.internal.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.arangodb.velocypack.util.ValueType;
+import com.arangodb.velocypack.ValueType;
 
 /**
  * @author Mark - mark@arangodb.com

@@ -23,8 +23,6 @@ import com.arangodb.velocypack.exception.VPackKeyTypeException;
 import com.arangodb.velocypack.exception.VPackNeedAttributeTranslatorException;
 import com.arangodb.velocypack.internal.VPackOptionsImpl;
 import com.arangodb.velocypack.internal.util.NumberUtil;
-import com.arangodb.velocypack.util.Value;
-import com.arangodb.velocypack.util.ValueType;
 
 /**
  * @author Mark - mark@arangodb.com
