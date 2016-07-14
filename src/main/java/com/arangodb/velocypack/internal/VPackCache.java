@@ -81,10 +81,6 @@ public class VPackCache {
 		};
 	}
 
-	public FieldInfo getFieldInfo(final Class<?> entityClass, final Field field) {
-		return getFields(entityClass).get(field);
-	}
-
 	public Map<String, FieldInfo> getFields(final Class<?> entityClass) {
 		Map<String, FieldInfo> fields = cache.get(entityClass);
 		if (fields == null) {
@@ -131,18 +127,11 @@ public class VPackCache {
 			parameterizedTypes = new Class<?>[] { type.getComponentType() };
 		} else if (Collection.class.isAssignableFrom(type)) {
 			final ParameterizedType genericType = (ParameterizedType) field.getGenericType();
-			final Type argType = genericType.getActualTypeArguments()[0];
-			parameterizedTypes = new Class<?>[] {
-					(Class<?>) (ParameterizedType.class.isAssignableFrom(argType.getClass())
-							? ParameterizedType.class.cast(argType).getRawType() : argType) };
+			parameterizedTypes = new Class<?>[] { getParameterizedType(genericType.getActualTypeArguments()[0]) };
 		} else if (Map.class.isAssignableFrom(type)) {
 			final ParameterizedType genericType = (ParameterizedType) field.getGenericType();
-			final Type argKeyType = genericType.getActualTypeArguments()[0];
-			final Class<?> key = (Class<?>) (ParameterizedType.class.isAssignableFrom(argKeyType.getClass())
-					? ParameterizedType.class.cast(argKeyType).getRawType() : argKeyType);
-			final Type argValueType = genericType.getActualTypeArguments()[1];
-			final Class<?> value = (Class<?>) (ParameterizedType.class.isAssignableFrom(argValueType.getClass())
-					? ParameterizedType.class.cast(argValueType).getRawType() : argValueType);
+			final Class<?> key = getParameterizedType(genericType.getActualTypeArguments()[0]);
+			final Class<?> value = getParameterizedType(genericType.getActualTypeArguments()[1]);
 			parameterizedTypes = new Class<?>[] { key, value };
 		}
 		return new FieldInfo(field.getType(), fieldName, serialize, deserialize, parameterizedTypes) {
@@ -156,6 +145,11 @@ public class VPackCache {
 				return field.get(obj);
 			}
 		};
+	}
+
+	private Class<?> getParameterizedType(final Type argType) {
+		return (Class<?>) (ParameterizedType.class.isAssignableFrom(argType.getClass())
+				? ParameterizedType.class.cast(argType).getRawType() : argType);
 	}
 
 }
