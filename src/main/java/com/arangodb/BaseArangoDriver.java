@@ -16,7 +16,6 @@
 
 package com.arangodb;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,19 +26,14 @@ import com.arangodb.entity.DefaultEntity;
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.EntityDeserializers;
 import com.arangodb.entity.EntityFactory;
-import com.arangodb.entity.KeyValueEntity;
 import com.arangodb.entity.ReplicationDumpHeader;
 import com.arangodb.entity.StreamEntity;
 import com.arangodb.entity.marker.MissingInstanceCreater;
 import com.arangodb.http.HttpResponseEntity;
-import com.arangodb.util.DateUtils;
 import com.arangodb.util.ReflectionUtils;
 import com.arangodb.util.StringUtils;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
+import com.arangodb.velocypack.VPackSlice;
+import com.arangodb.velocypack.exception.VPackException;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -49,26 +43,27 @@ public abstract class BaseArangoDriver {
 
 	private static final Pattern databaseNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9\\-_]{0,63}$");
 
-	protected String createDocumentHandle(long collectionId, String documentKey) {
+	protected String createDocumentHandle(final long collectionId, final String documentKey) {
 		return collectionId + "/" + documentKey;
 	}
 
-	protected String createDocumentHandle(String collectionName, String documentKey) throws ArangoException {
+	protected String createDocumentHandle(final String collectionName, final String documentKey)
+			throws ArangoException {
 		validateCollectionName(collectionName);
 		return collectionName + "/" + documentKey;
 	}
 
-	protected void validateCollectionName(String name) throws ArangoException {
+	protected void validateCollectionName(final String name) throws ArangoException {
 		if (name.indexOf('/') != -1) {
 			throw new ArangoException("does not allow '/' in name.");
 		}
 	}
 
-	protected void validateDocumentHandle(String documentHandle) throws ArangoException {
-		int pos = documentHandle.indexOf('/');
+	protected void validateDocumentHandle(final String documentHandle) throws ArangoException {
+		final int pos = documentHandle.indexOf('/');
 		if (pos > 0) {
-			String collectionName = documentHandle.substring(0, pos);
-			String documentKey = documentHandle.substring(pos + 1);
+			final String collectionName = documentHandle.substring(0, pos);
+			final String documentKey = documentHandle.substring(pos + 1);
 
 			validateCollectionName(collectionName);
 			if (collectionName.length() != 0 && documentKey.length() != 0) {
@@ -86,7 +81,7 @@ public abstract class BaseArangoDriver {
 	 *      "https://docs.arangodb.com/NamingConventions/DatabaseNames.html">
 	 *      DatabaseNames documentation</a>
 	 */
-	protected void validateDatabaseName(String database, boolean allowNull) throws ArangoException {
+	protected void validateDatabaseName(final String database, final boolean allowNull) throws ArangoException {
 		boolean valid = false;
 		if (database == null) {
 			if (allowNull) {
@@ -103,37 +98,10 @@ public abstract class BaseArangoDriver {
 		}
 	}
 
-	protected void setKeyValueHeader(HttpResponseEntity res, KeyValueEntity entity) throws ArangoException {
+	protected ReplicationDumpHeader toReplicationDumpHeader(final HttpResponseEntity res) {
+		final ReplicationDumpHeader header = new ReplicationDumpHeader();
 
-		Map<String, String> headers = res.getHeaders();
-
-		try {
-			String strCreated = headers.get("x-voc-created");
-			if (strCreated != null) {
-				entity.setCreated(DateUtils.parse(strCreated, "yyyy-MM-dd'T'HH:mm:ss'Z'"));
-			}
-
-			String strExpires = headers.get("x-voc-expires");
-			if (strExpires != null) {
-				entity.setExpires(DateUtils.parse(strExpires, "yyyy-MM-dd'T'HH:mm:ss'Z'"));
-			}
-
-			String strExtened = headers.get("x-voc-extended");
-			if (strExtened != null) {
-				Map<String, Object> attributes = EntityFactory.createEntity(strExtened, Map.class);
-				entity.setAttributes(attributes);
-			}
-
-		} catch (ParseException e) {
-			throw new ArangoException(e);
-		}
-
-	}
-
-	protected ReplicationDumpHeader toReplicationDumpHeader(HttpResponseEntity res) {
-		ReplicationDumpHeader header = new ReplicationDumpHeader();
-
-		Map<String, String> headerMap = res.getHeaders();
+		final Map<String, String> headerMap = res.getHeaders();
 		String value;
 
 		value = headerMap.get("x-arango-replication-active");
@@ -168,31 +136,30 @@ public abstract class BaseArangoDriver {
 	 * @throws ArangoException
 	 *             if any error happened
 	 */
-	private int checkServerErrors(HttpResponseEntity res) throws ArangoException {
-		int statusCode = res.getStatusCode();
-
+	private int checkServerErrors(final HttpResponseEntity res) throws ArangoException {
+		final int statusCode = res.getStatusCode();
 		if (statusCode >= 400) { // always throws ArangoException
-			DefaultEntity defaultEntity = new DefaultEntity();
-			if (res.getText() != null && !"".equals(res.getText()) && statusCode != 500) {
-				JsonParser jsonParser = new JsonParser();
-				JsonElement jsonElement = jsonParser.parse(res.getText());
-				JsonObject jsonObject = jsonElement.getAsJsonObject();
-				JsonElement errorMessage = jsonObject.get("errorMessage");
-				defaultEntity.setErrorMessage(errorMessage.getAsString());
-				JsonElement errorNumber = jsonObject.get("errorNum");
-				defaultEntity.setErrorNumber(errorNumber.getAsInt());
+			final DefaultEntity defaultEntity = new DefaultEntity();
+			final VPackSlice content = res.getContent();
+			if (content != null && content.getByteSize() > 0 && statusCode != 500) {
+				try {
+					final VPackSlice errorMessage = content.get("errorMessage");
+					defaultEntity.setErrorMessage(errorMessage.getAsString());
+					final VPackSlice errorNumber = content.get("errorNum");
+					defaultEntity.setErrorNumber(errorNumber.getAsInt());
+				} catch (final VPackException e) {
+					throw new ArangoException(e);
+				}
 			} else {
 				defaultEntity.setErrorMessage(res.createStatusPhrase());
 			}
-
 			defaultEntity.setCode(statusCode);
 			defaultEntity.setStatusCode(statusCode);
 			defaultEntity.setError(true);
-			ArangoException arangoException = new ArangoException(defaultEntity);
+			final ArangoException arangoException = new ArangoException(defaultEntity);
 			arangoException.setCode(statusCode);
 			throw arangoException;
 		}
-
 		return statusCode;
 	}
 
@@ -211,10 +178,10 @@ public abstract class BaseArangoDriver {
 	 * @throws ArangoException
 	 */
 	protected <T extends BaseEntity> T createEntity(
-		HttpResponseEntity res,
-		Class<T> clazz,
-		Class<?>[] pclazz,
-		boolean validate) throws ArangoException {
+		final HttpResponseEntity res,
+		final Class<T> clazz,
+		final Class<?>[] pclazz,
+		final boolean validate) throws ArangoException {
 		if (res == null) {
 			return null;
 		}
@@ -228,12 +195,12 @@ public abstract class BaseArangoDriver {
 			isDocumentEntity = true;
 		}
 
-		int statusCode = checkServerErrors(res);
+		final int statusCode = checkServerErrors(res);
 
 		try {
 			EntityDeserializers.setParameterized(pclazz);
 
-			T entity = createEntityWithFallback(res, clazz);
+			final T entity = createEntityWithFallback(res, clazz);
 
 			setStatusCode(res, entity);
 			if (validate) {
@@ -254,16 +221,16 @@ public abstract class BaseArangoDriver {
 		}
 	}
 
-	private <T extends BaseEntity> T createEntityWithFallback(HttpResponseEntity res, Class<T> clazz)
+	private <T extends BaseEntity> T createEntityWithFallback(final HttpResponseEntity res, final Class<T> clazz)
 			throws ArangoException {
 		T entity = createEntityImpl(res, clazz);
 		if (entity == null) {
-			Class<?> c = MissingInstanceCreater.getMissingClass(clazz);
+			final Class<?> c = MissingInstanceCreater.getMissingClass(clazz);
 			entity = ReflectionUtils.newInstance(c);
 		} else if (res.isBatchRepsonse()) {
 			try {
 				entity = clazz.newInstance();
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				throw new ArangoException(e);
 			}
 		}
@@ -278,42 +245,45 @@ public abstract class BaseArangoDriver {
 	 * @return A valid JSON string with the results
 	 * @throws ArangoException
 	 */
-	protected String getJSONResponseText(HttpResponseEntity res) throws ArangoException {
+	protected String getJSONResponseText(final HttpResponseEntity res) throws ArangoException {
 		if (res == null) {
 			return null;
 		}
-
 		checkServerErrors(res);
-
-		// no errors, return results as a JSON string
-		JsonParser jsonParser = new JsonParser();
-		JsonElement jsonElement = jsonParser.parse(res.getText());
-		JsonObject jsonObject = jsonElement.getAsJsonObject();
-		JsonElement result = jsonObject.get("result");
-		return result.toString();
+		try {
+			// no errors, return results as a JSON string
+			final VPackSlice result = res.getContent().get("result");
+			return EntityFactory.toJson(result);
+		} catch (final VPackException e) {
+			throw new ArangoException(e);
+		}
 	}
 
-	protected <T> T createEntity(String str, Class<T> clazz, Class<?>... pclazz) throws ArangoException {
+	protected <T> T createEntity(final VPackSlice vpack, final Class<T> clazz, final Class<?>... pclazz)
+			throws ArangoException {
 		try {
 			EntityDeserializers.setParameterized(pclazz);
-			return EntityFactory.createEntity(str, clazz);
+			return EntityFactory.createEntity(vpack, clazz);
 		} finally {
 			EntityDeserializers.removeParameterized();
 		}
 	}
 
-	protected <T extends BaseEntity> T createEntity(HttpResponseEntity res, Class<T> clazz) throws ArangoException {
+	protected <T extends BaseEntity> T createEntity(final HttpResponseEntity res, final Class<T> clazz)
+			throws ArangoException {
 		return createEntity(res, clazz, null, true);
 	}
 
-	protected <T extends BaseEntity> T createEntity(HttpResponseEntity res, Class<T> clazz, Class<?>... pclazz)
-			throws ArangoException {
+	protected <T extends BaseEntity> T createEntity(
+		final HttpResponseEntity res,
+		final Class<T> clazz,
+		final Class<?>... pclazz) throws ArangoException {
 		return createEntity(res, clazz, pclazz, true);
 	}
 
-	protected void setStatusCode(HttpResponseEntity res, BaseEntity entity) throws ArangoException {
+	protected void setStatusCode(final HttpResponseEntity res, final BaseEntity entity) throws ArangoException {
 		if (entity != null) {
-			if (res.getEtag() > 0) {
+			if (res.getEtag() != null) {
 				entity.setEtag(res.getEtag());
 			}
 			entity.setStatusCode(res.getStatusCode());
@@ -323,7 +293,7 @@ public abstract class BaseArangoDriver {
 		}
 	}
 
-	protected void validate(HttpResponseEntity res, BaseEntity entity) throws ArangoException {
+	protected void validate(final HttpResponseEntity res, final BaseEntity entity) throws ArangoException {
 
 		if (entity != null && entity.isError()) {
 			throw new ArangoException(entity);
@@ -339,7 +309,7 @@ public abstract class BaseArangoDriver {
 
 			if (res.isTextResponse()) {
 				tmpEntity.setErrorNumber(res.getStatusCode());
-				tmpEntity.setErrorMessage(res.getText());
+				tmpEntity.setErrorMessage(EntityFactory.toJson(res.getContent()));
 			} else {
 				tmpEntity.setErrorNumber(res.getStatusCode());
 				tmpEntity.setErrorMessage(res.getStatusPhrase());
@@ -360,34 +330,29 @@ public abstract class BaseArangoDriver {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected <T> T createEntityImpl(HttpResponseEntity res, Class<T> type) throws ArangoException {
+	protected <T> T createEntityImpl(final HttpResponseEntity res, final Class<T> type) throws ArangoException {
 		T result = null;
-		if (res.isJsonResponse()) {
-			try {
-				result = EntityFactory.createEntity(res.getText(), type);
-			} catch (JsonSyntaxException e) {
-				throw new ArangoException("got JsonSyntaxException while creating entity", e);
-			} catch (JsonParseException e) {
-				throw new ArangoException("got JsonParseException while creating entity", e);
-			}
+		if (res.isVPackResponse()) {
+			result = EntityFactory.createEntity(res.getContent(), type);
 		} else if (res.isDumpResponse() && StreamEntity.class.isAssignableFrom(type)) {
 			result = (T) new StreamEntity(res.getStream());
-		} else if (StringUtils.isNotEmpty(res.getText())) {
-			throw new ArangoException("expected JSON result from server but got: " + res.getText());
+		} else if (res.getContent().getByteSize() > 0) {
+			// TODO should never thrown, find a better solution
+			throw new ArangoException(
+					"expected VeloyPack result from server but got: " + EntityFactory.toJson(res.getContent()));
 		}
-
 		return result;
 	}
 
-	protected String createEndpointUrl(String database, Object... paths) throws ArangoException {
-		List<String> list = new ArrayList<String>();
+	protected String createEndpointUrl(final String database, final Object... paths) throws ArangoException {
+		final List<String> list = new ArrayList<String>();
 
 		if (database != null) {
 			validateDatabaseName(database, false);
 			list.add("_db");
 			list.add(database);
 		}
-		for (Object path : paths) {
+		for (final Object path : paths) {
 			if (path != null) {
 				list.add(path.toString());
 			}
@@ -395,11 +360,12 @@ public abstract class BaseArangoDriver {
 		return StringUtils.join(false, list);
 	}
 
-	protected String createEndpointUrl(String database, String str, Object... paths) throws ArangoException {
+	protected String createEndpointUrl(final String database, final String str, final Object... paths)
+			throws ArangoException {
 		if (paths == null) {
 			return createEndpointUrl(database, paths);
 		}
-		Object[] newPaths = new Object[paths.length + 1];
+		final Object[] newPaths = new Object[paths.length + 1];
 		newPaths[0] = str;
 		for (int i = 0; i < paths.length; i++) {
 			newPaths[i + 1] = paths[i];
@@ -407,23 +373,23 @@ public abstract class BaseArangoDriver {
 		return createEndpointUrl(database, newPaths);
 	}
 
-	protected String createUserEndpointUrl(Object... paths) throws ArangoException {
+	protected String createUserEndpointUrl(final Object... paths) throws ArangoException {
 		return createEndpointUrl(null, "/_api/user", paths);
 	}
 
-	protected String createJobEndpointUrl(String database, Object... paths) throws ArangoException {
+	protected String createJobEndpointUrl(final String database, final Object... paths) throws ArangoException {
 		return createEndpointUrl(database, "/_api/job", paths);
 	}
 
-	protected String createIndexEndpointUrl(String database, Object... paths) throws ArangoException {
+	protected String createIndexEndpointUrl(final String database, final Object... paths) throws ArangoException {
 		return createEndpointUrl(database, "/_api/index", paths);
 	}
 
-	protected String createGharialEndpointUrl(String database, Object... paths) throws ArangoException {
+	protected String createGharialEndpointUrl(final String database, final Object... paths) throws ArangoException {
 		return createEndpointUrl(database, "/_api/gharial", paths);
 	}
 
-	protected String createDocumentEndpointUrl(String database, Object... paths) throws ArangoException {
+	protected String createDocumentEndpointUrl(final String database, final Object... paths) throws ArangoException {
 		return createEndpointUrl(database, "/_api/document", paths);
 	}
 }

@@ -49,15 +49,15 @@ import com.arangodb.util.MapBuilder;
 public class InternalReplicationDriverImpl extends BaseArangoDriverImpl
 		implements com.arangodb.InternalReplicationDriver {
 
-	InternalReplicationDriverImpl(ArangoConfigure configure, HttpManager httpManager) {
+	InternalReplicationDriverImpl(final ArangoConfigure configure, final HttpManager httpManager) {
 		super(configure, httpManager);
 	}
 
 	@Override
-	public ReplicationInventoryEntity getReplicationInventory(String database, Boolean includeSystem)
+	public ReplicationInventoryEntity getReplicationInventory(final String database, final Boolean includeSystem)
 			throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doGet(createEndpointUrl(database, "/_api/replication/inventory"),
+		final HttpResponseEntity res = httpManager.doGet(createEndpointUrl(database, "/_api/replication/inventory"),
 			new MapBuilder().put("includeSystem", includeSystem).get());
 
 		return createEntity(res, ReplicationInventoryEntity.class);
@@ -67,23 +67,23 @@ public class InternalReplicationDriverImpl extends BaseArangoDriverImpl
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> void getReplicationDump(
-		String database,
-		String collectionName,
-		Long from,
-		Long to,
-		Integer chunkSize,
-		Boolean ticks,
-		Class<T> clazz,
-		DumpHandler<T> handler) throws ArangoException {
+		final String database,
+		final String collectionName,
+		final Long from,
+		final Long to,
+		final Integer chunkSize,
+		final Boolean ticks,
+		final Class<T> clazz,
+		final DumpHandler<T> handler) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doGet(createEndpointUrl(database, "/_api/replication/dump"),
+		final HttpResponseEntity res = httpManager.doGet(createEndpointUrl(database, "/_api/replication/dump"),
 			new MapBuilder().put(COLLECTION, collectionName).put("from", from).put("to", to).put("chunkSize", chunkSize)
 					.put("ticks", ticks).get());
 
-		ReplicationDumpHeader header = toReplicationDumpHeader(res);
+		final ReplicationDumpHeader header = toReplicationDumpHeader(res);
 		boolean cont = handler.head(header);
 
-		StreamEntity entity = createEntity(res, StreamEntity.class);
+		final StreamEntity entity = createEntity(res, StreamEntity.class);
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(new InputStreamReader(entity.getStream(), "utf-8"));
@@ -94,9 +94,9 @@ public class InternalReplicationDriverImpl extends BaseArangoDriverImpl
 				}
 				cont = handler.handle(createEntity(line, ReplicationDumpRecord.class, clazz));
 			}
-		} catch (UnsupportedEncodingException e) {
+		} catch (final UnsupportedEncodingException e) {
 			throw new ArangoException("got UnsupportedEncodingException for utf-8", e);
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			throw new ArangoException(e);
 		} finally {
 			IOUtils.close(reader);
@@ -106,16 +106,17 @@ public class InternalReplicationDriverImpl extends BaseArangoDriverImpl
 
 	@Override
 	public ReplicationSyncEntity syncReplication(
-		String localDatabase,
-		String endpoint,
-		String database,
-		String username,
-		String password,
-		RestrictType restrictType,
-		String... restrictCollections) throws ArangoException {
+		final String localDatabase,
+		final String endpoint,
+		final String database,
+		final String username,
+		final String password,
+		final RestrictType restrictType,
+		final String... restrictCollections) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doPut(createEndpointUrl(localDatabase, "/_api/replication/sync"), null,
-			EntityFactory.toJsonString(new MapBuilder().put("endpoint", endpoint).put("database", database)
+		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(localDatabase, "/_api/replication/sync"),
+			null,
+			EntityFactory.toVPack(new MapBuilder().put("endpoint", endpoint).put("database", database)
 					.put("username", username).put("password", password)
 					.put("restrictType", restrictType == null ? null : restrictType.name().toLowerCase(Locale.US))
 					.put("restrictCollections",
@@ -129,47 +130,48 @@ public class InternalReplicationDriverImpl extends BaseArangoDriverImpl
 	@Override
 	public String getReplicationServerId() throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doGet(createEndpointUrl(null, "/_api/replication/server-id")); // MEMO:
-																											// not
-																											// use
-																											// database,
-																											// because
-																											// same
-																											// value
-																											// each
-																											// database.
+		final HttpResponseEntity res = httpManager.doGet(createEndpointUrl(null, "/_api/replication/server-id")); // MEMO:
+		// not
+		// use
+		// database,
+		// because
+		// same
+		// value
+		// each
+		// database.
 
-		MapAsEntity entity = createEntity(res, MapAsEntity.class);
+		final MapAsEntity entity = createEntity(res, MapAsEntity.class);
 		return (String) entity.getMap().get("serverId");
 
 	}
 
 	@Override
-	public boolean startReplicationLogger(String database) throws ArangoException {
+	public boolean startReplicationLogger(final String database) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/replication/logger-start"), null,
-			null);
+		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/replication/logger-start"),
+			null, null);
 
-		MapAsEntity entity = createEntity(res, MapAsEntity.class);
+		final MapAsEntity entity = createEntity(res, MapAsEntity.class);
 		return (Boolean) entity.getMap().get("running");
 
 	}
 
 	@Override
-	public boolean stopReplicationLogger(String database) throws ArangoException {
+	public boolean stopReplicationLogger(final String database) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/replication/logger-stop"), null,
-			null);
+		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/replication/logger-stop"),
+			null, null);
 
-		MapAsEntity entity = createEntity(res, MapAsEntity.class);
+		final MapAsEntity entity = createEntity(res, MapAsEntity.class);
 		return (Boolean) entity.getMap().get("running");
 
 	}
 
 	@Override
-	public ReplicationLoggerConfigEntity getReplicationLoggerConfig(String database) throws ArangoException {
+	public ReplicationLoggerConfigEntity getReplicationLoggerConfig(final String database) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doGet(createEndpointUrl(database, "/_api/replication/logger-config"));
+		final HttpResponseEntity res = httpManager
+				.doGet(createEndpointUrl(database, "/_api/replication/logger-config"));
 
 		return createEntity(res, ReplicationLoggerConfigEntity.class);
 
@@ -177,34 +179,35 @@ public class InternalReplicationDriverImpl extends BaseArangoDriverImpl
 
 	@Override
 	public ReplicationLoggerConfigEntity setReplicationLoggerConfig(
-		String database,
-		Boolean autoStart,
-		Boolean logRemoteChanges,
-		Long maxEvents,
-		Long maxEventsSize) throws ArangoException {
+		final String database,
+		final Boolean autoStart,
+		final Boolean logRemoteChanges,
+		final Long maxEvents,
+		final Long maxEventsSize) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/replication/logger-config"), null,
-			EntityFactory
-					.toJsonString(new MapBuilder().put("autoStart", autoStart).put("logRemoteChanges", logRemoteChanges)
-							.put("maxEvents", maxEvents).put("maxEventsSize", maxEventsSize).get()));
+		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/replication/logger-config"),
+			null,
+			EntityFactory.toVPack(new MapBuilder().put("autoStart", autoStart).put("logRemoteChanges", logRemoteChanges)
+					.put("maxEvents", maxEvents).put("maxEventsSize", maxEventsSize).get()));
 
 		return createEntity(res, ReplicationLoggerConfigEntity.class);
 
 	}
 
 	@Override
-	public ReplicationLoggerStateEntity getReplicationLoggerState(String database) throws ArangoException {
+	public ReplicationLoggerStateEntity getReplicationLoggerState(final String database) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doGet(createEndpointUrl(database, "/_api/replication/logger-state"));
+		final HttpResponseEntity res = httpManager.doGet(createEndpointUrl(database, "/_api/replication/logger-state"));
 
 		return createEntity(res, ReplicationLoggerStateEntity.class);
 
 	}
 
 	@Override
-	public ReplicationApplierConfigEntity getReplicationApplierConfig(String database) throws ArangoException {
+	public ReplicationApplierConfigEntity getReplicationApplierConfig(final String database) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doGet(createEndpointUrl(database, "/_api/replication/applier-config"));
+		final HttpResponseEntity res = httpManager
+				.doGet(createEndpointUrl(database, "/_api/replication/applier-config"));
 
 		return createEntity(res, ReplicationApplierConfigEntity.class);
 
@@ -212,19 +215,19 @@ public class InternalReplicationDriverImpl extends BaseArangoDriverImpl
 
 	@Override
 	public ReplicationApplierConfigEntity setReplicationApplierConfig(
-		String localDatabase,
-		String endpoint,
-		String database,
-		String username,
-		String password,
-		Integer maxConnectRetries,
-		Integer connectTimeout,
-		Integer requestTimeout,
-		Integer chunkSize,
-		Boolean autoStart,
-		Boolean adaptivePolling) throws ArangoException {
+		final String localDatabase,
+		final String endpoint,
+		final String database,
+		final String username,
+		final String password,
+		final Integer maxConnectRetries,
+		final Integer connectTimeout,
+		final Integer requestTimeout,
+		final Integer chunkSize,
+		final Boolean autoStart,
+		final Boolean adaptivePolling) throws ArangoException {
 
-		ReplicationApplierConfigEntity bodyParam = new ReplicationApplierConfigEntity();
+		final ReplicationApplierConfigEntity bodyParam = new ReplicationApplierConfigEntity();
 		bodyParam.setEndpoint(endpoint);
 		bodyParam.setDatabase(database);
 		bodyParam.setUsername(username);
@@ -242,20 +245,21 @@ public class InternalReplicationDriverImpl extends BaseArangoDriverImpl
 
 	@Override
 	public ReplicationApplierConfigEntity setReplicationApplierConfig(
-		String database,
-		ReplicationApplierConfigEntity param) throws ArangoException {
+		final String database,
+		final ReplicationApplierConfigEntity param) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/replication/applier-config"),
-			null, EntityFactory.toJsonString(param));
+		final HttpResponseEntity res = httpManager.doPut(
+			createEndpointUrl(database, "/_api/replication/applier-config"), null, EntityFactory.toVPack(param));
 
 		return createEntity(res, ReplicationApplierConfigEntity.class);
 
 	}
 
 	@Override
-	public ReplicationApplierStateEntity startReplicationApplier(String database, Long from) throws ArangoException {
+	public ReplicationApplierStateEntity startReplicationApplier(final String database, final Long from)
+			throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/replication/applier-start"),
+		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/replication/applier-start"),
 			new MapBuilder().put("from", from).get(), null);
 
 		return createEntity(res, ReplicationApplierStateEntity.class);
@@ -263,19 +267,20 @@ public class InternalReplicationDriverImpl extends BaseArangoDriverImpl
 	}
 
 	@Override
-	public ReplicationApplierStateEntity stopReplicationApplier(String database) throws ArangoException {
+	public ReplicationApplierStateEntity stopReplicationApplier(final String database) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/replication/applier-stop"), null,
-			null);
+		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/replication/applier-stop"),
+			null, null);
 
 		return createEntity(res, ReplicationApplierStateEntity.class);
 
 	}
 
 	@Override
-	public ReplicationApplierStateEntity getReplicationApplierState(String database) throws ArangoException {
+	public ReplicationApplierStateEntity getReplicationApplierState(final String database) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doGet(createEndpointUrl(database, "/_api/replication/applier-state"));
+		final HttpResponseEntity res = httpManager
+				.doGet(createEndpointUrl(database, "/_api/replication/applier-state"));
 
 		return createEntity(res, ReplicationApplierStateEntity.class);
 

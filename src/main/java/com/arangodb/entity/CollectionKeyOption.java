@@ -27,60 +27,74 @@ import java.io.Serializable;
  */
 public class CollectionKeyOption implements Serializable {
 
-  /**
-   * specifies the type of the key generator. The currently available generators are traditional and autoincrement.
-   */
-  String type;
+	/**
+	 * specifies the type of the key generator. The currently available
+	 * generators are traditional and autoincrement.
+	 */
+	private String type;
 
-  /**
-   * if set to true, then it is allowed to supply own key values in the _key attribute of a document. If set to false,
-   * then the key generator will solely be responsible for generating keys and supplying own key values in the _key
-   * attribute of documents is considered an error.
-   */
-  boolean allowUserKeys;
+	/**
+	 * if set to true, then it is allowed to supply own key values in the _key
+	 * attribute of a document. If set to false, then the key generator will
+	 * solely be responsible for generating keys and supplying own key values in
+	 * the _key attribute of documents is considered an error.
+	 */
+	private boolean allowUserKeys;
 
-  /**
-   * increment value for autoincrement key generator. Not used for other key generator types.
-   */
-  long increment;
+	/**
+	 * increment value for autoincrement key generator. Not used for other key
+	 * generator types.
+	 */
+	private long increment;
 
-  /**
-   * initial offset value for autoincrement key generator. Not used for other key generator types.
-   */
-  long offset;
-  
-  public static CollectionKeyOption createIncrementOption(boolean allowUserKeys, long increment, long offset) {
-    CollectionKeyOption option = new CollectionKeyOption();
-    option.setType("autoincrement");
-    option.setAllowUserKeys(allowUserKeys);
-    option.setIncrement(increment);
-    option.setOffset(offset);
-    return option;
-  }
-  
-  public String getType() {
-    return type;
-  }
-  public boolean isAllowUserKeys() {
-    return allowUserKeys;
-  }
-  public long getIncrement() {
-    return increment;
-  }
-  public long getOffset() {
-    return offset;
-  }
-  public void setType(String type) {
-    this.type = type;
-  }
-  public void setAllowUserKeys(boolean allowUserKeys) {
-    this.allowUserKeys = allowUserKeys;
-  }
-  public void setIncrement(long increment) {
-    this.increment = increment;
-  }
-  public void setOffset(long offset) {
-    this.offset = offset;
-  }
-  
+	/**
+	 * initial offset value for autoincrement key generator. Not used for other
+	 * key generator types.
+	 */
+	private long offset;
+
+	public static CollectionKeyOption createIncrementOption(
+		final boolean allowUserKeys,
+		final long increment,
+		final long offset) {
+		final CollectionKeyOption option = new CollectionKeyOption();
+		option.setType("autoincrement");
+		option.setAllowUserKeys(allowUserKeys);
+		option.setIncrement(increment);
+		option.setOffset(offset);
+		return option;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public boolean isAllowUserKeys() {
+		return allowUserKeys;
+	}
+
+	public long getIncrement() {
+		return increment;
+	}
+
+	public long getOffset() {
+		return offset;
+	}
+
+	public void setType(final String type) {
+		this.type = type;
+	}
+
+	public void setAllowUserKeys(final boolean allowUserKeys) {
+		this.allowUserKeys = allowUserKeys;
+	}
+
+	public void setIncrement(final long increment) {
+		this.increment = increment;
+	}
+
+	public void setOffset(final long offset) {
+		this.offset = offset;
+	}
+
 }

@@ -335,6 +335,10 @@ public class VPackSlice {
 		return length;
 	}
 
+	public int size() {
+		return (int) getLength();
+	}
+
 	/**
 	 * Must be called for a nonempty array or object at start():
 	 */
@@ -407,7 +411,7 @@ public class VPackSlice {
 	 * @return array value at the specified index
 	 * @throws VPackValueTypeException
 	 */
-	public VPackSlice at(final int index) {
+	public VPackSlice get(final int index) {
 		if (!isArray()) {
 			throw new VPackValueTypeException(ValueType.ARRAY);
 		}

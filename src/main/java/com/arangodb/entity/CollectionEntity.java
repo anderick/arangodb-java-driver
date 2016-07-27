@@ -29,54 +29,54 @@ public class CollectionEntity extends BaseEntity {
 	/**
 	 * The collections name
 	 */
-	String name;
+	private String name;
 
 	/**
 	 * The unique id of the collection
 	 */
-	long id;
+	private long id;
 
 	/**
 	 * The collections type, either EDGE or DOCUMENT
 	 */
-	CollectionType type;
+	private CollectionType type;
 
 	/**
 	 * The state of the collection
 	 */
-	CollectionStatus status;
+	private CollectionStatus status;
 
 	/**
 	 * If true each write operation is synchronised to disk before the server
 	 * sends a response
 	 */
-	Boolean waitForSync;
+	private Boolean waitForSync;
 
 	/**
 	 * If true the collection is a system collection
 	 */
-	Boolean isSystem;
+	private Boolean isSystem;
 
 	/**
 	 * If true then the collection data will be kept in memory only and ArangoDB
 	 * will not write or sync the data to disk.
 	 */
-	Boolean isVolatile;
+	private Boolean isVolatile;
 
 	/**
 	 * The maximal size setting for journals / datafiles.
 	 */
-	long journalSize;
+	private long journalSize;
 
 	/**
 	 * The amount of documents in the collection
 	 */
-	long count;
+	private long count;
 
 	/**
 	 * The collections revision
 	 */
-	long revision;
+	private long revision;
 
 	/**
 	 * The collection figures
@@ -85,14 +85,14 @@ public class CollectionEntity extends BaseEntity {
 	 * @see com.arangodb.ArangoDriver#getCollectionFigures(long)
 	 * @see com.arangodb.ArangoDriver#getCollectionFigures(String)
 	 */
-	Figures figures;
+	private Figures figures;
 
 	/**
 	 * The collection key options
 	 * 
 	 * @see com.arangodb.entity.CollectionKeyOption
 	 */
-	CollectionKeyOption keyOptions;
+	private CollectionKeyOption keyOptions;
 
 	/**
 	 * The checksum of the collection
@@ -100,12 +100,12 @@ public class CollectionEntity extends BaseEntity {
 	 * @see com.arangodb.ArangoDriver#getCollectionChecksum(String, Boolean,
 	 *      Boolean)
 	 */
-	long checksum;
+	private long checksum;
 
 	/**
 	 * Whether or not the collection will be compacted.
 	 */
-	Boolean doCompact;
+	private Boolean doCompact;
 
 	public String getName() {
 		return name;
@@ -237,14 +237,14 @@ public class CollectionEntity extends BaseEntity {
 		 * of the collection. Documents that are contained in the write-ahead
 		 * log only are not reported in this figure.
 		 */
-		long aliveCount;
+		private long aliveCount;
 
 		/**
 		 * The total size in bytes used by all active documents of the
 		 * collection. Documents that are contained in the write-ahead log only
 		 * are not reported in this figure.
 		 */
-		long aliveSize;
+		private long aliveSize;
 
 		/**
 		 * The number of dead documents. This includes document versions that
@@ -252,72 +252,72 @@ public class CollectionEntity extends BaseEntity {
 		 * or replaced that are contained the write-ahead log only are not
 		 * reported in this figure.
 		 */
-		long deadCount;
+		private long deadCount;
 
 		/**
 		 * The total size in bytes used by all dead documents.
 		 */
-		long deadSize;
+		private long deadSize;
 
 		/**
 		 * The total number of deletion markers. Deletion markers only contained
 		 * in the write-ahead log are not reporting in this figure.
 		 */
-		long deadDeletion;
+		private long deadDeletion;
 
 		/**
 		 * The number of datafiles.
 		 */
-		long datafileCount;
+		private long datafileCount;
 
 		/**
 		 * The total filesize of datafiles (in bytes).
 		 */
-		long datafileFileSize;
+		private long datafileFileSize;
 
 		/**
 		 * The number of journal files.
 		 */
-		long journalsCount;
+		private long journalsCount;
 
 		/**
 		 * The total filesize of all journal files (in bytes).
 		 */
-		long journalsFileSize;
+		private long journalsFileSize;
 
 		/**
 		 * The number of compactor files.
 		 */
-		long compactorsCount;
+		private long compactorsCount;
 
 		/**
 		 * The total filesize of all compactor files (in bytes).
 		 */
-		long compactorsFileSize;
+		private long compactorsFileSize;
 
 		/**
 		 * The total number of indexes defined for the collection, including the
 		 * pre-defined indexes (e.g. primary index).
 		 */
-		long indexesCount;
+		private long indexesCount;
 
 		/**
 		 * The total memory allocated for indexes in bytes.
 		 */
-		long indexesSize;
+		private long indexesSize;
 
 		/**
 		 * The tick of the last marker that was stored in a journal of the
 		 * collection. This might be 0 if the collection does not yet have a
 		 * journal.
 		 */
-		long lastTick;
+		private long lastTick;
 
 		/**
 		 * The number of markers in the write-ahead log for this collection that
 		 * have not been transferred to journals or datafiles.
 		 */
-		long uncollectedLogfileEntries;
+		private long uncollectedLogfileEntries;
 
 		public long getAliveCount() {
 			return aliveCount;

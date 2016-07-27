@@ -146,4 +146,56 @@ public class VPackParserTest {
 		final String json = VPackParser.toJson(builder.slice());
 		Assert.assertEquals("[[1,2,3],[\"a\",\"b\",\"c\"]]", json);
 	}
+
+	@Test
+	public void excludeNullValueInObject() throws VPackException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.OBJECT));
+		builder.add("a", new Value(ValueType.NULL));
+		final String b = null;
+		builder.add("b", new Value(b));
+		builder.add("c", new Value("test"));
+		builder.close();
+		final String json = VPackParser.toJson(builder.slice(), false);
+		Assert.assertEquals("{\"c\":\"test\"}", json);
+	}
+
+	@Test
+	public void includeNullValueInObject() throws VPackException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.OBJECT));
+		builder.add("a", new Value(ValueType.NULL));
+		final String b = null;
+		builder.add("b", new Value(b));
+		builder.add("c", new Value("test"));
+		builder.close();
+		final String json = VPackParser.toJson(builder.slice(), true);
+		Assert.assertEquals("{\"a\":null,\"b\":null,\"c\":\"test\"}", json);
+	}
+
+	@Test
+	public void excludeNullValueInArray() throws VPackException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.ARRAY));
+		builder.add(new Value(ValueType.NULL));
+		final String s = null;
+		builder.add(new Value(s));
+		builder.add(new Value("test"));
+		builder.close();
+		final String json = VPackParser.toJson(builder.slice(), false);
+		Assert.assertEquals("[\"test\"]", json);
+	}
+
+	@Test
+	public void includeNullValueInArray() throws VPackException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value(ValueType.ARRAY));
+		builder.add(new Value(ValueType.NULL));
+		final String s = null;
+		builder.add(new Value(s));
+		builder.add(new Value("test"));
+		builder.close();
+		final String json = VPackParser.toJson(builder.slice(), true);
+		Assert.assertEquals("[null,null,\"test\"]", json);
+	}
 }

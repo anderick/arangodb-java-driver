@@ -272,7 +272,7 @@ public class VPackBuilderTest {
 		Assert.assertTrue(slice.isArray());
 		Assert.assertEquals(0, slice.getLength());
 		try {
-			slice.at(0);
+			slice.get(0);
 			Assert.fail();
 		} catch (final IndexOutOfBoundsException e) {
 
@@ -293,7 +293,7 @@ public class VPackBuilderTest {
 		Assert.assertTrue(slice.isArray());
 		Assert.assertEquals(2, slice.getLength());
 		for (int i = 0; i < expected.length; i++) {
-			final VPackSlice at = slice.at(i);
+			final VPackSlice at = slice.get(i);
 			Assert.assertTrue(at.isInteger());
 			Assert.assertEquals(expected[i], at.getAsLong());
 		}
@@ -337,7 +337,7 @@ public class VPackBuilderTest {
 		Assert.assertTrue(slice.isArray());
 		Assert.assertEquals(2, slice.getLength());
 		for (int i = 0; i < expected.length; i++) {
-			final VPackSlice at = slice.at(i);
+			final VPackSlice at = slice.get(i);
 			Assert.assertTrue(at.isInteger());
 			Assert.assertEquals(expected[i], at.getAsLong());
 		}
@@ -444,11 +444,11 @@ public class VPackBuilderTest {
 		Assert.assertTrue(slice.isArray());
 		Assert.assertEquals(values.length, slice.getLength());
 		for (int i = 0; i < values.length; i++) {
-			final VPackSlice ls = slice.at(i);
+			final VPackSlice ls = slice.get(i);
 			Assert.assertTrue(ls.isArray());
 			Assert.assertEquals(values[i].length, ls.getLength());
 			for (int j = 0; j < values[i].length; j++) {
-				final VPackSlice l = ls.at(j);
+				final VPackSlice l = ls.get(j);
 				Assert.assertTrue(l.isInteger());
 				Assert.assertEquals(values[i][j], l.getAsLong());
 			}
@@ -477,15 +477,15 @@ public class VPackBuilderTest {
 		Assert.assertTrue(slice.isArray());
 		Assert.assertEquals(values.length, slice.getLength());
 		for (int i = 0; i < values.length; i++) {
-			final VPackSlice lls = slice.at(i);
+			final VPackSlice lls = slice.get(i);
 			Assert.assertTrue(lls.isArray());
 			Assert.assertEquals(values[i].length, lls.getLength());
 			for (int j = 0; j < values[i].length; j++) {
-				final VPackSlice ls = lls.at(i);
+				final VPackSlice ls = lls.get(i);
 				Assert.assertTrue(ls.isArray());
 				Assert.assertEquals(values[i][j].length, ls.getLength());
 				for (int k = 0; k < values[i][j].length; k++) {
-					final VPackSlice l = ls.at(k);
+					final VPackSlice l = ls.get(k);
 					Assert.assertTrue(l.isInteger());
 					Assert.assertEquals(values[i][j][k], l.getAsLong());
 				}

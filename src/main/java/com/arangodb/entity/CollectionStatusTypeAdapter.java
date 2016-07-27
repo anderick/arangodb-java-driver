@@ -16,12 +16,14 @@
 
 package com.arangodb.entity;
 
-import java.io.IOException;
-
-import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
+import com.arangodb.velocypack.VPackBuilder;
+import com.arangodb.velocypack.VPackDeserializationContext;
+import com.arangodb.velocypack.VPackDeserializer;
+import com.arangodb.velocypack.VPackSerializationContext;
+import com.arangodb.velocypack.VPackSerializer;
+import com.arangodb.velocypack.VPackSlice;
+import com.arangodb.velocypack.Value;
+import com.arangodb.velocypack.exception.VPackException;
 
 /**
  *
@@ -30,21 +32,22 @@ import com.google.gson.stream.JsonWriter;
  * @author tamtam180 - kirscheless at gmail.com
  *
  */
-public class CollectionStatusTypeAdapter extends TypeAdapter<CollectionStatus> {
+public class CollectionStatusTypeAdapter
+		implements VPackDeserializer<CollectionStatus>, VPackSerializer<CollectionStatus> {
 
 	@Override
-	public void write(JsonWriter out, CollectionStatus value) throws IOException {
-		out.value(value.status());
+	public void serialize(
+		final VPackBuilder builder,
+		final String attribute,
+		final CollectionStatus value,
+		final VPackSerializationContext context) throws VPackException {
+		builder.add(attribute, new Value(value.status()));
 	}
 
 	@Override
-	public CollectionStatus read(JsonReader in) throws IOException {
-		if (in.peek() == JsonToken.NULL) {
-			in.nextNull();
-			return null;
-		}
-
-		return CollectionStatus.valueOf(in.nextInt());
+	public CollectionStatus deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+			throws VPackException {
+		return CollectionStatus.valueOf(vpack.getAsInt());
 	}
 
 }

@@ -26,101 +26,120 @@ import java.util.List;
  */
 public class StatisticsDescriptionEntity extends BaseEntity {
 
-  List<Group> groups;
-  List<Figure> figures;
-  
-  public List<Group> getGroups() {
-    return groups;
-  }
+	private List<Group> groups;
+	private List<Figure> figures;
 
-  public List<Figure> getFigures() {
-    return figures;
-  }
+	public List<Group> getGroups() {
+		return groups;
+	}
 
-  public void setGroups(List<Group> groups) {
-    this.groups = groups;
-  }
+	public List<Figure> getFigures() {
+		return figures;
+	}
 
-  public void setFigures(List<Figure> figures) {
-    this.figures = figures;
-  }
+	public void setGroups(final List<Group> groups) {
+		this.groups = groups;
+	}
 
-  
-  public static class Group implements Serializable {
-    String group;
-    String name;
-    String description;
-    public String getGroup() {
-      return group;
-    }
-    public String getName() {
-      return name;
-    }
-    public String getDescription() {
-      return description;
-    }
-    public void setGroup(String group) {
-      this.group = group;
-    }
-    public void setName(String name) {
-      this.name = name;
-    }
-    public void setDescription(String description) {
-      this.description = description;
-    }
-    
-  }
-  
-  public static class Figure implements Serializable {
-    String group;
-    String identifier;
-    String name;
-    String description;
-    String type;
-    String units;
-    BigDecimal[] cuts;
-    public String getGroup() {
-      return group;
-    }
-    public String getIdentifier() {
-      return identifier;
-    }
-    public String getName() {
-      return name;
-    }
-    public String getDescription() {
-      return description;
-    }
-    public String getType() {
-      return type;
-    }
-    public String getUnits() {
-      return units;
-    }
-    public BigDecimal[] getCuts() {
-      return cuts;
-    }
-    public void setGroup(String group) {
-      this.group = group;
-    }
-    public void setIdentifier(String identifier) {
-      this.identifier = identifier;
-    }
-    public void setName(String name) {
-      this.name = name;
-    }
-    public void setDescription(String description) {
-      this.description = description;
-    }
-    public void setType(String type) {
-      this.type = type;
-    }
-    public void setUnits(String units) {
-      this.units = units;
-    }
-    public void setCuts(BigDecimal[] cuts) {
-      this.cuts = cuts;
-    }
-  }
-  
+	public void setFigures(final List<Figure> figures) {
+		this.figures = figures;
+	}
+
+	public static class Group implements Serializable {
+		private String group;
+		private String name;
+		private String description;
+
+		public String getGroup() {
+			return group;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public String getDescription() {
+			return description;
+		}
+
+		public void setGroup(final String group) {
+			this.group = group;
+		}
+
+		public void setName(final String name) {
+			this.name = name;
+		}
+
+		public void setDescription(final String description) {
+			this.description = description;
+		}
+
+	}
+
+	public static class Figure implements Serializable {
+		private String group;
+		private String identifier;
+		private String name;
+		private String description;
+		private String type;
+		private String units;
+		private BigDecimal[] cuts;
+
+		public String getGroup() {
+			return group;
+		}
+
+		public String getIdentifier() {
+			return identifier;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public String getDescription() {
+			return description;
+		}
+
+		public String getType() {
+			return type;
+		}
+
+		public String getUnits() {
+			return units;
+		}
+
+		public BigDecimal[] getCuts() {
+			return cuts;
+		}
+
+		public void setGroup(final String group) {
+			this.group = group;
+		}
+
+		public void setIdentifier(final String identifier) {
+			this.identifier = identifier;
+		}
+
+		public void setName(final String name) {
+			this.name = name;
+		}
+
+		public void setDescription(final String description) {
+			this.description = description;
+		}
+
+		public void setType(final String type) {
+			this.type = type;
+		}
+
+		public void setUnits(final String units) {
+			this.units = units;
+		}
+
+		public void setCuts(final BigDecimal[] cuts) {
+			this.cuts = cuts;
+		}
+	}
+
 }

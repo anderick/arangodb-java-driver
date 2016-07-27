@@ -2,16 +2,12 @@ package com.arangodb.util;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import com.arangodb.ArangoDriver;
 import com.arangodb.ArangoException;
 import com.arangodb.Direction;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.arangodb.entity.EntityFactory;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -61,7 +57,7 @@ public class GraphQueryUtil {
 			final List<String> endVertexCollectionRestriction = graphEdgesOptions.getEndVertexCollectionRestriction();
 			if (endVertexCollectionRestriction != null && endVertexCollectionRestriction.size() > 0) {
 				sb.append(" FILTER ");
-				for (String endVertexCollection : endVertexCollectionRestriction) {
+				for (final String endVertexCollection : endVertexCollectionRestriction) {
 					sb.append("IS_SAME_COLLECTION(`");
 					sb.append(endVertexCollection);
 					sb.append("`,v)");
@@ -91,7 +87,7 @@ public class GraphQueryUtil {
 		final List<String> edgeCollectionRestriction) {
 		sb.append(" ");
 		if (edgeCollectionRestriction != null && edgeCollectionRestriction.size() > 0) {
-			for (String edgeCollection : edgeCollectionRestriction) {
+			for (final String edgeCollection : edgeCollectionRestriction) {
 				sb.append("`");
 				sb.append(edgeCollection);
 				sb.append("`,");
@@ -129,7 +125,7 @@ public class GraphQueryUtil {
 			sb.append("FOR ");
 			sb.append(var);
 			sb.append(" IN UNION (");
-			for (String vertexCollection : vertexCollections) {
+			for (final String vertexCollection : vertexCollections) {
 				sb.append("(FOR ");
 				sb.append(var);
 				sb.append(" IN `");
@@ -171,22 +167,21 @@ public class GraphQueryUtil {
 	private static void appendFilter(final String var, final Object example, final StringBuilder sb)
 			throws ArangoException {
 		if (example != null) {
-			final Gson gson = new Gson();
-			final JsonElement json = gson.toJsonTree(example);
-			if (json.isJsonObject()) {
+			final VPackSlice vpack = EntityFactory.toVPack(example);
+			if (vpack.isObject()) {
 				sb.append(" FILTER ");
-				appendObjectinFilter(var, json.getAsJsonObject(), sb);
-			} else if (json.isJsonArray()) {
+				appendObjectinFilter(var, vpack, sb);
+			} else if (vpack.isArray()) {
 				sb.append(" FILTER ");
-				final JsonArray jsonArray = json.getAsJsonArray();
-				if (jsonArray.size() > 0) {
-					for (JsonElement jsonElement : jsonArray) {
-						if (jsonElement.isJsonObject()) {
+				if (vpack.size() > 0) {
+					for (int i = 0; i < vpack.size(); i++) {
+						final VPackSlice at = vpack.get(i);
+						if (at.isObject()) {
 							sb.append("(");
-							appendObjectinFilter(var, jsonElement.getAsJsonObject(), sb);
+							appendObjectinFilter(var, at, sb);
 							sb.append(")");
 							sb.append(OR);
-						} else if (!jsonElement.isJsonNull()) {
+						} else if (!at.isNull()) {
 							throw new ArangoException("invalide format of entry in array example: "
 									+ example.getClass().getSimpleName() + ". only objects in array allowed.");
 						}
@@ -200,14 +195,15 @@ public class GraphQueryUtil {
 		}
 	}
 
-	private static void appendObjectinFilter(final String var, final JsonObject jsonObject, final StringBuilder sb) {
-		final Set<Entry<String, JsonElement>> entrySet = jsonObject.entrySet();
-		for (Entry<String, JsonElement> entry : entrySet) {
+	private static void appendObjectinFilter(final String var, final VPackSlice vpack, final StringBuilder sb) {
+		for (int i = 0; i < vpack.size(); i++) {
+			final VPackSlice key = vpack.keyAt(i);
+			final VPackSlice value = vpack.valueAt(i);
 			sb.append(var);
 			sb.append(".`");
-			sb.append(entry.getKey());
+			sb.append(key);
 			sb.append("` == ");
-			sb.append(entry.getValue().toString());
+			sb.append(EntityFactory.toJson(value));
 			sb.append(AND);
 		}
 		sb.delete(sb.length() - AND.length(), sb.length() - 1);
@@ -220,7 +216,7 @@ public class GraphQueryUtil {
 		final GraphVerticesOptions graphVerticesOptions,
 		final MapBuilder bindVars) throws ArangoException {
 
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		final boolean stringVertexExample = vertexExample != null
 				&& String.class.isAssignableFrom(vertexExample.getClass());
 		if (stringVertexExample) {
@@ -263,7 +259,7 @@ public class GraphQueryUtil {
 		final StringBuilder sb = new StringBuilder();
 		final boolean notStringStartVertexExample = startVertexExample != null
 				&& !String.class.isAssignableFrom(startVertexExample.getClass());
-		boolean notStringEndVertexExample = endVertexExample != null
+		final boolean notStringEndVertexExample = endVertexExample != null
 				&& !String.class.isAssignableFrom(endVertexExample.getClass());
 		if (notStringStartVertexExample || notStringEndVertexExample) {
 			final List<String> startVertexCollectionRestriction = shortestPathOptions
@@ -306,7 +302,7 @@ public class GraphQueryUtil {
 			} else {
 				appendBindVar(END_VERTEX_EXAMPLE, endVertexExample, bindVars, sb);
 			}
-			List<String> edgeCollectionRestriction = shortestPathOptions.getEdgeCollectionRestriction();
+			final List<String> edgeCollectionRestriction = shortestPathOptions.getEdgeCollectionRestriction();
 			appendEdgeCollectionsOrGraph(graphName, bindVars, sb, edgeCollectionRestriction);
 
 			final String weight = shortestPathOptions.getWeight();

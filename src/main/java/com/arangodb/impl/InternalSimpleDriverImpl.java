@@ -89,8 +89,7 @@ public class InternalSimpleDriverImpl extends BaseArangoDriverWithCursorImpl
 
 		validateCollectionName(collectionName);
 		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/simple/first-example"),
-			null,
-			EntityFactory.toJsonString(new MapBuilder().put(COLLECTION, collectionName).put(EXAMPLE, example).get()));
+			null, EntityFactory.toVPack(new MapBuilder().put(COLLECTION, collectionName).put(EXAMPLE, example).get()));
 
 		return createEntity(res, ScalarExampleEntity.class, clazz);
 	}
@@ -106,7 +105,7 @@ public class InternalSimpleDriverImpl extends BaseArangoDriverWithCursorImpl
 
 		validateCollectionName(collectionName);
 		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/simple/any"), null,
-			EntityFactory.toJsonString(new MapBuilder().put(COLLECTION, collectionName).get()));
+			EntityFactory.toVPack(new MapBuilder().put(COLLECTION, collectionName).get()));
 
 		return createEntity(res, ScalarExampleEntity.class, clazz);
 	}
@@ -143,7 +142,7 @@ public class InternalSimpleDriverImpl extends BaseArangoDriverWithCursorImpl
 		validateCollectionName(collectionName);
 		final HttpResponseEntity res = httpManager
 				.doPut(createEndpointUrl(database, "/_api/simple/remove-by-example"), null,
-					EntityFactory.toJsonString(new MapBuilder().put(COLLECTION, collectionName).put(EXAMPLE, example)
+					EntityFactory.toVPack(new MapBuilder().put(COLLECTION, collectionName).put(EXAMPLE, example)
 							.put(WAIT_FOR_SYNC, waitForSync)
 							.put(LIMIT, limit != null && limit.intValue() > 0 ? limit : null).get()));
 
@@ -164,7 +163,7 @@ public class InternalSimpleDriverImpl extends BaseArangoDriverWithCursorImpl
 		validateCollectionName(collectionName);
 		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/simple/replace-by-example"),
 			null,
-			EntityFactory.toJsonString(new MapBuilder().put(COLLECTION, collectionName).put(EXAMPLE, example)
+			EntityFactory.toVPack(new MapBuilder().put(COLLECTION, collectionName).put(EXAMPLE, example)
 					.put("newValue", newValue).put(WAIT_FOR_SYNC, waitForSync)
 					.put(LIMIT, limit != null && limit.intValue() > 0 ? limit : null).get()));
 
@@ -186,12 +185,13 @@ public class InternalSimpleDriverImpl extends BaseArangoDriverWithCursorImpl
 		validateCollectionName(collectionName);
 		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/simple/update-by-example"),
 			null,
-			EntityFactory.toJsonString(
-				new MapBuilder().put(COLLECTION, collectionName).put(EXAMPLE, example).put("newValue", newValue)
-						.put("keepNull", keepNull).put(WAIT_FOR_SYNC, waitForSync)
-						.put(LIMIT, limit != null && limit.intValue() > 0 ? limit : null).get(),
-				keepNull != null && !keepNull));
-
+			EntityFactory.toVPack(new MapBuilder().put(COLLECTION, collectionName).put(EXAMPLE, example)
+					.put("newValue", newValue).put("keepNull", keepNull).put(WAIT_FOR_SYNC, waitForSync)
+					.put(LIMIT, limit != null && limit.intValue() > 0 ? limit : null)
+					.get()/*
+							 * , keepNull != null && !keepNull
+							 */));
+		// TODO keepNull
 		return createEntity(res, SimpleByResultEntity.class);
 	}
 
@@ -222,8 +222,8 @@ public class InternalSimpleDriverImpl extends BaseArangoDriverWithCursorImpl
 		final int limit) throws ArangoException {
 		validateCollectionName(collectionName);
 		return httpManager.doPut(createEndpointUrl(database, "/_api/simple/all"), null,
-			EntityFactory.toJsonString(new MapBuilder().put(COLLECTION, collectionName)
-					.put("skip", skip > 0 ? skip : null).put(LIMIT, limit > 0 ? limit : null).get()));
+			EntityFactory.toVPack(new MapBuilder().put(COLLECTION, collectionName).put("skip", skip > 0 ? skip : null)
+					.put(LIMIT, limit > 0 ? limit : null).get()));
 	}
 
 	private HttpResponseEntity getSimpleByExample(
@@ -234,7 +234,7 @@ public class InternalSimpleDriverImpl extends BaseArangoDriverWithCursorImpl
 		final int limit) throws ArangoException {
 		validateCollectionName(collectionName);
 		return httpManager.doPut(createEndpointUrl(database, "/_api/simple/by-example"), null,
-			EntityFactory.toJsonString(new MapBuilder().put(COLLECTION, collectionName).put(EXAMPLE, example)
+			EntityFactory.toVPack(new MapBuilder().put(COLLECTION, collectionName).put(EXAMPLE, example)
 					.put("skip", skip > 0 ? skip : null).put(LIMIT, limit > 0 ? limit : null).get()));
 	}
 
@@ -249,7 +249,7 @@ public class InternalSimpleDriverImpl extends BaseArangoDriverWithCursorImpl
 		final int limit) throws ArangoException {
 		validateCollectionName(collectionName);
 		return httpManager.doPut(createEndpointUrl(database, "/_api/simple/range"), null,
-			EntityFactory.toJsonString(new MapBuilder().put(COLLECTION, collectionName).put("attribute", attribute)
+			EntityFactory.toVPack(new MapBuilder().put(COLLECTION, collectionName).put("attribute", attribute)
 					.put("left", left).put("right", right).put("closed", closed).put("skip", skip > 0 ? skip : null)
 					.put(LIMIT, limit > 0 ? limit : null).get()));
 	}
@@ -264,7 +264,7 @@ public class InternalSimpleDriverImpl extends BaseArangoDriverWithCursorImpl
 		final String index) throws ArangoException {
 		validateCollectionName(collectionName);
 		return httpManager.doPut(createEndpointUrl(database, "/_api/simple/fulltext"), null,
-			EntityFactory.toJsonString(new MapBuilder().put(COLLECTION, collectionName).put("attribute", attribute)
+			EntityFactory.toVPack(new MapBuilder().put(COLLECTION, collectionName).put("attribute", attribute)
 					.put("query", query).put("skip", skip > 0 ? skip : null).put(LIMIT, limit > 0 ? limit : null)
 					.put("index", index).get()));
 	}

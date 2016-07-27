@@ -17,6 +17,7 @@
 package com.arangodb.util;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,19 +39,40 @@ public class IOUtils {
 		// this is a helper class
 	}
 
-	public static String toString(InputStream input) throws IOException {
+	public static byte[] toByteArray(final InputStream input) throws IOException {
+		BufferedInputStream in = null;
+		ByteArrayOutputStream out = null;
+		byte[] result;
+		try {
+			in = new BufferedInputStream(input);
+			out = new ByteArrayOutputStream();
+			final byte[] buf = new byte[8012];
+			int len;
+			while ((len = in.read(buf)) != -1) {
+				out.write(buf, 0, len);
+			}
+			result = out.toByteArray();
+		} finally {
+			close(in);
+			close(out);
+		}
+		return result;
+
+	}
+
+	public static String toString(final InputStream input) throws IOException {
 		return toString(input, "utf-8");
 	}
 
-	public static String toString(InputStream input, String encode) throws IOException {
+	public static String toString(final InputStream input, final String encode) throws IOException {
 
 		InputStreamReader in;
 		try {
 
-			StringBuilder buffer = new StringBuilder(8012);
+			final StringBuilder buffer = new StringBuilder(8012);
 
 			in = new InputStreamReader(new BufferedInputStream(input), encode);
-			char[] cbuf = new char[8012];
+			final char[] cbuf = new char[8012];
 			int len;
 			while ((len = in.read(cbuf)) != -1) {
 				buffer.append(cbuf, 0, len);
@@ -58,18 +80,18 @@ public class IOUtils {
 
 			return buffer.toString();
 
-		} catch (UnsupportedEncodingException e) {
+		} catch (final UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		} finally {
 			close(input);
 		}
 	}
 
-	public static void close(Closeable input) {
+	public static void close(final Closeable input) {
 		if (input != null) {
 			try {
 				input.close();
-			} catch (IOException e) {
+			} catch (final IOException e) {
 				logger.error("could not close a file", e);
 			}
 		}

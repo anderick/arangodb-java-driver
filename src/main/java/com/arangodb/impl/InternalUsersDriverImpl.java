@@ -43,32 +43,36 @@ public class InternalUsersDriverImpl extends BaseArangoDriverImpl implements com
 	private static final String DATABASE = "database";
 	private static final String READ_WRITE = "rw";
 
-	InternalUsersDriverImpl(ArangoConfigure configure, HttpManager httpManager) {
+	InternalUsersDriverImpl(final ArangoConfigure configure, final HttpManager httpManager) {
 		super(configure, httpManager);
 	}
 
 	@Override
-	public DefaultEntity createUser(String username, String passwd, Boolean active, Map<String, Object> extra)
-			throws ArangoException {
+	public DefaultEntity createUser(
+		final String username,
+		final String passwd,
+		final Boolean active,
+		final Map<String, Object> extra) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doPost(createUserEndpointUrl(), null, EntityFactory.toJsonString(
+		final HttpResponseEntity res = httpManager.doPost(createUserEndpointUrl(), null, EntityFactory.toVPack(
 			new MapBuilder().put(USERNAME, username).put(PW, passwd).put(ACTIVE, active).put(EXTRA, extra).get()));
 
 		return createEntity(res, DefaultEntity.class);
 	}
 
 	@Override
-	public DefaultEntity deleteUser(String username) throws ArangoException {
+	public DefaultEntity deleteUser(final String username) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doDelete(createUserEndpointUrl(StringUtils.encodeUrl(username)), null);
+		final HttpResponseEntity res = httpManager.doDelete(createUserEndpointUrl(StringUtils.encodeUrl(username)),
+			null);
 
 		return createEntity(res, DefaultEntity.class);
 	}
 
 	@Override
-	public UserEntity getUser(String username) throws ArangoException {
+	public UserEntity getUser(final String username) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doGet(createUserEndpointUrl(StringUtils.encodeUrl(username)), null);
+		final HttpResponseEntity res = httpManager.doGet(createUserEndpointUrl(StringUtils.encodeUrl(username)), null);
 
 		return createEntity(res, UserEntity.class);
 	}
@@ -76,37 +80,43 @@ public class InternalUsersDriverImpl extends BaseArangoDriverImpl implements com
 	@Override
 	public UsersEntity getUsers() throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doGet(createUserEndpointUrl(), null);
+		final HttpResponseEntity res = httpManager.doGet(createUserEndpointUrl(), null);
 
 		return createEntity(res, UsersEntity.class);
 	}
 
 	@Override
-	public DefaultEntity replaceUser(String username, String passwd, Boolean active, Map<String, Object> extra)
-			throws ArangoException {
+	public DefaultEntity replaceUser(
+		final String username,
+		final String passwd,
+		final Boolean active,
+		final Map<String, Object> extra) throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doPut(createUserEndpointUrl(StringUtils.encodeUrl(username)), null,
-			EntityFactory.toJsonString(new MapBuilder().put(PW, passwd).put(ACTIVE, active).put(EXTRA, extra).get()));
-
-		return createEntity(res, DefaultEntity.class);
-	}
-
-	@Override
-	public DefaultEntity updateUser(String username, String passwd, Boolean active, Map<String, Object> extra)
-			throws ArangoException {
-
-		HttpResponseEntity res = httpManager.doPatch(createUserEndpointUrl(StringUtils.encodeUrl(username)), null,
-			EntityFactory.toJsonString(new MapBuilder().put(PW, passwd).put(ACTIVE, active).put(EXTRA, extra).get()));
+		final HttpResponseEntity res = httpManager.doPut(createUserEndpointUrl(StringUtils.encodeUrl(username)), null,
+			EntityFactory.toVPack(new MapBuilder().put(PW, passwd).put(ACTIVE, active).put(EXTRA, extra).get()));
 
 		return createEntity(res, DefaultEntity.class);
 	}
 
 	@Override
-	public DefaultEntity grantDatabaseAccess(String username, String database) throws ArangoException {
+	public DefaultEntity updateUser(
+		final String username,
+		final String passwd,
+		final Boolean active,
+		final Map<String, Object> extra) throws ArangoException {
+
+		final HttpResponseEntity res = httpManager.doPatch(createUserEndpointUrl(StringUtils.encodeUrl(username)), null,
+			EntityFactory.toVPack(new MapBuilder().put(PW, passwd).put(ACTIVE, active).put(EXTRA, extra).get()));
+
+		return createEntity(res, DefaultEntity.class);
+	}
+
+	@Override
+	public DefaultEntity grantDatabaseAccess(final String username, final String database) throws ArangoException {
 
 		final HttpResponseEntity res = httpManager.doPut(
 			createUserEndpointUrl(StringUtils.encodeUrl(username), DATABASE, StringUtils.encodeUrl(database)), null,
-			EntityFactory.toJsonString(new MapBuilder().put(GRANT, READ_WRITE).get()));
+			EntityFactory.toVPack(new MapBuilder().put(GRANT, READ_WRITE).get()));
 
 		return createEntity(res, DefaultEntity.class);
 	}

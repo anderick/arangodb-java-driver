@@ -40,18 +40,18 @@ public class InternalIndexDriverImpl extends BaseArangoDriverWithCursorImpl
 	private static final String UNIQUE = "unique";
 	private static final String TYPE = "type";
 
-	InternalIndexDriverImpl(ArangoConfigure configure, HttpManager httpManager) {
+	InternalIndexDriverImpl(final ArangoConfigure configure, final HttpManager httpManager) {
 		super(configure, null, httpManager);
 	}
 
 	@Override
 	public IndexEntity createIndex(
-		String database,
-		String collectionName,
-		IndexType type,
-		boolean unique,
-		boolean sparse,
-		String... fields) throws ArangoException {
+		final String database,
+		final String collectionName,
+		final IndexType type,
+		final boolean unique,
+		final boolean sparse,
+		final String... fields) throws ArangoException {
 
 		if (type == IndexType.PRIMARY) {
 			throw new IllegalArgumentException("cannot create primary index.");
@@ -61,64 +61,67 @@ public class InternalIndexDriverImpl extends BaseArangoDriverWithCursorImpl
 		}
 
 		validateCollectionName(collectionName);
-		HttpResponseEntity res = httpManager.doPost(createIndexEndpointUrl(database),
+		final HttpResponseEntity res = httpManager.doPost(createIndexEndpointUrl(database),
 			new MapBuilder(COLLECTION, collectionName).get(),
-			EntityFactory.toJsonString(new MapBuilder().put(TYPE, type.name().toLowerCase(Locale.US))
-					.put(UNIQUE, unique).put(SPARSE, sparse).put(FIELDS, fields).get()));
+			EntityFactory.toVPack(new MapBuilder().put(TYPE, type.name().toLowerCase(Locale.US)).put(UNIQUE, unique)
+					.put(SPARSE, sparse).put(FIELDS, fields).get()));
 
 		return createEntity(res, IndexEntity.class);
 	}
 
 	@Override
 	public IndexEntity createIndex(
-		String database,
-		String collectionName,
-		IndexType type,
-		boolean unique,
-		String... fields) throws ArangoException {
+		final String database,
+		final String collectionName,
+		final IndexType type,
+		final boolean unique,
+		final String... fields) throws ArangoException {
 		return createIndex(database, collectionName, type, unique, false, fields);
 	}
 
 	@Override
-	public IndexEntity createFulltextIndex(String database, String collectionName, Integer minLength, String... fields)
-			throws ArangoException {
+	public IndexEntity createFulltextIndex(
+		final String database,
+		final String collectionName,
+		final Integer minLength,
+		final String... fields) throws ArangoException {
 
 		validateCollectionName(collectionName);
 
-		HttpResponseEntity res = httpManager.doPost(createIndexEndpointUrl(database),
+		final HttpResponseEntity res = httpManager.doPost(createIndexEndpointUrl(database),
 			new MapBuilder(COLLECTION, collectionName).get(),
-			EntityFactory.toJsonString(new MapBuilder().put(TYPE, IndexType.FULLTEXT.name().toLowerCase(Locale.US))
+			EntityFactory.toVPack(new MapBuilder().put(TYPE, IndexType.FULLTEXT.name().toLowerCase(Locale.US))
 					.put("minLength", minLength).put(FIELDS, fields).get()));
 
 		return createEntity(res, IndexEntity.class);
 	}
 
 	@Override
-	public IndexEntity deleteIndex(String database, String indexHandle) throws ArangoException {
+	public IndexEntity deleteIndex(final String database, final String indexHandle) throws ArangoException {
 
 		validateDocumentHandle(indexHandle);
 
-		HttpResponseEntity res = httpManager.doDelete(createIndexEndpointUrl(database, indexHandle), null);
+		final HttpResponseEntity res = httpManager.doDelete(createIndexEndpointUrl(database, indexHandle), null);
 
 		return createEntity(res, IndexEntity.class);
 	}
 
 	@Override
-	public IndexEntity getIndex(String database, String indexHandle) throws ArangoException {
+	public IndexEntity getIndex(final String database, final String indexHandle) throws ArangoException {
 
 		validateDocumentHandle(indexHandle);
 
-		HttpResponseEntity res = httpManager.doGet(createIndexEndpointUrl(database, indexHandle));
+		final HttpResponseEntity res = httpManager.doGet(createIndexEndpointUrl(database, indexHandle));
 
 		return createEntity(res, IndexEntity.class);
 	}
 
 	@Override
-	public IndexesEntity getIndexes(String database, String collectionName) throws ArangoException {
+	public IndexesEntity getIndexes(final String database, final String collectionName) throws ArangoException {
 
 		validateCollectionName(collectionName);
 
-		HttpResponseEntity res = httpManager.doGet(createIndexEndpointUrl(database),
+		final HttpResponseEntity res = httpManager.doGet(createIndexEndpointUrl(database),
 			new MapBuilder(COLLECTION, collectionName).get());
 
 		return createEntity(res, IndexesEntity.class);

@@ -8,7 +8,6 @@ import org.junit.runners.MethodSorters;
 
 import com.arangodb.velocypack.TestBuilder.TestEntity;
 import com.arangodb.velocypack.exception.VPackException;
-import com.google.gson.Gson;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -131,15 +130,16 @@ public class VPackPerformanceTest {
 	}
 
 	private static void serializeJson(final String description, final int iterations, final int depth, final int size) {
-		final TestEntity entity = TestBuilder.buildEntity(depth, size);
-		final Gson gson = new Gson();
-
-		final long start = System.currentTimeMillis();
-		for (int i = 0; i < iterations; i++) {
-			gson.toJson(entity);
-		}
-		final long time = System.currentTimeMillis() - start;
-		System.out.println("serialize " + iterations + " x " + description + " Json: " + time + "ms");
+		// final TestEntity entity = TestBuilder.buildEntity(depth, size);
+		// final Gson gson = new Gson();
+		//
+		// final long start = System.currentTimeMillis();
+		// for (int i = 0; i < iterations; i++) {
+		// gson.toJson(entity);
+		// }
+		// final long time = System.currentTimeMillis() - start;
+		// System.out.println("serialize " + iterations + " x " + description +
+		// " Json: " + time + "ms");
 	}
 
 	private static void deserializeJson(
@@ -147,14 +147,15 @@ public class VPackPerformanceTest {
 		final int iterations,
 		final int depth,
 		final int size) {
-		final String serializedJson = TestBuilder.buildJson(depth, size);
-		final Gson gson = new Gson();
-
-		final long start = System.currentTimeMillis();
-		for (int i = 0; i < iterations; i++) {
-			gson.fromJson(serializedJson, TestEntity.class);
-		}
-		final long time = System.currentTimeMillis() - start;
-		System.out.println("deserialize " + iterations + " x " + description + " Json: " + time + "ms");
+		// final String serializedJson = TestBuilder.buildJson(depth, size);
+		// final Gson gson = new Gson();
+		//
+		// final long start = System.currentTimeMillis();
+		// for (int i = 0; i < iterations; i++) {
+		// gson.fromJson(serializedJson, TestEntity.class);
+		// }
+		// final long time = System.currentTimeMillis() - start;
+		// System.out.println("deserialize " + iterations + " x " + description
+		// + " Json: " + time + "ms");
 	}
 }

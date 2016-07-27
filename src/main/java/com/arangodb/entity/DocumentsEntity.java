@@ -32,7 +32,7 @@ public class DocumentsEntity extends BaseEntity implements Iterable<String> {
 	/**
 	 * the list of document ids
 	 */
-	List<String> documents;
+	private List<String> documents;
 
 	@Override
 	public Iterator<String> iterator() {
@@ -43,7 +43,7 @@ public class DocumentsEntity extends BaseEntity implements Iterable<String> {
 		return documents;
 	}
 
-	public void setDocuments(List<String> documents) {
+	public void setDocuments(final List<String> documents) {
 		this.documents = documents;
 	}
 

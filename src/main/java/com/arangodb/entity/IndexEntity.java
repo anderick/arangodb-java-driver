@@ -26,117 +26,139 @@ import java.util.List;
  */
 public class IndexEntity extends BaseEntity {
 
-  /**
-   * the index id
-   */
-  String id;
+	/**
+	 * the index id
+	 */
+	private String id;
 
-  /**
-   * the type of the index
-   * @see com.arangodb.entity.IndexType
-   */
-  IndexType type;
+	/**
+	 * the type of the index
+	 * 
+	 * @see com.arangodb.entity.IndexType
+	 */
+	private IndexType type;
 
-  /**
-   * the fields the index is defined on
-   */
-  List<String> fields;
+	/**
+	 * the fields the index is defined on
+	 */
+	private List<String> fields;
 
-  /**
-   * if the index is a geoIndex and *geoJson* is true, then the order within the list is longitude followed by latitude.
-   * This corresponds to the format described in http://geojson.org/geojson-spec.html#positions
-   */
-  boolean geoJson;
+	/**
+	 * if the index is a geoIndex and *geoJson* is true, then the order within
+	 * the list is longitude followed by latitude. This corresponds to the
+	 * format described in http://geojson.org/geojson-spec.html#positions
+	 */
+	private boolean geoJson;
 
-  /**
-   * is a newly created index
-   */
-  boolean isNewlyCreated;
+	/**
+	 * is a newly created index
+	 */
+	private boolean isNewlyCreated;
 
-  /**
-   * if true the index is a unique index.
-   */
-  boolean unique;
-  
-  /**
-   * if true the index is sparse
-   */
-  boolean sparse;
+	/**
+	 * if true the index is a unique index.
+	 */
+	private boolean unique;
 
-  /**
-   * the maximum amount of documents in case the index type is capped
-   */
-  int size;
+	/**
+	 * if true the index is sparse
+	 */
+	private boolean sparse;
 
-  /**
-   * minimum character length of words to index in case the index type is a fulltext
-   */
-  int minLength;
-  
-  /**
-   * index selectivity estimate (if provided by the index)
-   */
-  double selectivityEstimate;
+	/**
+	 * the maximum amount of documents in case the index type is capped
+	 */
+	private int size;
 
-  public String getId() {
-    return id;
-  }
-  public IndexType getType() {
-    return type;
-  }
-  public List<String> getFields() {
-    return fields;
-  }
-  public boolean isGeoJson() {
-    return geoJson;
-  }
-  public boolean isNewlyCreated() {
-    return isNewlyCreated;
-  }
-  public boolean isUnique() {
-    return unique;
-  }
-  public boolean isSparse() {
-    return sparse;
-  }
-  public int getSize() {
-    return size;
-  }
-  public double getSelectivityEstimate() {
-    return selectivityEstimate;
-  }
-  public void setId(String id) {
-    this.id = id;
-  }
-  public void setType(IndexType type) {
-    this.type = type;
-  }
-  public void setFields(List<String> fields) {
-    this.fields = fields;
-  }
-  public void setGeoJson(boolean getJson) {
-    this.geoJson = getJson;
-  }
-  public void setNewlyCreated(boolean isNewlyCreated) {
-    this.isNewlyCreated = isNewlyCreated;
-  }
-  public void setUnique(boolean unique) {
-    this.unique = unique;
-  }
-  public void setSparse(boolean sparse) {
-    this.sparse = sparse;
-  }
-  public void setSize(int size) {
-    this.size = size;
-  }
-  public int getMinLength() {
-    return minLength;
-  }
-  public void setMinLength(int minLength) {
-    this.minLength = minLength;
-  }
-  public void setSelectivityEstimate(double selectivityEstimate) {
-    this.selectivityEstimate = selectivityEstimate;
-  }
-  
+	/**
+	 * minimum character length of words to index in case the index type is a
+	 * fulltext
+	 */
+	private int minLength;
+
+	/**
+	 * index selectivity estimate (if provided by the index)
+	 */
+	private double selectivityEstimate;
+
+	public String getId() {
+		return id;
+	}
+
+	public IndexType getType() {
+		return type;
+	}
+
+	public List<String> getFields() {
+		return fields;
+	}
+
+	public boolean isGeoJson() {
+		return geoJson;
+	}
+
+	public boolean isNewlyCreated() {
+		return isNewlyCreated;
+	}
+
+	public boolean isUnique() {
+		return unique;
+	}
+
+	public boolean isSparse() {
+		return sparse;
+	}
+
+	public int getSize() {
+		return size;
+	}
+
+	public double getSelectivityEstimate() {
+		return selectivityEstimate;
+	}
+
+	public void setId(final String id) {
+		this.id = id;
+	}
+
+	public void setType(final IndexType type) {
+		this.type = type;
+	}
+
+	public void setFields(final List<String> fields) {
+		this.fields = fields;
+	}
+
+	public void setGeoJson(final boolean getJson) {
+		this.geoJson = getJson;
+	}
+
+	public void setNewlyCreated(final boolean isNewlyCreated) {
+		this.isNewlyCreated = isNewlyCreated;
+	}
+
+	public void setUnique(final boolean unique) {
+		this.unique = unique;
+	}
+
+	public void setSparse(final boolean sparse) {
+		this.sparse = sparse;
+	}
+
+	public void setSize(final int size) {
+		this.size = size;
+	}
+
+	public int getMinLength() {
+		return minLength;
+	}
+
+	public void setMinLength(final int minLength) {
+		this.minLength = minLength;
+	}
+
+	public void setSelectivityEstimate(final double selectivityEstimate) {
+		this.selectivityEstimate = selectivityEstimate;
+	}
+
 }

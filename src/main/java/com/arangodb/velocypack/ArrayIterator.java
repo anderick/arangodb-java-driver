@@ -25,7 +25,7 @@ public class ArrayIterator extends SliceIterator {
 	public VPackSlice next() {
 		final VPackSlice next;
 		if (hasNext()) {
-			next = slice.at((int) position++);
+			next = slice.get((int) position++);
 		} else {
 			throw new NoSuchElementException();
 		}

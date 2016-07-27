@@ -20,6 +20,8 @@ import java.util.Map;
 
 import org.apache.http.HttpEntity;
 
+import com.arangodb.velocypack.VPackSlice;
+
 /**
  * @author tamtam180 - kirscheless at gmail.com
  * 
@@ -30,20 +32,24 @@ public class HttpRequestEntity {
 		GET, POST, PUT, DELETE, HEAD, PATCH
 	}
 
-	public Map<String, Object> headers;
-	public RequestType type;
-	public String url;
-	public Map<String, Object> parameters;
-	public String username;
-	public String password;
-	public String bodyText;
-	public HttpEntity entity;
+	private Map<String, Object> headers;
+	private RequestType type;
+	private String url;
+	private Map<String, Object> parameters;
+	private String username;
+	private String password;
+	private VPackSlice body;
+	private HttpEntity entity;
+
+	public HttpRequestEntity() {
+		super();
+	}
 
 	public Map<String, Object> getHeaders() {
 		return headers;
 	}
 
-	public void setHeaders(Map<String, Object> headers) {
+	public void setHeaders(final Map<String, Object> headers) {
 		this.headers = headers;
 	}
 
@@ -55,7 +61,7 @@ public class HttpRequestEntity {
 		return type;
 	}
 
-	public void setType(RequestType type) {
+	public void setType(final RequestType type) {
 		this.type = type;
 	}
 
@@ -63,7 +69,7 @@ public class HttpRequestEntity {
 		return url;
 	}
 
-	public void setUrl(String url) {
+	public void setUrl(final String url) {
 		this.url = url;
 	}
 
@@ -71,7 +77,7 @@ public class HttpRequestEntity {
 		return parameters;
 	}
 
-	public void setParameters(Map<String, Object> parameters) {
+	public void setParameters(final Map<String, Object> parameters) {
 		this.parameters = parameters;
 	}
 
@@ -79,7 +85,7 @@ public class HttpRequestEntity {
 		return username;
 	}
 
-	public void setUsername(String username) {
+	public void setUsername(final String username) {
 		this.username = username;
 	}
 
@@ -87,23 +93,23 @@ public class HttpRequestEntity {
 		return password;
 	}
 
-	public void setPassword(String password) {
+	public void setPassword(final String password) {
 		this.password = password;
 	}
 
-	public String getBodyText() {
-		return bodyText;
+	public VPackSlice getBody() {
+		return body;
 	}
 
-	public void setBodyText(String bodyText) {
-		this.bodyText = bodyText;
+	public void setBody(final VPackSlice body) {
+		this.body = body;
 	}
 
 	public HttpEntity getEntity() {
 		return entity;
 	}
 
-	public void setEntity(HttpEntity entity) {
+	public void setEntity(final HttpEntity entity) {
 		this.entity = entity;
 	}
 

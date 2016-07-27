@@ -16,28 +16,16 @@
 
 package com.arangodb.entity;
 
-import java.io.StringWriter;
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.Map;
 
-import com.arangodb.annotations.DocumentKey;
-import com.arangodb.annotations.Exclude;
+import com.arangodb.ArangoException;
 import com.arangodb.entity.CollectionEntity.Figures;
-import com.arangodb.entity.EntityDeserializers.CollectionKeyOptionDeserializer;
 import com.arangodb.entity.marker.VertexEntity;
-import com.arangodb.http.JsonSequenceEntity;
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.FieldNamingStrategy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.arangodb.velocypack.VPack;
+import com.arangodb.velocypack.VPackParser;
+import com.arangodb.velocypack.VPackSlice;
+import com.arangodb.velocypack.exception.VPackParserException;
 
 /**
  * Entity factory , internally used.
@@ -46,209 +34,247 @@ import com.google.gson.JsonParser;
  */
 public class EntityFactory {
 
-	private static Gson gson;
-	private static Gson gsonNull;
+	private static VPack vpack = new VPack();
 
 	private EntityFactory() {
 		// this is a helper class
 	}
 
-	public static GsonBuilder getGsonBuilder() {
-		return new GsonBuilder().addSerializationExclusionStrategy(new ExcludeExclusionStrategy(true))
-				.addDeserializationExclusionStrategy(new ExcludeExclusionStrategy(false))
-				.setFieldNamingStrategy(new ArangoFieldNamingStrategy())
-				.registerTypeAdapter(CollectionStatus.class, new CollectionStatusTypeAdapter())
-				.registerTypeAdapter(CollectionEntity.class, new EntityDeserializers.CollectionEntityDeserializer())
-				.registerTypeAdapter(CollectionsEntity.class, new EntityDeserializers.CollectionsEntityDeserializer())
-				.registerTypeAdapter(DocumentEntity.class, new EntityDeserializers.DocumentEntityDeserializer())
-				.registerTypeAdapter(DocumentsEntity.class, new EntityDeserializers.DocumentsEntityDeserializer())
-				.registerTypeAdapter(AqlFunctionsEntity.class, new EntityDeserializers.AqlfunctionsEntityDeserializer())
-				.registerTypeAdapter(JobsEntity.class, new EntityDeserializers.JobsEntityDeserializer())
-				.registerTypeAdapter(ArangoVersion.class, new EntityDeserializers.VersionDeserializer())
-				.registerTypeAdapter(ArangoUnixTime.class, new EntityDeserializers.ArangoUnixTimeDeserializer())
-				.registerTypeAdapter(DefaultEntity.class, new EntityDeserializers.DefaultEntityDeserializer())
-				.registerTypeAdapter(Figures.class, new EntityDeserializers.FiguresDeserializer())
-				.registerTypeAdapter(CursorEntity.class, new EntityDeserializers.CursorEntityDeserializer())
-				.registerTypeAdapter(IndexEntity.class, new EntityDeserializers.IndexEntityDeserializer())
-				.registerTypeAdapter(IndexesEntity.class, new EntityDeserializers.IndexesEntityDeserializer())
-				.registerTypeAdapter(ScalarExampleEntity.class,
-					new EntityDeserializers.ScalarExampleEntityDeserializer())
-				.registerTypeAdapter(SimpleByResultEntity.class,
-					new EntityDeserializers.SimpleByResultEntityDeserializer())
-				.registerTypeAdapter(TransactionResultEntity.class,
-					new EntityDeserializers.TransactionResultEntityDeserializer())
-				.registerTypeAdapter(AdminLogEntity.class, new EntityDeserializers.AdminLogEntryEntityDeserializer())
-				.registerTypeAdapter(StatisticsEntity.class, new EntityDeserializers.StatisticsEntityDeserializer())
-				.registerTypeAdapter(StatisticsDescriptionEntity.class,
-					new EntityDeserializers.StatisticsDescriptionEntityDeserializer())
-				.registerTypeAdapter(UserEntity.class, new EntityDeserializers.UserEntityDeserializer())
-				.registerTypeAdapter(ImportResultEntity.class, new EntityDeserializers.ImportResultEntityDeserializer())
-				.registerTypeAdapter(DatabaseEntity.class, new EntityDeserializers.DatabaseEntityDeserializer())
-				.registerTypeAdapter(StringsResultEntity.class,
-					new EntityDeserializers.StringsResultEntityDeserializer())
-				.registerTypeAdapter(BooleanResultEntity.class,
-					new EntityDeserializers.BooleanResultEntityDeserializer())
-				.registerTypeAdapter(Endpoint.class, new EntityDeserializers.EndpointDeserializer())
-				.registerTypeAdapter(DocumentResultEntity.class,
-					new EntityDeserializers.DocumentResultEntityDeserializer())
-				.registerTypeAdapter(CollectionKeyOptionDeserializer.class,
-					new EntityDeserializers.CollectionKeyOptionDeserializer())
-				.registerTypeAdapter(ReplicationInventoryEntity.class,
-					new EntityDeserializers.ReplicationInventoryEntityDeserializer())
-				.registerTypeAdapter(ReplicationDumpRecord.class,
-					new EntityDeserializers.ReplicationDumpRecordDeserializer())
-				.registerTypeAdapter(ReplicationSyncEntity.class,
-					new EntityDeserializers.ReplicationSyncEntityDeserializer())
-				.registerTypeAdapter(MapAsEntity.class, new EntityDeserializers.MapAsEntityDeserializer())
-				.registerTypeAdapter(ReplicationLoggerConfigEntity.class,
-					new EntityDeserializers.ReplicationLoggerConfigEntityDeserializer())
-				.registerTypeAdapter(ReplicationApplierConfigEntity.class,
-					new EntityDeserializers.ReplicationApplierConfigEntityDeserializer())
-				.registerTypeAdapter(ReplicationApplierState.class,
-					new EntityDeserializers.ReplicationApplierStateDeserializer())
-				.registerTypeAdapter(ReplicationApplierStateEntity.class,
-					new EntityDeserializers.ReplicationApplierStateEntityDeserializer())
-				.registerTypeAdapter(ReplicationLoggerStateEntity.class,
-					new EntityDeserializers.ReplicationLoggerStateEntityDeserializer())
-				.registerTypeAdapter(ReplicationLoggerStateEntity.Client.class,
-					new EntityDeserializers.ReplicationLoggerStateEntityClientDeserializer())
-				.registerTypeAdapter(GraphEntity.class, new EntityDeserializers.GraphEntityDeserializer())
-				.registerTypeAdapter(GraphsEntity.class, new EntityDeserializers.GraphsEntityDeserializer())
-				.registerTypeAdapter(DeletedEntity.class, new EntityDeserializers.DeleteEntityDeserializer())
-				.registerTypeAdapter(VertexEntity.class, new EntityDeserializers.VertexEntityDeserializer())
-				.registerTypeAdapter(EdgeEntity.class, new EntityDeserializers.EdgeEntityDeserializer())
-				.registerTypeAdapter(TraversalEntity.class, new EntityDeserializers.TraversalEntityDeserializer())
-				.registerTypeAdapter(ShortestPathEntity.class, new EntityDeserializers.ShortestPathEntityDeserializer())
-				.registerTypeAdapter(QueryCachePropertiesEntity.class,
-					new EntityDeserializers.QueryCachePropertiesEntityDeserializer())
-				.registerTypeAdapter(QueriesResultEntity.class,
-					new EntityDeserializers.QueriesResultEntityDeserializer())
-				.registerTypeAdapter(QueryTrackingPropertiesEntity.class,
-					new EntityDeserializers.QueryTrackingPropertiesEntityDeserializer())
-				.setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-	}
-
 	static {
-		configure(getGsonBuilder());
+		configure();
 	}
 
-	/**
-	 * Configures instances of Gson used by this factory.
-	 * 
-	 * @param builders
-	 *            one or two GsonBuilder instances. If only one is provided it
-	 *            will be used for initializing both <code>gson</code> and
-	 *            <code>gsonNull</code> fields (latter with
-	 *            <code>serializeNulls()</code> called prior to creating). If
-	 *            two are given - first initializes <code>gson</code> field,
-	 *            second initializes <code>gsonNull</code> (used when
-	 *            serialization of nulls is requested).
-	 */
-	public static void configure(GsonBuilder... builders) {
-		if (builders.length < 1) {
-			throw new IllegalArgumentException("builders");
-		}
+	public static void configure() {
+		vpack.registerSerializer(CollectionStatus.class, new CollectionStatusTypeAdapter())
+				.registerDeserializer(CollectionStatus.class, new CollectionStatusTypeAdapter())
+				.registerDeserializer(CollectionEntity.class, new EntityDeserializers.CollectionEntityDeserializer())
+				.registerDeserializer(CollectionsEntity.class, new EntityDeserializers.CollectionsEntityDeserializer())
+				.registerDeserializer(DocumentEntity.class, new EntityDeserializers.DocumentEntityDeserializer())
+				.registerDeserializer(DocumentsEntity.class, new EntityDeserializers.DocumentsEntityDeserializer())
+				.registerDeserializer(AqlFunctionsEntity.class,
+					new EntityDeserializers.AqlfunctionsEntityDeserializer())
+				.registerDeserializer(JobsEntity.class, new EntityDeserializers.JobsEntityDeserializer())
+				.registerDeserializer(ArangoVersion.class, new EntityDeserializers.VersionDeserializer())
+				.registerDeserializer(ArangoUnixTime.class, new EntityDeserializers.ArangoUnixTimeDeserializer())
+				.registerDeserializer(DefaultEntity.class, new EntityDeserializers.DefaultEntityDeserializer())
+				.registerDeserializer(Figures.class, new EntityDeserializers.FiguresDeserializer())
+				.registerDeserializer(CursorEntity.class, new EntityDeserializers.CursorEntityDeserializer())
+				.registerDeserializer(IndexEntity.class, new EntityDeserializers.IndexEntityDeserializer())
+				.registerDeserializer(IndexesEntity.class, new EntityDeserializers.IndexesEntityDeserializer())
+				.registerDeserializer(ScalarExampleEntity.class,
+					new EntityDeserializers.ScalarExampleEntityDeserializer())
+				.registerDeserializer(SimpleByResultEntity.class,
+					new EntityDeserializers.SimpleByResultEntityDeserializer())
+				.registerDeserializer(TransactionResultEntity.class,
+					new EntityDeserializers.TransactionResultEntityDeserializer())
+				.registerDeserializer(AdminLogEntity.class, new EntityDeserializers.AdminLogEntryEntityDeserializer())
+				.registerDeserializer(StatisticsEntity.class, new EntityDeserializers.StatisticsEntityDeserializer())
+				.registerDeserializer(StatisticsDescriptionEntity.class,
+					new EntityDeserializers.StatisticsDescriptionEntityDeserializer())
+				.registerDeserializer(UserEntity.class, new EntityDeserializers.UserEntityDeserializer())
+				.registerDeserializer(ImportResultEntity.class,
+					new EntityDeserializers.ImportResultEntityDeserializer())
+				.registerDeserializer(DatabaseEntity.class, new EntityDeserializers.DatabaseEntityDeserializer())
+				.registerDeserializer(StringsResultEntity.class,
+					new EntityDeserializers.StringsResultEntityDeserializer())
+				.registerDeserializer(BooleanResultEntity.class,
+					new EntityDeserializers.BooleanResultEntityDeserializer())
+				.registerDeserializer(Endpoint.class, new EntityDeserializers.EndpointDeserializer())
+				.registerDeserializer(DocumentResultEntity.class,
+					new EntityDeserializers.DocumentResultEntityDeserializer())
+				.registerDeserializer(CollectionKeyOption.class,
+					new EntityDeserializers.CollectionKeyOptionDeserializer())
+				.registerDeserializer(ReplicationInventoryEntity.class,
+					new EntityDeserializers.ReplicationInventoryEntityDeserializer())
+				.registerDeserializer(ReplicationDumpRecord.class,
+					new EntityDeserializers.ReplicationDumpRecordDeserializer())
+				.registerDeserializer(ReplicationSyncEntity.class,
+					new EntityDeserializers.ReplicationSyncEntityDeserializer())
+				.registerDeserializer(MapAsEntity.class, new EntityDeserializers.MapAsEntityDeserializer())
+				.registerDeserializer(ReplicationLoggerConfigEntity.class,
+					new EntityDeserializers.ReplicationLoggerConfigEntityDeserializer())
+				.registerDeserializer(ReplicationApplierConfigEntity.class,
+					new EntityDeserializers.ReplicationApplierConfigEntityDeserializer())
+				.registerDeserializer(ReplicationApplierState.class,
+					new EntityDeserializers.ReplicationApplierStateDeserializer())
+				.registerDeserializer(ReplicationApplierStateEntity.class,
+					new EntityDeserializers.ReplicationApplierStateEntityDeserializer())
+				.registerDeserializer(ReplicationLoggerStateEntity.class,
+					new EntityDeserializers.ReplicationLoggerStateEntityDeserializer())
+				.registerDeserializer(ReplicationLoggerStateEntity.Client.class,
+					new EntityDeserializers.ReplicationLoggerStateEntityClientDeserializer())
+				.registerDeserializer(GraphEntity.class, new EntityDeserializers.GraphEntityDeserializer())
+				.registerDeserializer(GraphsEntity.class, new EntityDeserializers.GraphsEntityDeserializer())
+				.registerDeserializer(DeletedEntity.class, new EntityDeserializers.DeleteEntityDeserializer())
+				.registerDeserializer(VertexEntity.class, new EntityDeserializers.VertexEntityDeserializer())
+				.registerDeserializer(EdgeEntity.class, new EntityDeserializers.EdgeEntityDeserializer())
+				.registerDeserializer(TraversalEntity.class, new EntityDeserializers.TraversalEntityDeserializer())
+				.registerDeserializer(ShortestPathEntity.class,
+					new EntityDeserializers.ShortestPathEntityDeserializer())
+				.registerDeserializer(QueryCachePropertiesEntity.class,
+					new EntityDeserializers.QueryCachePropertiesEntityDeserializer())
+				.registerDeserializer(QueriesResultEntity.class,
+					new EntityDeserializers.QueriesResultEntityDeserializer())
+				.registerDeserializer(QueryTrackingPropertiesEntity.class,
+					new EntityDeserializers.QueryTrackingPropertiesEntityDeserializer());
 
-		gson = builders[0].create();
-
-		if (builders.length > 1) {
-			gsonNull = builders[1].create();
-		} else {
-			// use the first one again, but with nulls serialization turned on
-			gsonNull = builders[0].serializeNulls().create();
-		}
+		// return new GsonBuilder().addSerializationExclusionStrategy(new
+		// ExcludeExclusionStrategy(true))
+		// .addDeserializationExclusionStrategy(new
+		// ExcludeExclusionStrategy(false))
+		// .setFieldNamingStrategy(new ArangoFieldNamingStrategy())
+		// .registerTypeAdapter(CollectionStatus.class, new
+		// CollectionStatusTypeAdapter())
+		// .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 	}
 
-	public static <T> T createEntity(String jsonText, Type type) {
-		return gson.fromJson(jsonText, type);
-	}
-
-	public static <T> String toJsonString(T obj) {
-		return toJsonString(obj, false);
-	}
-
-	public static <T> JsonSequenceEntity toJsonSequenceEntity(Iterator<T> itr) {
-		return new JsonSequenceEntity(itr, gson);
-	}
-
-	public static String toImportHeaderValues(Collection<? extends Collection<?>> headerValues) {
-		StringWriter writer = new StringWriter();
-		for (Collection<?> array : headerValues) {
-			gson.toJson(array, writer);
-			writer.write('\n');
-		}
-		writer.flush();
-		return writer.toString();
-	}
-
-	public static <T> String toJsonString(T obj, boolean includeNullValue) {
-		if (obj != null && obj.getClass().equals(BaseDocument.class)) {
-			String tmp = includeNullValue ? gsonNull.toJson(obj) : gson.toJson(obj);
-			JsonParser jsonParser = new JsonParser();
-			JsonElement jsonElement = jsonParser.parse(tmp);
-			JsonObject jsonObject = jsonElement.getAsJsonObject();
-			JsonObject result = jsonObject.getAsJsonObject("properties");
-			JsonElement keyObject = jsonObject.get("_key");
-			if (keyObject != null && keyObject.getClass() != JsonNull.class) {
-				result.add("_key", jsonObject.get("_key"));
-			}
-			JsonElement handleObject = jsonObject.get("_id");
-			if (handleObject != null && handleObject.getClass() != JsonNull.class) {
-				result.add("_id", jsonObject.get("_id"));
-			}
-			// JsonElement revisionValue = jsonObject.get("documentRevision");
-			// result.add("_rev", revisionValue);
-			return result.toString();
-		}
-		return includeNullValue ? gsonNull.toJson(obj) : gson.toJson(obj);
-	}
-
-	/**
-	 * @param obj
-	 * @param includeNullValue
-	 * @return a JsonElement object
-	 * @since 1.4.0
-	 */
-	public static <T> JsonElement toJsonElement(T obj, boolean includeNullValue) {
-		return includeNullValue ? gsonNull.toJsonTree(obj) : gson.toJsonTree(obj);
-	}
-
-	/**
-	 * @author tamtam180 - kirscheless at gmail.com
-	 * @since 1.4.0
-	 */
-	private static class ExcludeExclusionStrategy implements ExclusionStrategy {
-		private boolean serialize;
-
-		public ExcludeExclusionStrategy(boolean serialize) {
-			this.serialize = serialize;
-		}
-
-		@Override
-		public boolean shouldSkipField(FieldAttributes f) {
-			Exclude annotation = f.getAnnotation(Exclude.class);
-			if (annotation != null && (serialize ? annotation.serialize() : annotation.deserialize())) {
-				return true;
-			}
-			return false;
-		}
-
-		@Override
-		public boolean shouldSkipClass(Class<?> clazz) {
-			return false;
+	public static <T> T createEntity(final VPackSlice vpack, final Class<T> type) throws ArangoException {
+		try {
+			return EntityFactory.vpack.deserialize(vpack, type);
+		} catch (final VPackParserException e) {
+			throw new ArangoException(e);
 		}
 	}
 
-	private static class ArangoFieldNamingStrategy implements FieldNamingStrategy {
-		private static final String KEY = "_key";
-
-		@Override
-		public String translateName(Field f) {
-			DocumentKey key = f.getAnnotation(DocumentKey.class);
-			if (key == null) {
-				return FieldNamingPolicy.IDENTITY.translateName(f);
-			}
-			return KEY;
+	public static <T extends Collection<C>, C> T createEntity(
+		final VPackSlice vpack,
+		final Class<T> type,
+		final Class<C> contentType) throws ArangoException {
+		try {
+			return EntityFactory.vpack.deserialize(vpack, type, contentType);
+		} catch (final VPackParserException e) {
+			throw new ArangoException(e);
 		}
 	}
+
+	public static <T extends Map<K, C>, K, C> T createEntity(
+		final VPackSlice vpack,
+		final Class<T> type,
+		final Class<K> keyType,
+		final Class<C> contentType) throws ArangoException {
+		try {
+			return EntityFactory.vpack.deserialize(vpack, type, keyType, contentType);
+		} catch (final VPackParserException e) {
+			throw new ArangoException(e);
+		}
+	}
+
+	public static <T> VPackSlice toVPack(final T obj) throws ArangoException {
+		try {
+			return EntityFactory.vpack.serialize(obj);
+		} catch (final VPackParserException e) {
+			throw new ArangoException(e);
+		}
+	}
+
+	public static <T extends Map<?, ?>> VPackSlice toVPack(final T obj) throws ArangoException {
+		return toVPack(obj, String.class);
+	}
+
+	public static <T extends Map<?, ?>> VPackSlice toVPack(final T obj, final Class<?> keyType) throws ArangoException {
+		try {
+			return EntityFactory.vpack.serialize(obj, keyType);
+		} catch (final VPackParserException e) {
+			throw new ArangoException(e);
+		}
+	}
+
+	public static String toJson(final VPackSlice vpack) {
+		return VPackParser.toJson(vpack, false);
+	}
+
+	public static String toJson(final VPackSlice vpack, final boolean includeNullValue) {
+		return VPackParser.toJson(vpack, includeNullValue);
+	}
+	//
+	// public static <T> String toJsonString(final T obj) throws
+	// VPackParserException {
+	// return toJsonString(obj, false);
+	// }
+
+	public static VPackSlice toImportHeaderValues(final Collection<? extends Collection<?>> headerValues)
+			throws ArangoException {
+		try {
+			return EntityFactory.vpack.serialize(headerValues);
+		} catch (final VPackParserException e) {
+			throw new ArangoException(e);
+		}
+		// final StringWriter writer = new StringWriter();
+		// for (final Collection<?> array : headerValues) {
+		// gson.toJson(array, writer);
+		// writer.write('\n');
+		// }
+		// writer.flush();
+		// return writer.toString();
+	}
+
+	// public static <T> String toJsonString(final T obj, final boolean
+	// includeNullValue) throws VPackParserException {
+	// // TODO includeNullValue
+	// return VPackParser.toJson(EntityFactory.vpack.serialize(obj));
+	//
+	// // if (obj != null && obj.getClass().equals(BaseDocument.class)) {
+	// // final String tmp = includeNullValue ? gsonNull.toJson(obj) :
+	// // gson.toJson(obj);
+	// // final JsonParser jsonParser = new JsonParser();
+	// // final JsonElement jsonElement = jsonParser.parse(tmp);
+	// // final JsonObject jsonObject = jsonElement.getAsJsonObject();
+	// // final JsonObject result = jsonObject.getAsJsonObject("properties");
+	// // final JsonElement keyObject = jsonObject.get("_key");
+	// // if (keyObject != null && keyObject.getClass() != JsonNull.class) {
+	// // result.add("_key", jsonObject.get("_key"));
+	// // }
+	// // final JsonElement handleObject = jsonObject.get("_id");
+	// // if (handleObject != null && handleObject.getClass() !=
+	// // JsonNull.class) {
+	// // result.add("_id", jsonObject.get("_id"));
+	// // }
+	// // // JsonElement revisionValue = jsonObject.get("documentRevision");
+	// // // result.add("_rev", revisionValue);
+	// // return result.toString();
+	// // }
+	// // return includeNullValue ? gsonNull.toJson(obj) : gson.toJson(obj);
+	// }
+
+	// /**
+	// * @author tamtam180 - kirscheless at gmail.com
+	// * @since 1.4.0
+	// */
+	// private static class ExcludeExclusionStrategy implements
+	// ExclusionStrategy {
+	// private final boolean serialize;
+	//
+	// public ExcludeExclusionStrategy(final boolean serialize) {
+	// this.serialize = serialize;
+	// }
+	//
+	// @Override
+	// public boolean shouldSkipField(final FieldAttributes f) {
+	// final Exclude annotation = f.getAnnotation(Exclude.class);
+	// if (annotation != null && (serialize ? annotation.serialize() :
+	// annotation.deserialize())) {
+	// return true;
+	// }
+	// return false;
+	// }
+	//
+	// @Override
+	// public boolean shouldSkipClass(final Class<?> clazz) {
+	// return false;
+	// }
+	// }
+	//
+	// private static class ArangoFieldNamingStrategy implements
+	// FieldNamingStrategy {
+	// private static final String KEY = "_key";
+	//
+	// @Override
+	// public String translateName(final Field f) {
+	// final DocumentKey key = f.getAnnotation(DocumentKey.class);
+	// if (key == null) {
+	// return FieldNamingPolicy.IDENTITY.translateName(f);
+	// }
+	// return KEY;
+	// }
+	// }
 }

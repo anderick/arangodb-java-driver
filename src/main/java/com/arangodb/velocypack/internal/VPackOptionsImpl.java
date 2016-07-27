@@ -9,13 +9,25 @@ import com.arangodb.velocypack.VPackBuilder.BuilderOptions;
  */
 public class VPackOptionsImpl implements VPackOptions, BuilderOptions {
 
-	protected boolean buildUnindexedArrays;
-	protected boolean buildUnindexedObjects;
+	private boolean serializeNullValues;
+	private boolean buildUnindexedArrays;
+	private boolean buildUnindexedObjects;
 
 	public VPackOptionsImpl() {
 		super();
+		serializeNullValues = false;
 		buildUnindexedArrays = false;
 		buildUnindexedObjects = false;
+	}
+
+	@Override
+	public boolean isSerializeNullValues() {
+		return serializeNullValues;
+	}
+
+	@Override
+	public void setSerializeNullValues(final boolean serializeNullValues) {
+		this.serializeNullValues = serializeNullValues;
 	}
 
 	@Override

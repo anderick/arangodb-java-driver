@@ -27,9 +27,9 @@ public class TransactionEntity extends BaseEntity {
 
 	public static class ReadWriteCollections {
 
-		private List<String> read = new ArrayList<String>();
+		private final List<String> read = new ArrayList<String>();
 
-		private List<String> write = new ArrayList<String>();
+		private final List<String> write = new ArrayList<String>();
 
 		private boolean allowImplicit = true;
 
@@ -37,22 +37,22 @@ public class TransactionEntity extends BaseEntity {
 			return allowImplicit;
 		}
 
-		public void setAllowImplicit(boolean allowImplicit) {
+		public void setAllowImplicit(final boolean allowImplicit) {
 			this.allowImplicit = allowImplicit;
 		}
 	}
 
-	ReadWriteCollections collections = new ReadWriteCollections();
+	private ReadWriteCollections collections = new ReadWriteCollections();
 
-	String action;
+	private String action;
 
-	Boolean waitForSync;
+	private Boolean waitForSync;
 
-	int lockTimeout;
+	private int lockTimeout;
 
-	Object params;
+	private Object params;
 
-	public TransactionEntity(String action) {
+	public TransactionEntity(final String action) {
 		this.action = action;
 	}
 
@@ -60,15 +60,15 @@ public class TransactionEntity extends BaseEntity {
 		return collections;
 	}
 
-	public void setCollections(ReadWriteCollections collections) {
+	public void setCollections(final ReadWriteCollections collections) {
 		this.collections = collections;
 	}
 
-	public void addReadCollection(String collection) {
+	public void addReadCollection(final String collection) {
 		this.collections.read.add(collection);
 	}
 
-	public void addWriteCollection(String collection) {
+	public void addWriteCollection(final String collection) {
 		this.collections.write.add(collection);
 	}
 
@@ -85,7 +85,7 @@ public class TransactionEntity extends BaseEntity {
 		return action;
 	}
 
-	public void setAction(String action) {
+	public void setAction(final String action) {
 		this.action = action;
 	}
 
@@ -93,7 +93,7 @@ public class TransactionEntity extends BaseEntity {
 		return waitForSync;
 	}
 
-	public void setWaitForSync(Boolean waitForSync) {
+	public void setWaitForSync(final Boolean waitForSync) {
 		this.waitForSync = waitForSync;
 	}
 
@@ -101,7 +101,7 @@ public class TransactionEntity extends BaseEntity {
 		return lockTimeout;
 	}
 
-	public void setLockTimeout(int lockTimeout) {
+	public void setLockTimeout(final int lockTimeout) {
 		this.lockTimeout = lockTimeout;
 	}
 
@@ -109,7 +109,7 @@ public class TransactionEntity extends BaseEntity {
 		return params;
 	}
 
-	public void setParams(Object params) {
+	public void setParams(final Object params) {
 		this.params = params;
 	}
 }

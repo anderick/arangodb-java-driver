@@ -24,6 +24,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 import com.arangodb.example.ExamplesTestSuite;
 import com.arangodb.util.StringJoinTest;
+import com.arangodb.velocypack.VPackTestSuite;
 
 /**
  * Starts all unit tests
@@ -121,7 +122,9 @@ import com.arangodb.util.StringJoinTest;
 		ArangoDriverQueryCacheTest.class,
 
 		// examples
-		ExamplesTestSuite.class
+		ExamplesTestSuite.class,
+
+		VPackTestSuite.class
 
 })
 

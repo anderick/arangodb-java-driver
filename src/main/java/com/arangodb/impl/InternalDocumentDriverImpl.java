@@ -31,6 +31,7 @@ import com.arangodb.http.HttpManager;
 import com.arangodb.http.HttpResponseEntity;
 import com.arangodb.util.EdgeUtils;
 import com.arangodb.util.MapBuilder;
+import com.arangodb.velocypack.VPackSlice;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -56,7 +57,7 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 
 		validateCollectionName(collectionName);
 
-		String body;
+		VPackSlice body;
 		if (raw) {
 			body = value.toString();
 		} else if (documentKey != null) {
@@ -64,9 +65,9 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 			if (elem.isJsonObject()) {
 				elem.getAsJsonObject().addProperty(BaseDocument.KEY, documentKey);
 			}
-			body = EntityFactory.toJsonString(elem);
+			body = EntityFactory.toVPack(elem);
 		} else {
-			body = EntityFactory.toJsonString(value);
+			body = EntityFactory.toVPack(value);
 		}
 
 		final HttpResponseEntity res = httpManager.doPost(createDocumentEndpointUrl(database),
@@ -114,7 +115,7 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 
 		final HttpResponseEntity res = httpManager.doPut(createDocumentEndpointUrl(database, documentHandle),
 			createRevisionCheckHeader(rev), new MapBuilder().put(WAIT_FOR_SYNC, waitForSync).get(),
-			EntityFactory.toJsonString(value));
+			EntityFactory.toVPack(value));
 
 		final DocumentEntity<T> result = createEntity(res, DocumentEntity.class);
 		annotationHandler.updateDocumentRev(value, result.getDocumentRevision());
@@ -153,7 +154,7 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 		final HttpResponseEntity res = httpManager.doPatch(createDocumentEndpointUrl(database, documentHandle),
 			createRevisionCheckHeader(rev),
 			new MapBuilder().put(WAIT_FOR_SYNC, waitForSync).put("keepNull", keepNull).get(),
-			EntityFactory.toJsonString(value, keepNull != null && !keepNull));
+			EntityFactory.toVPack(value, keepNull != null && !keepNull));
 
 		@SuppressWarnings("unchecked")
 		final DocumentEntity<T> result = createEntity(res, DocumentEntity.class);
@@ -186,7 +187,7 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 	@Override
 	public List<String> getDocuments(final String database, final String collectionName) throws ArangoException {
 		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/simple/all-keys"), null,
-			EntityFactory.toJsonString(new MapBuilder().put(COLLECTION, collectionName).put("type", "id").get()));
+			EntityFactory.toVPack(new MapBuilder().put(COLLECTION, collectionName).put("type", "id").get()));
 
 		@SuppressWarnings("unchecked")
 		final CursorEntity<String> tmp = createEntity(res, CursorEntity.class, String.class);
@@ -235,18 +236,16 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 		final HttpResponseEntity res = httpManager.doGet(createDocumentEndpointUrl(database, documentHandle),
 			new MapBuilder().put("If-None-Match", ifNoneMatchRevision, true).put("If-Match", ifMatchRevision).get(),
 			null);
-
 		if (res.getStatusCode() >= 400) {
 			final BaseDocument entity = new BaseDocument();
 			entity.setError(true);
 			entity.setCode(res.getStatusCode());
 			entity.setStatusCode(res.getStatusCode());
 			entity.setErrorNumber(res.getStatusCode());
-			entity.setErrorMessage(res.getText());
+			entity.setErrorMessage(EntityFactory.toJson(res.getContent()));
 			throw new ArangoException(entity);
 		}
-
-		return res.getText();
+		return EntityFactory.toJson(res.getContent());
 	}
 
 	@Override
@@ -270,21 +269,21 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 
 	@Override
 	public <T> EdgeEntity<T> createEdge(
-		String database,
-		String collectionName,
-		String documentKey,
-		T value,
-		String fromHandle,
-		String toHandle,
-		Boolean waitForSync) throws ArangoException {
+		final String database,
+		final String collectionName,
+		final String documentKey,
+		final T value,
+		final String fromHandle,
+		final String toHandle,
+		final Boolean waitForSync) throws ArangoException {
 
 		validateCollectionName(collectionName);
 
-		JsonObject obj = EdgeUtils.valueToEdgeJsonObject(documentKey, fromHandle, toHandle, value);
+		final JsonObject obj = EdgeUtils.valueToEdgeJsonObject(documentKey, fromHandle, toHandle, value);
 
 		final HttpResponseEntity res = httpManager.doPost(createDocumentEndpointUrl(database),
 			new MapBuilder().put(COLLECTION, collectionName).put(WAIT_FOR_SYNC, waitForSync).get(),
-			EntityFactory.toJsonString(obj));
+			EntityFactory.toVPack(obj));
 
 		@SuppressWarnings("unchecked")
 		final EdgeEntity<T> entity = createEntity(res, EdgeEntity.class);

@@ -37,8 +37,6 @@ import com.arangodb.util.CollectionUtils;
 import com.arangodb.util.EdgeUtils;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.util.StringUtils;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -66,7 +64,7 @@ public class InternalGraphDriverImpl extends BaseArangoDriverWithCursorImpl
 			throws ArangoException {
 		final HttpResponseEntity response = httpManager.doPost(createGharialEndpointUrl(databaseName),
 			new MapBuilder().put(WAIT_FOR_SYNC, waitForSync).get(),
-			EntityFactory.toJsonString(new MapBuilder().put("name", graphName).get()));
+			EntityFactory.toVPack(new MapBuilder().put("name", graphName).get()));
 		return createEntity(response, GraphEntity.class);
 	}
 
@@ -78,11 +76,10 @@ public class InternalGraphDriverImpl extends BaseArangoDriverWithCursorImpl
 		final List<String> orphanCollections,
 		final Boolean waitForSync) throws ArangoException {
 
-		final HttpResponseEntity response = httpManager
-				.doPost(createGharialEndpointUrl(databaseName), new MapBuilder().put(WAIT_FOR_SYNC, waitForSync).get(),
-					EntityFactory.toJsonString(
-						new MapBuilder().put("name", graphName).put("edgeDefinitions", edgeDefinitions)
-								.put("orphanCollections", orphanCollections).get()));
+		final HttpResponseEntity response = httpManager.doPost(createGharialEndpointUrl(databaseName),
+			new MapBuilder().put(WAIT_FOR_SYNC, waitForSync).get(),
+			EntityFactory.toVPack(new MapBuilder().put("name", graphName).put("edgeDefinitions", edgeDefinitions)
+					.put("orphanCollections", orphanCollections).get()));
 		return createEntity(response, GraphEntity.class);
 	}
 
@@ -219,7 +216,7 @@ public class InternalGraphDriverImpl extends BaseArangoDriverWithCursorImpl
 
 		final HttpResponseEntity res = httpManager.doPost(
 			createGharialEndpointUrl(databaseName, StringUtils.encodeUrl(graphName), VERTEX), null,
-			EntityFactory.toJsonString(new MapBuilder().put(COLLECTION, collectionName).get()));
+			EntityFactory.toVPack(new MapBuilder().put(COLLECTION, collectionName).get()));
 
 		if (wrongResult(res)) {
 			throw new ArangoException(UNKNOWN_ERROR);
@@ -264,22 +261,18 @@ public class InternalGraphDriverImpl extends BaseArangoDriverWithCursorImpl
 		validateCollectionName(graphName);
 		validateCollectionName(edgeDefinition.getCollection());
 
-		final String edgeDefinitionJson = this.convertToString(edgeDefinition);
-
 		final HttpResponseEntity res = httpManager.doPost(
-			createGharialEndpointUrl(databaseName, StringUtils.encodeUrl(graphName), EDGE), null, edgeDefinitionJson);
-
+			createGharialEndpointUrl(databaseName, StringUtils.encodeUrl(graphName), EDGE), null,
+			EntityFactory.toVPack(edgeDefinition));
 		if (wrongResult(res)) {
 			throw new ArangoException(UNKNOWN_ERROR);
 		}
-
 		GraphEntity result;
 		if (isInBatchMode()) {
 			result = new GraphEntity();
 		} else {
 			result = createEntity(res, GraphEntity.class, null, true);
 		}
-
 		return result;
 	}
 
@@ -293,22 +286,18 @@ public class InternalGraphDriverImpl extends BaseArangoDriverWithCursorImpl
 		validateCollectionName(graphName);
 		validateCollectionName(edgeDefinition.getCollection());
 
-		final String edgeDefinitionJson = this.convertToString(edgeDefinition);
-
 		final HttpResponseEntity res = httpManager.doPut(createGharialEndpointUrl(databaseName,
-			StringUtils.encodeUrl(graphName), EDGE, StringUtils.encodeUrl(edgeName)), null, edgeDefinitionJson);
-
+			StringUtils.encodeUrl(graphName), EDGE, StringUtils.encodeUrl(edgeName)), null,
+			EntityFactory.toVPack(edgeDefinition));
 		if (wrongResult(res)) {
 			throw new ArangoException(UNKNOWN_ERROR);
 		}
-
 		GraphEntity result;
 		if (isInBatchMode()) {
 			result = new GraphEntity();
 		} else {
 			result = createEntity(res, GraphEntity.class, null, true);
 		}
-
 		return result;
 
 	}
@@ -456,7 +445,7 @@ public class InternalGraphDriverImpl extends BaseArangoDriverWithCursorImpl
 			createGharialEndpointUrl(databaseName, StringUtils.encodeUrl(graphName), VERTEX,
 				StringUtils.encodeUrl(collectionName), StringUtils.encodeUrl(key)),
 			new MapBuilder().put(IF_MATCH, ifMatchRevision, true).put(IF_NONE_MATCH, ifNoneMatchRevision, true).get(),
-			new MapBuilder().put(WAIT_FOR_SYNC, waitForSync).get(), EntityFactory.toJsonString(vertex));
+			new MapBuilder().put(WAIT_FOR_SYNC, waitForSync).get(), EntityFactory.toVPack(vertex));
 
 		VertexEntity<T> result;
 		if (vertex != null) {
@@ -489,7 +478,7 @@ public class InternalGraphDriverImpl extends BaseArangoDriverWithCursorImpl
 				StringUtils.encodeUrl(collectionName), StringUtils.encodeUrl(key)),
 			new MapBuilder().put(IF_MATCH, ifMatchRevision, true).put(IF_NONE_MATCH, ifNoneMatchRevision, true).get(),
 			new MapBuilder().put("keepNull", keepNull).put(WAIT_FOR_SYNC, waitForSync).get(),
-			EntityFactory.toJsonString(vertex, keepNull != null && !keepNull));
+			EntityFactory.toVPack(vertex/* , keepNull != null && !keepNull */));
 
 		VertexEntity<T> result;
 		if (vertex != null) {
@@ -618,7 +607,7 @@ public class InternalGraphDriverImpl extends BaseArangoDriverWithCursorImpl
 			createGharialEndpointUrl(database, StringUtils.encodeUrl(graphName), EDGE,
 				StringUtils.encodeUrl(edgeCollectionName), StringUtils.encodeUrl(key)),
 			new MapBuilder().put(IF_NONE_MATCH, ifNoneMatchRevision, true).put(IF_MATCH, ifMatchRevision, true).get(),
-			new MapBuilder().put(WAIT_FOR_SYNC, waitForSync).get(), EntityFactory.toJsonString(obj));
+			new MapBuilder().put(WAIT_FOR_SYNC, waitForSync).get(), EntityFactory.toVPack(obj));
 
 		final EdgeEntity<T> entity = createEntity(res, EdgeEntity.class, value == null ? null : value.getClass());
 		if (value != null) {
@@ -659,7 +648,7 @@ public class InternalGraphDriverImpl extends BaseArangoDriverWithCursorImpl
 				StringUtils.encodeUrl(edgeCollectionName), StringUtils.encodeUrl(key)),
 			new MapBuilder().put(IF_NONE_MATCH, ifNoneMatchRevision, true).put(IF_MATCH, ifMatchRevision, true).get(),
 			new MapBuilder().put(WAIT_FOR_SYNC, waitForSync).put("keepNull", keepNull).get(),
-			EntityFactory.toJsonString(obj));
+			EntityFactory.toVPack(obj));
 
 		final EdgeEntity<T> entity = createEntity(res, EdgeEntity.class, value == null ? null : value.getClass());
 		if (value != null) {
@@ -676,13 +665,6 @@ public class InternalGraphDriverImpl extends BaseArangoDriverWithCursorImpl
 		}
 
 		return entity;
-	}
-
-	private String convertToString(final EdgeDefinitionEntity edgeDefinition) {
-		final JsonObject rawEdgeDefinition = (JsonObject) EntityFactory
-				.toJsonElement(new MapBuilder().put("edgeDefinition", edgeDefinition).get(), false);
-		final JsonElement edgeDefinitionJson = rawEdgeDefinition.get("edgeDefinition");
-		return edgeDefinitionJson.toString();
 	}
 
 }

@@ -25,17 +25,17 @@ package com.arangodb.entity;
  */
 public class BooleanResultEntity extends BaseEntity {
 
-  /**
-   * The result
-   */
-  Boolean result;
+	/**
+	 * The result
+	 */
+	private Boolean result;
 
-  public Boolean getResult() {
-    return result;
-  }
+	public Boolean getResult() {
+		return result;
+	}
 
-  public void setResult(Boolean result) {
-    this.result = result;
-  }
-  
+	public void setResult(final Boolean result) {
+		this.result = result;
+	}
+
 }

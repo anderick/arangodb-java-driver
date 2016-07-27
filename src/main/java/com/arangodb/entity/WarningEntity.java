@@ -24,18 +24,18 @@ public class WarningEntity {
 	/**
 	 * a warning code
 	 */
-	Long code;
+	private Long code;
 
 	/**
 	 * a warning message
 	 */
-	String message;
+	private String message;
 
 	public WarningEntity() {
 		// do nothing here
 	}
 
-	public WarningEntity(Long code, String message) {
+	public WarningEntity(final Long code, final String message) {
 		this.code = code;
 		this.message = message;
 	}
@@ -49,7 +49,7 @@ public class WarningEntity {
 		return code;
 	}
 
-	public void setCode(Long code) {
+	public void setCode(final Long code) {
 		this.code = code;
 	}
 
@@ -62,7 +62,7 @@ public class WarningEntity {
 		return message;
 	}
 
-	public void setMessage(String message) {
+	public void setMessage(final String message) {
 		this.message = message;
 	}
 

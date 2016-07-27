@@ -52,7 +52,7 @@ public class InternalCursorDriverImpl extends BaseArangoDriverImpl implements co
 	@Override
 	public CursorEntity<?> validateQuery(final String database, final String query) throws ArangoException {
 		final HttpResponseEntity res = httpManager.doPost(createEndpointUrl(database, "/_api/query"), null,
-			EntityFactory.toJsonString(new MapBuilder("query", query).get()));
+			EntityFactory.toVPack(new MapBuilder("query", query).get()));
 
 		return createEntity(res, CursorEntity.class);
 	}
@@ -91,7 +91,7 @@ public class InternalCursorDriverImpl extends BaseArangoDriverImpl implements co
 		map.put("query", query);
 		map.put("bindVars", bindVars == null ? Collections.emptyMap() : bindVars);
 
-		return httpManager.doPost(createEndpointUrl(database, "/_api/cursor"), null, EntityFactory.toJsonString(map));
+		return httpManager.doPost(createEndpointUrl(database, "/_api/cursor"), null, EntityFactory.toVPack(map));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -187,7 +187,7 @@ public class InternalCursorDriverImpl extends BaseArangoDriverImpl implements co
 			tmpShortestPathOptions = new ShortestPathOptions();
 		}
 
-		MapBuilder mapBuilder = new MapBuilder();
+		final MapBuilder mapBuilder = new MapBuilder();
 		final String query = GraphQueryUtil.createShortestPathQuery(driver, database, graphName, startVertexExample,
 			endVertexExample, tmpShortestPathOptions, vertexClass, edgeClass, mapBuilder);
 
@@ -211,7 +211,7 @@ public class InternalCursorDriverImpl extends BaseArangoDriverImpl implements co
 		final String database,
 		final QueryTrackingPropertiesEntity properties) throws ArangoException {
 		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(database, "/_api/query/properties"), null,
-			EntityFactory.toJsonString(properties));
+			EntityFactory.toVPack(properties));
 
 		return createEntity(res, QueryTrackingPropertiesEntity.class);
 	}

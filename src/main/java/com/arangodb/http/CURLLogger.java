@@ -22,8 +22,8 @@ import org.apache.http.auth.Credentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.arangodb.entity.EntityFactory;
 import com.arangodb.http.HttpRequestEntity.RequestType;
-import com.arangodb.util.StringUtils;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -37,24 +37,25 @@ public class CURLLogger {
 		// this is a helper class
 	}
 
-	public static void log(String url, HttpRequestEntity requestEntity, Credentials credencials) {
+	public static void log(final String url, final HttpRequestEntity requestEntity, final Credentials credencials) {
 
-		boolean includeBody = (requestEntity.type == RequestType.POST || requestEntity.type == RequestType.PUT
-				|| requestEntity.type == RequestType.PATCH) && StringUtils.isNotEmpty(requestEntity.bodyText);
+		final boolean includeBody = (requestEntity.getType() == RequestType.POST
+				|| requestEntity.getType() == RequestType.PUT || requestEntity.getType() == RequestType.PATCH)
+				&& requestEntity.getBody().getByteSize() > 0;
 
-		StringBuilder buffer = new StringBuilder();
+		final StringBuilder buffer = new StringBuilder();
 
 		if (includeBody) {
 			buffer.append("\n");
 			buffer.append("cat <<-___EOB___ | ");
 		}
 
-		buffer.append("curl -X ").append(requestEntity.type);
+		buffer.append("curl -X ").append(requestEntity.getType());
 		buffer.append(" --dump -");
 
 		// header
 		if (requestEntity.hasHeaders()) {
-			for (Entry<String, Object> header : requestEntity.headers.entrySet()) {
+			for (final Entry<String, Object> header : requestEntity.getHeaders().entrySet()) {
 				buffer.append(" -H '").append(header.getKey()).append(":").append(header.getValue()).append("'");
 			}
 		}
@@ -73,7 +74,7 @@ public class CURLLogger {
 
 		if (includeBody) {
 			buffer.append("\n");
-			buffer.append(requestEntity.bodyText);
+			buffer.append(EntityFactory.toJson(requestEntity.getBody()));
 			buffer.append("\n");
 			buffer.append("___EOB___");
 		}

@@ -24,42 +24,47 @@ package com.arangodb.entity;
  */
 public class ArangoUnixTime extends BaseEntity {
 
-  /**
-   * the unix timestamp as double
-   */
-  double time;
+	/**
+	 * the unix timestamp as double
+	 */
+	private double time;
 
-  /**
-   * the unix timestamp as integer
-   */
-  int second;
+	/**
+	 * the unix timestamp as integer
+	 */
+	private int second;
 
-  /**
-   * the microseconds part of the unix timestamp
-   */
-  int microsecond;
-  
-  public long getTimeMillis() {
-    return 1000L * second + (microsecond/1000);
-  }
-  
-  public double getTime() {
-    return time;
-  }
-  public int getSecond() {
-    return second;
-  }
-  public int getMicrosecond() {
-    return microsecond;
-  }
-  public void setTime(double time) {
-    this.time = time;
-  }
-  public void setSecond(int second) {
-    this.second = second;
-  }
-  public void setMicrosecond(int microsecond) {
-    this.microsecond = microsecond;
-  }
-  
+	/**
+	 * the microseconds part of the unix timestamp
+	 */
+	private int microsecond;
+
+	public long getTimeMillis() {
+		return 1000L * second + (microsecond / 1000);
+	}
+
+	public double getTime() {
+		return time;
+	}
+
+	public int getSecond() {
+		return second;
+	}
+
+	public int getMicrosecond() {
+		return microsecond;
+	}
+
+	public void setTime(final double time) {
+		this.time = time;
+	}
+
+	public void setSecond(final int second) {
+		this.second = second;
+	}
+
+	public void setMicrosecond(final int microsecond) {
+		this.microsecond = microsecond;
+	}
+
 }

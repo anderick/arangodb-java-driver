@@ -15,24 +15,21 @@ import com.arangodb.util.MapBuilder;
  */
 public class InternalTransactionDriverImpl extends BaseArangoDriverImpl implements InternalTransactionDriver {
 
-	InternalTransactionDriverImpl(ArangoConfigure configure, HttpManager httpManager) {
+	InternalTransactionDriverImpl(final ArangoConfigure configure, final HttpManager httpManager) {
 		super(configure, httpManager);
 	}
 
 	@Override
-	public TransactionEntity createTransaction(String action) {
+	public TransactionEntity createTransaction(final String action) {
 		return new TransactionEntity(action);
 	}
 
 	@Override
-	public TransactionResultEntity executeTransaction(String database, TransactionEntity transactionEntity)
+	public TransactionResultEntity executeTransaction(final String database, final TransactionEntity transactionEntity)
 			throws ArangoException {
-		HttpResponseEntity res = httpManager.doPost(
-			createEndpointUrl(database, "/_api/transaction"),
-			null,
-			EntityFactory.toJsonString(new MapBuilder().put("collections", transactionEntity.getCollections())
-					.put("action", transactionEntity.getAction())
-					.put("lockTimeout", transactionEntity.getLockTimeout())
+		final HttpResponseEntity res = httpManager.doPost(createEndpointUrl(database, "/_api/transaction"), null,
+			EntityFactory.toVPack(new MapBuilder().put("collections", transactionEntity.getCollections())
+					.put("action", transactionEntity.getAction()).put("lockTimeout", transactionEntity.getLockTimeout())
 					.put("params", transactionEntity.getParams()).get()));
 		return createEntity(res, TransactionResultEntity.class);
 	}

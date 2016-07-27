@@ -25,17 +25,17 @@ package com.arangodb.entity;
  */
 public class DeletedEntity extends DefaultEntity {
 
-  /**
-   * if true the deletion has been executed successfully
-   */
-  Boolean deleted;
+	/**
+	 * if true the deletion has been executed successfully
+	 */
+	private Boolean deleted;
 
-  public Boolean getDeleted() {
-    return deleted;
-  }
+	public Boolean getDeleted() {
+		return deleted;
+	}
 
-  public void setDeleted(Boolean deleted) {
-    this.deleted = deleted;
-  }
+	public void setDeleted(final Boolean deleted) {
+		this.deleted = deleted;
+	}
 
 }

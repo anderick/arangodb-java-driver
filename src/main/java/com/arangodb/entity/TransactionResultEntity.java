@@ -16,7 +16,7 @@
 
 package com.arangodb.entity;
 
-import com.google.gson.JsonObject;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -30,32 +30,32 @@ public class TransactionResultEntity extends BaseEntity {
 	 */
 	private Object result;
 
-	public JsonObject getResultAsJsonObject() {
-		return (JsonObject) result;
+	public VPackSlice getResultAsJsonObject() {
+		return (VPackSlice) result;
 	}
 
 	public long getResultAsLong() {
-		java.lang.Number number = (java.lang.Number) this.result;
+		final java.lang.Number number = (java.lang.Number) this.result;
 		return number.longValue();
 	}
 
 	public double getResultAsDouble() {
-		java.lang.Number number = (java.lang.Number) this.result;
+		final java.lang.Number number = (java.lang.Number) this.result;
 		return number.doubleValue();
 	}
 
 	public byte getResultAsByte() {
-		java.lang.Number number = (java.lang.Number) this.result;
+		final java.lang.Number number = (java.lang.Number) this.result;
 		return number.byteValue();
 	}
 
 	public float getResultAsFloat() {
-		java.lang.Number number = (java.lang.Number) this.result;
+		final java.lang.Number number = (java.lang.Number) this.result;
 		return number.floatValue();
 	}
 
 	public int getResultAsInt() {
-		java.lang.Number number = (java.lang.Number) this.result;
+		final java.lang.Number number = (java.lang.Number) this.result;
 		return number.intValue();
 	}
 
@@ -67,7 +67,7 @@ public class TransactionResultEntity extends BaseEntity {
 		return (String) result;
 	}
 
-	public void setResult(Object result) {
+	public void setResult(final Object result) {
 		this.result = result;
 	}
 }

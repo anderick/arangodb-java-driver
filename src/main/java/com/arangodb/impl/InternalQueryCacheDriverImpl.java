@@ -31,14 +31,14 @@ import com.arangodb.http.HttpResponseEntity;
 public class InternalQueryCacheDriverImpl extends BaseArangoDriverImpl
 		implements com.arangodb.InternalQueryCacheDriver {
 
-	InternalQueryCacheDriverImpl(ArangoConfigure configure, HttpManager httpManager) {
+	InternalQueryCacheDriverImpl(final ArangoConfigure configure, final HttpManager httpManager) {
 		super(configure, httpManager);
 	}
 
 	@Override
 	public DefaultEntity deleteQueryCache() throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doDelete(createEndpointUrl(null, "/_api/query-cache"), null);
+		final HttpResponseEntity res = httpManager.doDelete(createEndpointUrl(null, "/_api/query-cache"), null);
 
 		return createEntity(res, DefaultEntity.class);
 	}
@@ -46,18 +46,18 @@ public class InternalQueryCacheDriverImpl extends BaseArangoDriverImpl
 	@Override
 	public QueryCachePropertiesEntity getQueryCacheProperties() throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doGet(createEndpointUrl(null, "/_api/query-cache"), null);
+		final HttpResponseEntity res = httpManager.doGet(createEndpointUrl(null, "/_api/query-cache"), null);
 
 		return createEntity(res, QueryCachePropertiesEntity.class);
 
 	}
 
 	@Override
-	public QueryCachePropertiesEntity setQueryCacheProperties(QueryCachePropertiesEntity properties)
+	public QueryCachePropertiesEntity setQueryCacheProperties(final QueryCachePropertiesEntity properties)
 			throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doPut(createEndpointUrl(null, "/_api/query-cache/properties"), null,
-			EntityFactory.toJsonString(properties));
+		final HttpResponseEntity res = httpManager.doPut(createEndpointUrl(null, "/_api/query-cache/properties"), null,
+			EntityFactory.toVPack(properties));
 
 		return createEntity(res, QueryCachePropertiesEntity.class);
 	}

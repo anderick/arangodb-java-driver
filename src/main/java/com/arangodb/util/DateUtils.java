@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import com.google.gson.JsonParseException;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -56,7 +56,7 @@ public class DateUtils {
 			// do nothing here
 		}
 
-		public TripleKey(T first, U second, V third) {
+		public TripleKey(final T first, final U second, final V third) {
 			this.first = first;
 			this.second = second;
 			this.third = third;
@@ -66,7 +66,7 @@ public class DateUtils {
 			return first;
 		}
 
-		public void setFirst(T first) {
+		public void setFirst(final T first) {
 			this.first = first;
 		}
 
@@ -74,7 +74,7 @@ public class DateUtils {
 			return second;
 		}
 
-		public void setSecond(U second) {
+		public void setSecond(final U second) {
 			this.second = second;
 		}
 
@@ -82,7 +82,7 @@ public class DateUtils {
 			return third;
 		}
 
-		public void setThird(V third) {
+		public void setThird(final V third) {
 			this.third = third;
 		}
 
@@ -97,38 +97,48 @@ public class DateUtils {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
+		public boolean equals(final Object obj) {
+			if (this == obj) {
 				return true;
-			if (obj == null)
+			}
+			if (obj == null) {
 				return false;
-			if (getClass() != obj.getClass())
+			}
+			if (getClass() != obj.getClass()) {
 				return false;
-			TripleKey<?, ?, ?> other = (TripleKey<?, ?, ?>) obj;
+			}
+			final TripleKey<?, ?, ?> other = (TripleKey<?, ?, ?>) obj;
 			if (first == null) {
-				if (other.first != null)
+				if (other.first != null) {
 					return false;
-			} else if (!first.equals(other.first))
+				}
+			} else if (!first.equals(other.first)) {
 				return false;
+			}
 			if (second == null) {
-				if (other.second != null)
+				if (other.second != null) {
 					return false;
-			} else if (!second.equals(other.second))
+				}
+			} else if (!second.equals(other.second)) {
 				return false;
+			}
 			if (third == null) {
-				if (other.third != null)
+				if (other.third != null) {
 					return false;
-			} else if (!third.equals(other.third))
+				}
+			} else if (!third.equals(other.third)) {
 				return false;
+			}
 			return true;
 		}
 	}
 
 	private static class LocalFormat {
-		private HashMap<TripleKey<String, Locale, TimeZone>, SimpleDateFormat> sdfMap = new HashMap<DateUtils.TripleKey<String, Locale, TimeZone>, SimpleDateFormat>();
+		private final HashMap<TripleKey<String, Locale, TimeZone>, SimpleDateFormat> sdfMap = new HashMap<DateUtils.TripleKey<String, Locale, TimeZone>, SimpleDateFormat>();
 
-		public SimpleDateFormat getDateFormat(String format, Locale locale, TimeZone timeZone) {
-			TripleKey<String, Locale, TimeZone> key = new TripleKey<String, Locale, TimeZone>(format, locale, timeZone);
+		public SimpleDateFormat getDateFormat(final String format, final Locale locale, final TimeZone timeZone) {
+			final TripleKey<String, Locale, TimeZone> key = new TripleKey<String, Locale, TimeZone>(format, locale,
+					timeZone);
 			SimpleDateFormat sdf = sdfMap.get(key);
 			if (sdf == null) {
 				sdf = new SimpleDateFormat(format);
@@ -140,33 +150,34 @@ public class DateUtils {
 
 	}
 
-	public static Date parse(String text, String format) throws ParseException {
-
-		SimpleDateFormat dateFormat = dateFormats.get().getDateFormat(format, Locale.US, utcTimeZone);
-
+	public static Date parse(final String text, final String format) throws ParseException {
+		final SimpleDateFormat dateFormat = dateFormats.get().getDateFormat(format, Locale.US, utcTimeZone);
 		return dateFormat.parse(text);
 	}
 
 	/**
-	 * Parse date-string in "yyyy-MM-dd'T'HH:mm:ss'Z'" format.
+	 * Parse vpack in date vapck can be date or string in format
+	 * "yyyy-MM-dd'T'HH:mm:ss'Z'"
 	 * 
-	 * @param dateString
+	 * @param vpack
 	 * @return a Date object
 	 */
-	public static Date parse(String dateString) {
-
-		try {
-			return DateUtils.parse(dateString, "yyyy-MM-dd'T'HH:mm:ss'Z'");
-		} catch (ParseException e) {
-			throw new JsonParseException("time format invalid:" + dateString);
+	public static Date parse(final VPackSlice vpack) {
+		Date date = null;
+		if (vpack.isDate()) {
+			date = vpack.getAsDate();
+		} else if (vpack.isString()) {
+			try {
+				date = DateUtils.parse(vpack.getAsString(), "yyyy-MM-dd'T'HH:mm:ss'Z'");
+			} catch (final ParseException e) {
+				new RuntimeException(e);
+			}
 		}
-
+		return date;
 	}
 
-	public static String format(Date date, String format) {
-
-		SimpleDateFormat dateFormat = dateFormats.get().getDateFormat(format, Locale.US, TimeZone.getDefault());
-
+	public static String format(final Date date, final String format) {
+		final SimpleDateFormat dateFormat = dateFormats.get().getDateFormat(format, Locale.US, TimeZone.getDefault());
 		return dateFormat.format(date);
 	}
 

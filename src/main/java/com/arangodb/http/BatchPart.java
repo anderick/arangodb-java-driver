@@ -2,6 +2,9 @@ package com.arangodb.http;
 
 import java.util.Map;
 
+import com.arangodb.entity.EntityFactory;
+import com.arangodb.velocypack.VPackSlice;
+
 /**
  * Created by fbartels on 10/22/14.
  */
@@ -9,13 +12,13 @@ public class BatchPart {
 
 	private String method;
 	private String url;
-	private String body;
+	private VPackSlice body;
 	private Map<String, Object> headers;
 	private InvocationObject invocationObject;
 	private String id;
 
-	public BatchPart(String method, String url, String body, Map<String, Object> headers,
-		InvocationObject invocationObject, int id) {
+	public BatchPart(final String method, final String url, final VPackSlice body, final Map<String, Object> headers,
+		final InvocationObject invocationObject, final int id) {
 		this.method = method;
 		this.url = url;
 		this.body = body;
@@ -24,24 +27,25 @@ public class BatchPart {
 		this.id = "request" + id;
 	}
 
-	public String getBody() {
+	public VPackSlice getBody() {
 		return body;
 	}
 
 	@Override
 	public String toString() {
-		return "BatchPart{" + "method='" + method + '\'' + ", url='" + url + '\'' + ", body='" + body + '\'' + '}';
+		return "BatchPart{" + "method='" + method + '\'' + ", url='" + url + '\'' + ", body='"
+				+ EntityFactory.toJson(body) + '\'' + '}';
 	}
 
 	public InvocationObject getInvocationObject() {
 		return this.invocationObject;
 	}
 
-	public void setInvocationObject(InvocationObject invocationObject) {
+	public void setInvocationObject(final InvocationObject invocationObject) {
 		this.invocationObject = invocationObject;
 	}
 
-	public void setBody(String body) {
+	public void setBody(final VPackSlice body) {
 		this.body = body;
 	}
 
@@ -49,7 +53,7 @@ public class BatchPart {
 		return method;
 	}
 
-	public void setMethod(String method) {
+	public void setMethod(final String method) {
 		this.method = method;
 	}
 
@@ -57,7 +61,7 @@ public class BatchPart {
 		return url;
 	}
 
-	public void setUrl(String url) {
+	public void setUrl(final String url) {
 		this.url = url;
 	}
 
@@ -65,7 +69,7 @@ public class BatchPart {
 		return headers;
 	}
 
-	public void setHeaders(Map<String, Object> headers) {
+	public void setHeaders(final Map<String, Object> headers) {
 		this.headers = headers;
 	}
 
@@ -73,7 +77,7 @@ public class BatchPart {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(final String id) {
 		this.id = id;
 	}
 }

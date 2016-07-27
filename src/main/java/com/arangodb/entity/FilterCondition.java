@@ -24,42 +24,42 @@ import java.io.Serializable;
  */
 public class FilterCondition implements Serializable {
 
-  String key;
-  Object value;
-  String compare;
-  
-  public FilterCondition() {
-    
-  }
-  
-  public FilterCondition(String key, Object value, String compare) {
-    this.key = key;
-    this.value = value;
-    this.compare = compare;
-  }
+	private String key;
+	private Object value;
+	private String compare;
 
-  public String getKey() {
-    return key;
-  }
+	public FilterCondition() {
 
-  public Object getValue() {
-    return value;
-  }
+	}
 
-  public String getCompare() {
-    return compare;
-  }
+	public FilterCondition(final String key, final Object value, final String compare) {
+		this.key = key;
+		this.value = value;
+		this.compare = compare;
+	}
 
-  public void setKey(String key) {
-    this.key = key;
-  }
+	public String getKey() {
+		return key;
+	}
 
-  public void setValue(Object value) {
-    this.value = value;
-  }
+	public Object getValue() {
+		return value;
+	}
 
-  public void setCompare(String compare) {
-    this.compare = compare;
-  }
-  
+	public String getCompare() {
+		return compare;
+	}
+
+	public void setKey(final String key) {
+		this.key = key;
+	}
+
+	public void setValue(final Object value) {
+		this.value = value;
+	}
+
+	public void setCompare(final String compare) {
+		this.compare = compare;
+	}
+
 }

@@ -31,72 +31,72 @@ public class ReplicationApplierState implements Serializable {
 	/**
 	 * whether or not the applier is active and running
 	 */
-	Boolean running;
+	private Boolean running;
 
 	/**
 	 * the last tick value from the continuous replication log the applier has
 	 * applied
 	 */
-	Long lastAppliedContinuousTick;
+	private Long lastAppliedContinuousTick;
 
 	/**
 	 * the last tick value from the continuous replication log the applier has
 	 * processed.
 	 */
-	Long lastProcessedContinuousTick;
+	private Long lastProcessedContinuousTick;
 
 	/**
 	 * the last tick value the logger server can provide.
 	 */
-	Long lastAvailableContinuousTick;
+	private Long lastAvailableContinuousTick;
 
 	/**
 	 * the time on the applier server.
 	 */
-	Date time;
+	private Date time;
 
 	/**
 	 * the total number of requests the applier has made to the endpoint.
 	 */
-	Long totalRequests;
+	private Long totalRequests;
 
 	/**
 	 * the total number of failed connection attempts the applier has made.
 	 */
-	Long totalFailedConnects;
+	private Long totalFailedConnects;
 
 	/**
 	 * the total number of log events the applier has processed.
 	 */
-	Long totalEvents;
+	private Long totalEvents;
 
 	/**
 	 * details about the last error that happened on the applier.
 	 */
-	LastError lastError;
+	private LastError lastError;
 
 	/**
 	 * details about the replication applier progress.
 	 * 
 	 * @see com.arangodb.entity.ReplicationApplierState.Progress
 	 */
-	Progress progress;
+	private Progress progress;
 
 	public static class Progress implements Serializable {
 		/**
 		 * the date and time the progress was logged
 		 */
-		Date time;
+		private Date time;
 
 		/**
 		 * a textual description of the progress
 		 */
-		String message;
+		private String message;
 
 		/**
 		 * the current number of failed connection attempts
 		 */
-		Long failedConnects;
+		private Long failedConnects;
 
 		public Date getTime() {
 			return time;
@@ -110,15 +110,15 @@ public class ReplicationApplierState implements Serializable {
 			return failedConnects;
 		}
 
-		public void setTime(Date time) {
+		public void setTime(final Date time) {
 			this.time = time;
 		}
 
-		public void setMessage(String message) {
+		public void setMessage(final String message) {
 			this.message = message;
 		}
 
-		public void setFailedConnects(Long failedConnects) {
+		public void setFailedConnects(final Long failedConnects) {
 			this.failedConnects = failedConnects;
 		}
 	}
@@ -152,15 +152,15 @@ public class ReplicationApplierState implements Serializable {
 			return errorNum;
 		}
 
-		public void setTime(Date time) {
+		public void setTime(final Date time) {
 			this.time = time;
 		}
 
-		public void setErrorMessage(String errorMessage) {
+		public void setErrorMessage(final String errorMessage) {
 			this.errorMessage = errorMessage;
 		}
 
-		public void setErrorNum(Integer errorNum) {
+		public void setErrorNum(final Integer errorNum) {
 			this.errorNum = errorNum;
 		}
 	}
@@ -205,43 +205,43 @@ public class ReplicationApplierState implements Serializable {
 		return progress;
 	}
 
-	public void setRunning(Boolean running) {
+	public void setRunning(final Boolean running) {
 		this.running = running;
 	}
 
-	public void setLastAppliedContinuousTick(Long lastAppliedContinuousTick) {
+	public void setLastAppliedContinuousTick(final Long lastAppliedContinuousTick) {
 		this.lastAppliedContinuousTick = lastAppliedContinuousTick;
 	}
 
-	public void setLastProcessedContinuousTick(Long lastProcessedContinuousTick) {
+	public void setLastProcessedContinuousTick(final Long lastProcessedContinuousTick) {
 		this.lastProcessedContinuousTick = lastProcessedContinuousTick;
 	}
 
-	public void setLastAvailableContinuousTick(Long lastAvailableContinuousTick) {
+	public void setLastAvailableContinuousTick(final Long lastAvailableContinuousTick) {
 		this.lastAvailableContinuousTick = lastAvailableContinuousTick;
 	}
 
-	public void setTime(Date time) {
+	public void setTime(final Date time) {
 		this.time = time;
 	}
 
-	public void setTotalRequests(Long totalRequests) {
+	public void setTotalRequests(final Long totalRequests) {
 		this.totalRequests = totalRequests;
 	}
 
-	public void setTotalFailedConnects(Long totalFailedConnects) {
+	public void setTotalFailedConnects(final Long totalFailedConnects) {
 		this.totalFailedConnects = totalFailedConnects;
 	}
 
-	public void setTotalEvents(Long totalEvents) {
+	public void setTotalEvents(final Long totalEvents) {
 		this.totalEvents = totalEvents;
 	}
 
-	public void setLastError(LastError lastError) {
+	public void setLastError(final LastError lastError) {
 		this.lastError = lastError;
 	}
 
-	public void setProgress(Progress progress) {
+	public void setProgress(final Progress progress) {
 		this.progress = progress;
 	}
 

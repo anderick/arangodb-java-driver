@@ -19,21 +19,34 @@ package com.arangodb.http;
 import java.io.InputStream;
 import java.util.Map;
 
+import com.arangodb.entity.EntityFactory;
+import com.arangodb.velocypack.VPackSlice;
+
 /**
  * @author tamtam180 - kirscheless at gmail.com
  *
  */
 public class HttpResponseEntity {
 
-	int statusCode;
-	String statusPhrase;
-	String text;
-	InputStream stream;
-	long etag = -1;
-	String requestId;
-	Map<String, String> headers;
+	private int statusCode;
+	private String statusPhrase;
+	// private String text;
+	private VPackSlice content;
+	private InputStream stream;
+	private String etag;
+	private String requestId;
+	private Map<String, String> headers;
+	private String contentType;
 
-	String contentType;
+	/**
+	 * Cheks if the content type is "application/x-velocypack"
+	 * 
+	 * @return true if the content type is "application/x-velocypack"
+	 * @since 3.1.0
+	 */
+	public boolean isVPackResponse() {
+		return contentType != null && contentType.startsWith("application/x-velocypack");
+	}
 
 	/**
 	 * Checks if the content type is "application/json"
@@ -77,7 +90,7 @@ public class HttpResponseEntity {
 		return stream;
 	}
 
-	public void setStream(InputStream stream) {
+	public void setStream(final InputStream stream) {
 		this.stream = stream;
 	}
 
@@ -85,27 +98,35 @@ public class HttpResponseEntity {
 		return statusPhrase;
 	}
 
-	public String getText() {
-		return text;
-	}
+	// public String getText() {
+	// return text;
+	// }
 
-	public void setStatusCode(int statusCode) {
+	public void setStatusCode(final int statusCode) {
 		this.statusCode = statusCode;
 	}
 
-	public void setStatusPhrase(String statusPhrase) {
+	public void setStatusPhrase(final String statusPhrase) {
 		this.statusPhrase = statusPhrase;
 	}
 
-	public void setText(String text) {
-		this.text = text;
-	}
+	// public void setText(final String text) {
+	// this.text = text;
+	// }
 
-	public long getEtag() {
+	public String getEtag() {
 		return etag;
 	}
 
-	public void setEtag(long etag) {
+	public VPackSlice getContent() {
+		return content;
+	}
+
+	public void setContent(final VPackSlice content) {
+		this.content = content;
+	}
+
+	public void setEtag(final String etag) {
 		this.etag = etag;
 	}
 
@@ -113,7 +134,7 @@ public class HttpResponseEntity {
 		return headers;
 	}
 
-	public void setHeaders(Map<String, String> headers) {
+	public void setHeaders(final Map<String, String> headers) {
 		this.headers = headers;
 	}
 
@@ -121,7 +142,7 @@ public class HttpResponseEntity {
 		return contentType;
 	}
 
-	public void setContentType(String contentType) {
+	public void setContentType(final String contentType) {
 		this.contentType = contentType;
 	}
 
@@ -129,7 +150,7 @@ public class HttpResponseEntity {
 		return requestId;
 	}
 
-	public void setRequestId(String requestId) {
+	public void setRequestId(final String requestId) {
 		this.requestId = requestId;
 	}
 
@@ -164,17 +185,12 @@ public class HttpResponseEntity {
 			result = "Conflict";
 			break;
 		case 500:
-			result = "Internal Server Error";
+			result = "Internal Server Error: " + EntityFactory.toJson(content);
 			break;
 		default:
 			result = "unknown error";
 			break;
 		}
-
-		if (statusCode == 500) {
-			return result + ": " + getText();
-		}
-
 		return result;
 	}
 }

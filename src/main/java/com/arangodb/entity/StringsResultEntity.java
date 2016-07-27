@@ -25,17 +25,17 @@ import java.util.List;
  */
 public class StringsResultEntity extends BaseEntity {
 
-  /**
-   * List of strings
-   */
-  List<String> result;
+	/**
+	 * List of strings
+	 */
+	private List<String> result;
 
-  public List<String> getResult() {
-    return result;
-  }
+	public List<String> getResult() {
+		return result;
+	}
 
-  public void setResult(List<String> result) {
-    this.result = result;
-  }
+	public void setResult(final List<String> result) {
+		this.result = result;
+	}
 
 }

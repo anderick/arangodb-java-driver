@@ -18,7 +18,7 @@ package com.arangodb.entity;
 
 import java.util.Map;
 
-import com.google.gson.annotations.SerializedName;
+import com.arangodb.velocypack.annotations.SerializedName;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -26,68 +26,69 @@ import com.google.gson.annotations.SerializedName;
  */
 public class UserEntity extends BaseEntity {
 
-  /**
-   * Name of the user.
-   */
-  @SerializedName("username")
-  String username;
+	/**
+	 * Name of the user.
+	 */
+	@SerializedName("username")
+	private String username;
 
-  /**
-   * Password of the user.
-   */
-  @SerializedName("passwd")
-  String password;
+	/**
+	 * Password of the user.
+	 */
+	@SerializedName("passwd")
+	private String password;
 
-  /**
-   * Indicates, if user is active.
-   */
-  Boolean active;
+	/**
+	 * Indicates, if user is active.
+	 */
+	private Boolean active;
 
-  /**
-   * Additional information on user.
-   */
-  Map<String, Object> extra;
+	/**
+	 * Additional information on user.
+	 */
+	private Map<String, Object> extra;
 
-  public UserEntity() {
-  }
+	public UserEntity() {
+	}
 
-  public UserEntity(String username, String password, Boolean active, Map<String, Object> extra) {
-    this.username = username;
-    this.password = password;
-    this.active = active;
-    this.extra = extra;
-  }
+	public UserEntity(final String username, final String password, final Boolean active,
+		final Map<String, Object> extra) {
+		this.username = username;
+		this.password = password;
+		this.active = active;
+		this.extra = extra;
+	}
 
-  public String getUsername() {
-    return username;
-  }
+	public String getUsername() {
+		return username;
+	}
 
-  public String getPassword() {
-    return password;
-  }
+	public String getPassword() {
+		return password;
+	}
 
-  public Boolean isActive() {
-    return active;
-  }
+	public Boolean isActive() {
+		return active;
+	}
 
-  public Map<String, Object> getExtra() {
-    return extra;
-  }
+	public Map<String, Object> getExtra() {
+		return extra;
+	}
 
-  public void setUsername(String username) {
-    this.username = username;
-  }
+	public void setUsername(final String username) {
+		this.username = username;
+	}
 
-  public void setPassword(String password) {
-    this.password = password;
-  }
+	public void setPassword(final String password) {
+		this.password = password;
+	}
 
-  public void setActive(Boolean active) {
-    this.active = active;
-  }
+	public void setActive(final Boolean active) {
+		this.active = active;
+	}
 
-  public void setExtra(Map<String, Object> extra) {
-    this.extra = extra;
-  }
+	public void setExtra(final Map<String, Object> extra) {
+		this.extra = extra;
+	}
 
 }

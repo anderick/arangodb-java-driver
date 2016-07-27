@@ -699,7 +699,7 @@ public class VPackSliceTest {
 	@Test(expected = VPackValueTypeException.class)
 	public void notArrayAt() throws VPackException {
 		final VPackSlice slice = new VPackSlice(new byte[] { 0x1a });
-		slice.at(1);
+		slice.get(1);
 	}
 
 	@Test
@@ -710,14 +710,14 @@ public class VPackSliceTest {
 	@Test(expected = IndexOutOfBoundsException.class)
 	public void arrayEmptyAt() throws VPackException {
 		final VPackSlice slice = new VPackSlice(new byte[] { 0x01 });
-		slice.at(1);
+		slice.get(1);
 	}
 
 	@Test(expected = IndexOutOfBoundsException.class)
 	public void arrayWrongIndex() throws VPackException {
 		// [1, 2 ,3]
 		final VPackSlice slice = new VPackSlice(new byte[] { 0x02, 0x05, 0x31, 0x32, 0x33 });
-		slice.at(4);
+		slice.get(4);
 	}
 
 	@Test
@@ -758,7 +758,7 @@ public class VPackSliceTest {
 	public void arrayCompactWrongIndex() throws VPackException {
 		// [1, 16]
 		final VPackSlice slice = new VPackSlice(new byte[] { 0x13, 0x06, 0x31, 0x28, 0x10, 0x02 });
-		slice.at(3);
+		slice.get(3);
 	}
 
 	@Test
@@ -827,11 +827,11 @@ public class VPackSliceTest {
 		final VPackSlice slice = new VPackSlice(vpack);
 		for (int i = 0; i < expected.length; i++) {
 			final long[] childArray = expected[i];
-			final VPackSlice at = slice.at(i);
+			final VPackSlice at = slice.get(i);
 			Assert.assertTrue(at.isArray());
 			Assert.assertEquals(childArray.length, at.getLength());
 			for (int j = 0; j < childArray.length; j++) {
-				final VPackSlice atat = at.at(j);
+				final VPackSlice atat = at.get(j);
 				Assert.assertTrue(atat.isInteger());
 				Assert.assertEquals(childArray[j], atat.getAsLong());
 			}
@@ -842,7 +842,7 @@ public class VPackSliceTest {
 		checkLength(expected.length, vpack);
 		final VPackSlice slice = new VPackSlice(vpack);
 		for (int i = 0; i < expected.length; i++) {
-			final VPackSlice at = slice.at(i);
+			final VPackSlice at = slice.get(i);
 			Assert.assertTrue(at.isInteger());
 			Assert.assertEquals(expected[i], at.getAsLong());
 		}

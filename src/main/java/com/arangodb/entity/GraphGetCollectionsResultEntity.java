@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class GraphGetCollectionsResultEntity extends BaseEntity {
 
-	List<String> collections;
+	private List<String> collections;
 
 	public List<String> getCollections() {
 		if (collections == null) {
@@ -18,7 +18,7 @@ public class GraphGetCollectionsResultEntity extends BaseEntity {
 		return collections;
 	}
 
-	public void setCollections(List<String> collections) {
+	public void setCollections(final List<String> collections) {
 		this.collections = collections;
 	}
 

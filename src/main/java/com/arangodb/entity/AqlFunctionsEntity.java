@@ -29,13 +29,13 @@ public class AqlFunctionsEntity extends BaseEntity {
 	/**
 	 * A map containing the function name as key and the function as value
 	 */
-	Map<String, String> aqlFunctions;
+	private Map<String, String> aqlFunctions;
 
 	public AqlFunctionsEntity() {
 		// needed for ReflectionUtils
 	}
 
-	public AqlFunctionsEntity(Map<String, String> aqlfunctions) {
+	public AqlFunctionsEntity(final Map<String, String> aqlfunctions) {
 		this.aqlFunctions = aqlfunctions;
 	}
 

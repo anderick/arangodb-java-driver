@@ -34,33 +34,35 @@ public class InternalAqlFunctionsDriverImpl extends BaseArangoDriverImpl
 
 	private static final String API_AQLFUNCTION = "/_api/aqlfunction";
 
-	InternalAqlFunctionsDriverImpl(ArangoConfigure configure, HttpManager httpManager) {
+	InternalAqlFunctionsDriverImpl(final ArangoConfigure configure, final HttpManager httpManager) {
 		super(configure, httpManager);
 	}
 
 	@Override
-	public DefaultEntity createAqlFunction(String database, String name, String code) throws ArangoException {
-		HttpResponseEntity res = httpManager.doPost(createEndpointUrl(database, API_AQLFUNCTION), null,
-			EntityFactory.toJsonString(new MapBuilder().put("name", name).put("code", code).get()));
+	public DefaultEntity createAqlFunction(final String database, final String name, final String code)
+			throws ArangoException {
+		final HttpResponseEntity res = httpManager.doPost(createEndpointUrl(database, API_AQLFUNCTION), null,
+			EntityFactory.toVPack(new MapBuilder().put("name", name).put("code", code).get()));
 		return createEntity(res, DefaultEntity.class, null, false);
 	}
 
 	@Override
-	public AqlFunctionsEntity getAqlFunctions(String database, String namespace) throws ArangoException {
+	public AqlFunctionsEntity getAqlFunctions(final String database, final String namespace) throws ArangoException {
 
 		String appendix = "";
 		if (namespace != null) {
 			appendix = "?namespace=" + namespace;
 		}
-		HttpResponseEntity res = httpManager.doGet(createEndpointUrl(database, API_AQLFUNCTION + appendix));
+		final HttpResponseEntity res = httpManager.doGet(createEndpointUrl(database, API_AQLFUNCTION + appendix));
 		return createEntity(res, AqlFunctionsEntity.class);
 
 	}
 
 	@Override
-	public DefaultEntity deleteAqlFunction(String database, String name, boolean isNameSpace) throws ArangoException {
+	public DefaultEntity deleteAqlFunction(final String database, final String name, final boolean isNameSpace)
+			throws ArangoException {
 
-		HttpResponseEntity res = httpManager.doDelete(createEndpointUrl(database, API_AQLFUNCTION, name),
+		final HttpResponseEntity res = httpManager.doDelete(createEndpointUrl(database, API_AQLFUNCTION, name),
 			new MapBuilder().put("group", isNameSpace).get());
 
 		return createEntity(res, DefaultEntity.class);

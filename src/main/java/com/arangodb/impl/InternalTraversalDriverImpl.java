@@ -33,26 +33,22 @@ import com.arangodb.util.TraversalQueryOptions;
  */
 public class InternalTraversalDriverImpl extends BaseArangoDriverImpl implements com.arangodb.InternalTraversalDriver {
 
-	InternalTraversalDriverImpl(ArangoConfigure configure, HttpManager httpManager) {
+	InternalTraversalDriverImpl(final ArangoConfigure configure, final HttpManager httpManager) {
 		super(configure, httpManager);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public <V, E> TraversalEntity<V, E> getTraversal(
-		String databaseName,
-		TraversalQueryOptions traversalQueryOptions,
-		Class<V> vertexClazz,
-		Class<E> edgeClazz) throws ArangoException {
+		final String databaseName,
+		final TraversalQueryOptions traversalQueryOptions,
+		final Class<V> vertexClazz,
+		final Class<E> edgeClazz) throws ArangoException {
 
-		TraversalQueryOptions options = (traversalQueryOptions != null) ? traversalQueryOptions
+		final TraversalQueryOptions options = (traversalQueryOptions != null) ? traversalQueryOptions
 				: new TraversalQueryOptions();
-
-		String body = EntityFactory.toJsonString(options.toMap());
-
-		HttpResponseEntity response = httpManager.doPost(createEndpointUrl(databaseName, "/_api/traversal"), null,
-			body);
-
+		final HttpResponseEntity response = httpManager.doPost(createEndpointUrl(databaseName, "/_api/traversal"), null,
+			EntityFactory.toVPack(options.toMap()));
 		return createEntity(response, TraversalEntity.class, vertexClazz, edgeClazz);
 	}
 

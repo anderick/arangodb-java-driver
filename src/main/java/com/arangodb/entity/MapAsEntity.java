@@ -24,14 +24,14 @@ import java.util.Map;
  */
 public class MapAsEntity extends BaseEntity {
 
-  Map<String, Object> map;
+	private Map<String, Object> map;
 
-  public Map<String, Object> getMap() {
-    return map;
-  }
+	public Map<String, Object> getMap() {
+		return map;
+	}
 
-  public void setMap(Map<String, Object> map) {
-    this.map = map;
-  }
-  
+	public void setMap(final Map<String, Object> map) {
+		this.map = map;
+	}
+
 }

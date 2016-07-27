@@ -26,65 +26,71 @@ import java.util.List;
  */
 public class ReplicationLoggerStateEntity extends BaseEntity {
 
-  ReplicationState state;
-  String serverVersion;
-  String serverId;
-  List<Client> clients;
+	private ReplicationState state;
+	private String serverVersion;
+	private String serverId;
+	private List<Client> clients;
 
-  public ReplicationState getState() {
-    return state;
-  }
+	public ReplicationState getState() {
+		return state;
+	}
 
-  public String getServerVersion() {
-    return serverVersion;
-  }
+	public String getServerVersion() {
+		return serverVersion;
+	}
 
-  public String getServerId() {
-    return serverId;
-  }
+	public String getServerId() {
+		return serverId;
+	}
 
-  public List<Client> getClients() {
-    return clients;
-  }
+	public List<Client> getClients() {
+		return clients;
+	}
 
-  public void setState(ReplicationState state) {
-    this.state = state;
-  }
+	public void setState(final ReplicationState state) {
+		this.state = state;
+	}
 
-  public void setServerVersion(String serverVersion) {
-    this.serverVersion = serverVersion;
-  }
+	public void setServerVersion(final String serverVersion) {
+		this.serverVersion = serverVersion;
+	}
 
-  public void setServerId(String serverId) {
-    this.serverId = serverId;
-  }
+	public void setServerId(final String serverId) {
+		this.serverId = serverId;
+	}
 
-  public void setClients(List<Client> clients) {
-    this.clients = clients;
-  }
+	public void setClients(final List<Client> clients) {
+		this.clients = clients;
+	}
 
-  public static class Client implements Serializable {
-    String serverId;
-    Long lastServedTick;
-    Date time;
-    public String getServerId() {
-      return serverId;
-    }
-    public Long getLastServedTick() {
-      return lastServedTick;
-    }
-    public Date getTime() {
-      return time;
-    }
-    public void setServerId(String serverId) {
-      this.serverId = serverId;
-    }
-    public void setLastServedTick(Long lastServedTick) {
-      this.lastServedTick = lastServedTick;
-    }
-    public void setTime(Date time) {
-      this.time = time;
-    }
-  }
-  
+	public static class Client implements Serializable {
+		private String serverId;
+		private Long lastServedTick;
+		private Date time;
+
+		public String getServerId() {
+			return serverId;
+		}
+
+		public Long getLastServedTick() {
+			return lastServedTick;
+		}
+
+		public Date getTime() {
+			return time;
+		}
+
+		public void setServerId(final String serverId) {
+			this.serverId = serverId;
+		}
+
+		public void setLastServedTick(final Long lastServedTick) {
+			this.lastServedTick = lastServedTick;
+		}
+
+		public void setTime(final Date time) {
+			this.time = time;
+		}
+	}
+
 }

@@ -18,7 +18,7 @@ package com.arangodb.entity;
 
 import java.util.List;
 
-import com.google.gson.annotations.SerializedName;
+import com.arangodb.velocypack.annotations.SerializedName;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -26,99 +26,100 @@ import com.google.gson.annotations.SerializedName;
  */
 public class GraphEntity extends BaseEntity implements DocumentHolder {
 
-  /**
-   * Revision of graph.
-   */
-  @SerializedName("_rev")
-  long documentRevision;
+	/**
+	 * Revision of graph.
+	 */
+	@SerializedName("_rev")
+	private long documentRevision;
 
-  /**
-   * Id of graph.
-   */
-  @SerializedName("_id")
-  String documentHandle;
+	/**
+	 * Id of graph.
+	 */
+	@SerializedName("_id")
+	private String documentHandle;
 
-  /**
-   * Key of graph.
-   */
-  @SerializedName("_key")
-  String documentKey;
+	/**
+	 * Key of graph.
+	 */
+	@SerializedName("_key")
+	private String documentKey;
 
-  /**
-   * List of collections of the graph which are not used in an edge definition.
-   */
-  List<String> orphanCollections;
+	/**
+	 * List of collections of the graph which are not used in an edge
+	 * definition.
+	 */
+	private List<String> orphanCollections;
 
-  /**
-   * The edge definitions of the graph.
-   */
-  EdgeDefinitionsEntity edgeDefinitionsEntity;
+	/**
+	 * The edge definitions of the graph.
+	 */
+	private EdgeDefinitionsEntity edgeDefinitionsEntity;
 
-  /**
-   * Name of the graph.
-   */
-  String name;
+	/**
+	 * Name of the graph.
+	 */
+	private String name;
 
-  @Override
-  public long getDocumentRevision() {
-    return documentRevision;
-  }
+	@Override
+	public long getDocumentRevision() {
+		return documentRevision;
+	}
 
-  @Override
-  public String getDocumentHandle() {
-    return documentHandle;
-  }
+	@Override
+	public String getDocumentHandle() {
+		return documentHandle;
+	}
 
-  @Override
-  public String getDocumentKey() {
-    return documentKey;
-  }
+	@Override
+	public String getDocumentKey() {
+		return documentKey;
+	}
 
-  @Override
-  public void setDocumentRevision(long documentRevision) {
-    this.documentRevision = documentRevision;
-  }
+	@Override
+	public void setDocumentRevision(final long documentRevision) {
+		this.documentRevision = documentRevision;
+	}
 
-  @Override
-  public void setDocumentHandle(String documentHandle) {
-    this.documentHandle = documentHandle;
-  }
+	@Override
+	public void setDocumentHandle(final String documentHandle) {
+		this.documentHandle = documentHandle;
+	}
 
-  @Override
-  public void setDocumentKey(String documentKey) {
-    this.documentKey = documentKey;
-  }
+	@Override
+	public void setDocumentKey(final String documentKey) {
+		this.documentKey = documentKey;
+	}
 
-  public EdgeDefinitionsEntity getEdgeDefinitionsEntity() {
-    return edgeDefinitionsEntity;
-  }
+	public EdgeDefinitionsEntity getEdgeDefinitionsEntity() {
+		return edgeDefinitionsEntity;
+	}
 
-  public List<EdgeDefinitionEntity> getEdgeDefinitions() {
-    return edgeDefinitionsEntity.getEdgeDefinitions();
-  }
+	public List<EdgeDefinitionEntity> getEdgeDefinitions() {
+		return edgeDefinitionsEntity.getEdgeDefinitions();
+	}
 
-  public void setEdgeDefinitionsEntity(EdgeDefinitionsEntity edgeDefinitionsEntity) {
-    this.edgeDefinitionsEntity = edgeDefinitionsEntity;
-  }
+	public void setEdgeDefinitionsEntity(final EdgeDefinitionsEntity edgeDefinitionsEntity) {
+		this.edgeDefinitionsEntity = edgeDefinitionsEntity;
+	}
 
-  public void setEdgeDefinitions(List<EdgeDefinitionEntity> edgeDefinitions) {
-    this.edgeDefinitionsEntity.setEdgeDefinitions(edgeDefinitions);
-  }
+	public void setEdgeDefinitions(final List<EdgeDefinitionEntity> edgeDefinitions) {
+		this.edgeDefinitionsEntity.setEdgeDefinitions(edgeDefinitions);
+	}
 
-  public List<String> getOrphanCollections() {
-    return orphanCollections;
-  }
+	public List<String> getOrphanCollections() {
+		return orphanCollections;
+	}
 
-  public void setOrphanCollections(List<String> orphanCollections) {
-    this.orphanCollections = orphanCollections;
-  }
+	public void setOrphanCollections(final List<String> orphanCollections) {
+		this.orphanCollections = orphanCollections;
+	}
 
-  public void setName(String name) {
-    this.name = name;
-  }
+	public void setName(final String name) {
+		this.name = name;
+	}
 
-  public String getName() {
-    return name;
-  }
+	public String getName() {
+		return name;
+	}
 
 }

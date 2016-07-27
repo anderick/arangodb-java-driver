@@ -17,25 +17,25 @@ public class BatchHttpManager extends HttpManager {
 
 	private boolean batchModeActive = false;
 
-	public BatchHttpManager(ArangoConfigure configure) {
+	public BatchHttpManager(final ArangoConfigure configure) {
 		super(configure);
 	}
 
 	@Override
-	public HttpResponseEntity execute(HttpRequestEntity requestEntity) throws ArangoException {
+	public HttpResponseEntity execute(final HttpRequestEntity requestEntity) throws ArangoException {
 		if (!this.isBatchModeActive()) {
 			return super.execute(requestEntity);
 		}
 
-		int id = callStack.size() + 1;
-		callStack.add(new BatchPart(requestEntity.type.toString(), buildUrl("", requestEntity), requestEntity.bodyText,
-				requestEntity.headers, this.getCurrentObject(), id));
+		final int id = callStack.size() + 1;
+		callStack.add(new BatchPart(requestEntity.getType().toString(), buildUrl("", requestEntity),
+				requestEntity.getBody(), requestEntity.getHeaders(), this.getCurrentObject(), id));
 		this.setCurrentObject(null);
-		HttpResponseEntity responseEntity = new HttpResponseEntity();
+		final HttpResponseEntity responseEntity = new HttpResponseEntity();
 
 		// http status
-		responseEntity.statusCode = 206;
-		responseEntity.statusPhrase = "Batch mode active, request has been stacked";
+		responseEntity.setStatusCode(206);
+		responseEntity.setStatusPhrase("Batch mode active, request has been stacked");
 		responseEntity.setRequestId("request" + id);
 		return responseEntity;
 	}
@@ -50,7 +50,7 @@ public class BatchHttpManager extends HttpManager {
 	}
 
 	@Override
-	public void setCurrentObject(InvocationObject currentObject) {
+	public void setCurrentObject(final InvocationObject currentObject) {
 		this.currentObject = currentObject;
 	}
 
@@ -58,7 +58,7 @@ public class BatchHttpManager extends HttpManager {
 		return batchModeActive;
 	}
 
-	public void setBatchModeActive(boolean batchModeActive) {
+	public void setBatchModeActive(final boolean batchModeActive) {
 		this.batchModeActive = batchModeActive;
 	}
 

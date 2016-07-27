@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import com.arangodb.velocypack.exception.VPackException;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 
 /**
  * @author Mark - mark@arangodb.com
@@ -88,35 +85,36 @@ public class TestBuilder {
 		builder.close();
 	}
 
-	private static void recurse(final JsonObject obj, final int curdepth, final int depth, final int size) {
-		if (curdepth >= depth) {
-			return;
-		}
-		obj.addProperty("attr1", "TextTextText" + curdepth);
-		obj.addProperty("attr2", curdepth);
-		obj.addProperty("attr3", curdepth);
-		obj.addProperty("attr4", curdepth + 0.5);
-		obj.addProperty("attr5", true);
-		final JsonObject subObj1 = new JsonObject();
-		recurse(subObj1, curdepth + 1, depth, size);
-		obj.add("sub1", subObj1);
-
-		final JsonObject subObj2 = new JsonObject();
-		recurse(subObj2, curdepth + 1, depth, size);
-		obj.add("sub2", subObj1);
-
-		final JsonArray arr1 = new JsonArray();
-		for (int i = 0; i < size; i++) {
-			arr1.add(i);
-		}
-		obj.add("arr1", arr1);
-	}
-
-	public static String buildJson(final int depth, final int size) {
-		final JsonObject obj = new JsonObject();
-		recurse(obj, 0, depth, size);
-		return new Gson().toJson(obj);
-	}
+	// private static void recurse(final JsonObject obj, final int curdepth,
+	// final int depth, final int size) {
+	// if (curdepth >= depth) {
+	// return;
+	// }
+	// obj.addProperty("attr1", "TextTextText" + curdepth);
+	// obj.addProperty("attr2", curdepth);
+	// obj.addProperty("attr3", curdepth);
+	// obj.addProperty("attr4", curdepth + 0.5);
+	// obj.addProperty("attr5", true);
+	// final JsonObject subObj1 = new JsonObject();
+	// recurse(subObj1, curdepth + 1, depth, size);
+	// obj.add("sub1", subObj1);
+	//
+	// final JsonObject subObj2 = new JsonObject();
+	// recurse(subObj2, curdepth + 1, depth, size);
+	// obj.add("sub2", subObj1);
+	//
+	// final JsonArray arr1 = new JsonArray();
+	// for (int i = 0; i < size; i++) {
+	// arr1.add(i);
+	// }
+	// obj.add("arr1", arr1);
+	// }
+	//
+	// public static String buildJson(final int depth, final int size) {
+	// final JsonObject obj = new JsonObject();
+	// recurse(obj, 0, depth, size);
+	// return new Gson().toJson(obj);
+	// }
 
 	public static void main(final String[] args) throws VPackException, IOException {
 		if (args.length < 3) {

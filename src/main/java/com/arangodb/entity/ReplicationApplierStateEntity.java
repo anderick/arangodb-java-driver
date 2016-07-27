@@ -24,61 +24,71 @@ package com.arangodb.entity;
  */
 public class ReplicationApplierStateEntity extends BaseEntity {
 
-  /**
-   * The applier state
-   * @see com.arangodb.entity.ReplicationApplierState
-   */
-  ReplicationApplierState state;
+	/**
+	 * The applier state
+	 * 
+	 * @see com.arangodb.entity.ReplicationApplierState
+	 */
+	private ReplicationApplierState state;
 
-  /**
-   * The version of the server
-   */
-  String serverVersion;
+	/**
+	 * The version of the server
+	 */
+	private String serverVersion;
 
-  /**
-   * The server id
-   */
-  String serverId;
+	/**
+	 * The server id
+	 */
+	private String serverId;
 
-  /**
-   * The endpoint
-   */
-  String endpoint;
+	/**
+	 * The endpoint
+	 */
+	private String endpoint;
 
-  /**
-   * The database
-   */
-  String database;
-  
-  public ReplicationApplierState getState() {
-    return state;
-  }
-  public String getServerVersion() {
-    return serverVersion;
-  }
-  public String getServerId() {
-    return serverId;
-  }
-  public String getEndpoint() {
-    return endpoint;
-  }
-  public String getDatabase() {
-    return database;
-  }
-  public void setState(ReplicationApplierState state) {
-    this.state = state;
-  }
-  public void setServerVersion(String serverVersion) {
-    this.serverVersion = serverVersion;
-  }
-  public void setServerId(String serverId) {
-    this.serverId = serverId;
-  }
-  public void setEndpoint(String endpoint) {
-    this.endpoint = endpoint;
-  }
-  public void setDatabase(String database) {
-    this.database = database;
-  }
-  
+	/**
+	 * The database
+	 */
+	private String database;
+
+	public ReplicationApplierState getState() {
+		return state;
+	}
+
+	public String getServerVersion() {
+		return serverVersion;
+	}
+
+	public String getServerId() {
+		return serverId;
+	}
+
+	public String getEndpoint() {
+		return endpoint;
+	}
+
+	public String getDatabase() {
+		return database;
+	}
+
+	public void setState(final ReplicationApplierState state) {
+		this.state = state;
+	}
+
+	public void setServerVersion(final String serverVersion) {
+		this.serverVersion = serverVersion;
+	}
+
+	public void setServerId(final String serverId) {
+		this.serverId = serverId;
+	}
+
+	public void setEndpoint(final String endpoint) {
+		this.endpoint = endpoint;
+	}
+
+	public void setDatabase(final String database) {
+		this.database = database;
+	}
+
 }

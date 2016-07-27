@@ -26,41 +26,41 @@ import java.util.List;
  */
 public class DocumentResultEntity<T> extends BaseEntity {
 
-  /**
-   * The list of generic document entities
-   */
-  List<DocumentEntity<T>> result;
+	/**
+	 * The list of generic document entities
+	 */
+	private List<DocumentEntity<T>> result;
 
-  /**
-   * Returns the first document from the list
-   *
-   * @return DocumentEntity<T>
-   */
-  public DocumentEntity<T> getOne() {
-    if (result == null || result.isEmpty()) {
-      return null;
-    }
-    return result.get(0);
-  }
+	/**
+	 * Returns the first document from the list
+	 *
+	 * @return DocumentEntity<T>
+	 */
+	public DocumentEntity<T> getOne() {
+		if (result == null || result.isEmpty()) {
+			return null;
+		}
+		return result.get(0);
+	}
 
-  /**
-   * The size of the documents list
-   *
-   * @return int
-   */
-  public int size() {
-    if (result == null) {
-      return 0;
-    }
-    return result.size();
-  }
+	/**
+	 * The size of the documents list
+	 *
+	 * @return int
+	 */
+	public int size() {
+		if (result == null) {
+			return 0;
+		}
+		return result.size();
+	}
 
-  public List<DocumentEntity<T>> getResult() {
-    return result;
-  }
+	public List<DocumentEntity<T>> getResult() {
+		return result;
+	}
 
-  public void setResult(List<DocumentEntity<T>> result) {
-    this.result = result;
-  }
-  
+	public void setResult(final List<DocumentEntity<T>> result) {
+		this.result = result;
+	}
+
 }

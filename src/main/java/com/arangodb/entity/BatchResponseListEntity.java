@@ -32,18 +32,18 @@ public class BatchResponseListEntity extends BaseEntity {
 	 * A list of BatchResponseEntities, each one representing a single batch
 	 * part of a batch request.
 	 */
-	List<BatchResponseEntity> batchResponseEntities;
+	private List<BatchResponseEntity> batchResponseEntities;
 
 	public List<BatchResponseEntity> getBatchResponseEntities() {
 		return batchResponseEntities;
 	}
 
-	public void setBatchResponseEntities(List<BatchResponseEntity> batchResponseEntities) {
+	public void setBatchResponseEntities(final List<BatchResponseEntity> batchResponseEntities) {
 		this.batchResponseEntities = batchResponseEntities;
 	}
 
-	public BatchResponseEntity getResponseFromRequestId(String requestId) throws ArangoException {
-		for (BatchResponseEntity bpe : this.batchResponseEntities) {
+	public BatchResponseEntity getResponseFromRequestId(final String requestId) throws ArangoException {
+		for (final BatchResponseEntity bpe : this.batchResponseEntities) {
 			if (bpe.getRequestId().equals(requestId)) {
 				return bpe;
 			}

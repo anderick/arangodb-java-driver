@@ -27,28 +27,30 @@ import java.util.Map;
  */
 public class IndexesEntity extends BaseEntity {
 
-  /**
-   * the list of index entites
-   */
-  List<IndexEntity> indexes;
+	/**
+	 * the list of index entites
+	 */
+	private List<IndexEntity> indexes;
 
-  /**
-   * a map containing the indices , there ids as keys.
-   */
-  Map<String, IndexEntity> identifiers;
-  
-  public List<IndexEntity> getIndexes() {
-    return indexes;
-  }
-  public Map<String, IndexEntity> getIdentifiers() {
-    return identifiers;
-  }
-  public void setIndexes(List<IndexEntity> indexes) {
-    this.indexes = indexes;
-  }
-  public void setIdentifiers(Map<String, IndexEntity> identifiers) {
-    this.identifiers = identifiers;
-  }
-  
-  
+	/**
+	 * a map containing the indices , there ids as keys.
+	 */
+	private Map<String, IndexEntity> identifiers;
+
+	public List<IndexEntity> getIndexes() {
+		return indexes;
+	}
+
+	public Map<String, IndexEntity> getIdentifiers() {
+		return identifiers;
+	}
+
+	public void setIndexes(final List<IndexEntity> indexes) {
+		this.indexes = indexes;
+	}
+
+	public void setIdentifiers(final Map<String, IndexEntity> identifiers) {
+		this.identifiers = identifiers;
+	}
+
 }

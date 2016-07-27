@@ -16,8 +16,6 @@
 
 package com.arangodb.entity;
 
-
-
 /**
  *
  * An entity representing the ArangoDB version
@@ -27,27 +25,30 @@ package com.arangodb.entity;
  */
 public class ArangoVersion extends BaseEntity {
 
-  /**
-   * Name of the server
-   */
-  String server;
+	/**
+	 * Name of the server
+	 */
+	private String server;
 
-  /**
-   * The current version
-   */
-  String version;
-  
-  public String getServer() {
-    return server;
-  }
-  public String getVersion() {
-    return version;
-  }
-  public void setServer(String server) {
-    this.server = server;
-  }
-  public void setVersion(String version) {
-    this.version = version;
-  }
-  
+	/**
+	 * The current version
+	 */
+	private String version;
+
+	public String getServer() {
+		return server;
+	}
+
+	public String getVersion() {
+		return version;
+	}
+
+	public void setServer(final String server) {
+		this.server = server;
+	}
+
+	public void setVersion(final String version) {
+		this.version = version;
+	}
+
 }

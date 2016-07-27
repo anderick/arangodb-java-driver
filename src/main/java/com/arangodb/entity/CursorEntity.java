@@ -35,22 +35,22 @@ public class CursorEntity<T> extends BaseEntity implements Iterable<T> {
 	/**
 	 * True if the cursor has more results.
 	 */
-	boolean hasMore;
+	private boolean hasMore;
 
 	/**
 	 * The amount of results in the cursor
 	 */
-	int count = -1;
+	private int count = -1;
 
 	/**
 	 * The number of results before the final LIMIT
 	 */
-	int fullCount = -1;
+	private int fullCount = -1;
 
 	/**
 	 * The cursor id
 	 */
-	long cursorId = -1;
+	private long cursorId = -1;
 
 	/**
 	 * a boolean flag indicating whether the query result was served from the
@@ -58,27 +58,27 @@ public class CursorEntity<T> extends BaseEntity implements Iterable<T> {
 	 * the extra return attribute will not contain any stats sub-attribute and
 	 * no profile sub-attribute. (since ArangoDB 2.7)
 	 */
-	boolean cached = false;
+	private boolean cached = false;
 
 	/**
 	 * A list of bind variables returned by the query
 	 */
-	List<String> bindVars;
+	private List<String> bindVars;
 
 	/**
 	 * A list of extra data returned by the query
 	 */
-	Map<String, Object> extra;
+	private Map<String, Object> extra;
 
 	/**
 	 * A list of objects containing the results
 	 */
-	List<T> results;
+	private List<T> results;
 
 	/**
 	 * A list of warnings
 	 */
-	List<WarningEntity> warnings;
+	private List<WarningEntity> warnings;
 
 	@Override
 	public Iterator<T> iterator() {
@@ -103,13 +103,13 @@ public class CursorEntity<T> extends BaseEntity implements Iterable<T> {
 	 * @param index
 	 * @return Object
 	 */
-	public T get(int index) {
+	public T get(final int index) {
 		rangeCheck(index);
 		return results.get(index);
 	}
 
-	private void rangeCheck(int index) {
-		int size = size();
+	private void rangeCheck(final int index) {
+		final int size = size();
 		if (index < 0 || index >= size) {
 			throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
 		}
@@ -134,7 +134,7 @@ public class CursorEntity<T> extends BaseEntity implements Iterable<T> {
 	 * @return the single result or null
 	 */
 	public T getUniqueResult() {
-		int size = size();
+		final int size = size();
 		if (size == 0) {
 			return null;
 		}
@@ -172,31 +172,31 @@ public class CursorEntity<T> extends BaseEntity implements Iterable<T> {
 		return extra;
 	}
 
-	public void setResults(List<T> results) {
+	public void setResults(final List<T> results) {
 		this.results = results;
 	}
 
-	public void setHasMore(boolean hasMore) {
+	public void setHasMore(final boolean hasMore) {
 		this.hasMore = hasMore;
 	}
 
-	public void setFullCount(int count) {
+	public void setFullCount(final int count) {
 		this.fullCount = count;
 	}
 
-	public void setCount(int count) {
+	public void setCount(final int count) {
 		this.count = count;
 	}
 
-	public void setCursorId(long cursorId) {
+	public void setCursorId(final long cursorId) {
 		this.cursorId = cursorId;
 	}
 
-	public void setBindVars(List<String> bindVars) {
+	public void setBindVars(final List<String> bindVars) {
 		this.bindVars = bindVars;
 	}
 
-	public void setExtra(Map<String, Object> extra) {
+	public void setExtra(final Map<String, Object> extra) {
 		this.extra = extra;
 	}
 
@@ -204,7 +204,7 @@ public class CursorEntity<T> extends BaseEntity implements Iterable<T> {
 		return cached;
 	}
 
-	public void setCached(boolean cached) {
+	public void setCached(final boolean cached) {
 		this.cached = cached;
 	}
 
@@ -212,7 +212,7 @@ public class CursorEntity<T> extends BaseEntity implements Iterable<T> {
 		return warnings;
 	}
 
-	public void setWarnings(List<WarningEntity> warnings) {
+	public void setWarnings(final List<WarningEntity> warnings) {
 		this.warnings = warnings;
 	}
 

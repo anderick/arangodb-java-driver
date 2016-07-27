@@ -55,8 +55,8 @@ import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
@@ -74,8 +74,10 @@ import org.slf4j.LoggerFactory;
 
 import com.arangodb.ArangoConfigure;
 import com.arangodb.ArangoException;
+import com.arangodb.entity.EntityFactory;
 import com.arangodb.http.HttpRequestEntity.RequestType;
 import com.arangodb.util.IOUtils;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -84,7 +86,8 @@ import com.arangodb.util.IOUtils;
  */
 public class HttpManager {
 
-	private static final ContentType APPLICATION_JSON_UTF8 = ContentType.create("application/json", "utf-8");
+	private static final String USERAGENT = "Mozilla/5.0 (compatible; ArangoDB-JavaDriver/1.1; +http://mt.orz.at/)";
+	private static final ContentType CONTENT_TYPE = ContentType.create("application/x-velocypack");
 
 	private static Logger logger = LoggerFactory.getLogger(HttpManager.class);
 
@@ -272,12 +275,12 @@ public class HttpManager {
 		final String username,
 		final String password) throws ArangoException {
 		final HttpRequestEntity requestEntity = new HttpRequestEntity();
-		requestEntity.type = type;
-		requestEntity.url = url;
-		requestEntity.headers = headers;
-		requestEntity.parameters = params;
-		requestEntity.username = username;
-		requestEntity.password = password;
+		requestEntity.setType(type);
+		requestEntity.setUrl(url);
+		requestEntity.setHeaders(headers);
+		requestEntity.setParameters(params);
+		requestEntity.setUsername(username);
+		requestEntity.setPassword(password);
 		return execute(requestEntity);
 	}
 
@@ -285,13 +288,13 @@ public class HttpManager {
 		final String url,
 		final Map<String, Object> headers,
 		final Map<String, Object> params,
-		final String bodyText) throws ArangoException {
-		return doPostPutPatch(RequestType.POST, url, headers, params, bodyText, null);
+		final VPackSlice body) throws ArangoException {
+		return doPostPutPatch(RequestType.POST, url, headers, params, body, null);
 	}
 
-	public HttpResponseEntity doPost(final String url, final Map<String, Object> params, final String bodyText)
+	public HttpResponseEntity doPost(final String url, final Map<String, Object> params, final VPackSlice body)
 			throws ArangoException {
-		return doPostPutPatch(RequestType.POST, url, null, params, bodyText, null);
+		return doPostPutPatch(RequestType.POST, url, null, params, body, null);
 	}
 
 	public HttpResponseEntity doPost(final String url, final Map<String, Object> params, final HttpEntity entity)
@@ -304,7 +307,7 @@ public class HttpManager {
 		final Map<String, Object> params,
 		final HttpEntity entity,
 		final Map<String, Object> headers,
-		final String body) throws ArangoException {
+		final VPackSlice body) throws ArangoException {
 		return doPostPutPatch(RequestType.POST, url, headers, params, body, entity);
 	}
 
@@ -312,26 +315,26 @@ public class HttpManager {
 		final String url,
 		final Map<String, Object> headers,
 		final Map<String, Object> params,
-		final String bodyText) throws ArangoException {
-		return doPostPutPatch(RequestType.PUT, url, headers, params, bodyText, null);
+		final VPackSlice body) throws ArangoException {
+		return doPostPutPatch(RequestType.PUT, url, headers, params, body, null);
 	}
 
-	public HttpResponseEntity doPut(final String url, final Map<String, Object> params, final String bodyText)
+	public HttpResponseEntity doPut(final String url, final Map<String, Object> params, final VPackSlice body)
 			throws ArangoException {
-		return doPostPutPatch(RequestType.PUT, url, null, params, bodyText, null);
+		return doPostPutPatch(RequestType.PUT, url, null, params, body, null);
 	}
 
 	public HttpResponseEntity doPatch(
 		final String url,
 		final Map<String, Object> headers,
 		final Map<String, Object> params,
-		final String bodyText) throws ArangoException {
-		return doPostPutPatch(RequestType.PATCH, url, headers, params, bodyText, null);
+		final VPackSlice body) throws ArangoException {
+		return doPostPutPatch(RequestType.PATCH, url, headers, params, body, null);
 	}
 
-	public HttpResponseEntity doPatch(final String url, final Map<String, Object> params, final String bodyText)
+	public HttpResponseEntity doPatch(final String url, final Map<String, Object> params, final VPackSlice body)
 			throws ArangoException {
-		return doPostPutPatch(RequestType.PATCH, url, null, params, bodyText, null);
+		return doPostPutPatch(RequestType.PATCH, url, null, params, body, null);
 	}
 
 	private HttpResponseEntity doPostPutPatch(
@@ -339,15 +342,15 @@ public class HttpManager {
 		final String url,
 		final Map<String, Object> headers,
 		final Map<String, Object> params,
-		final String bodyText,
+		final VPackSlice body,
 		final HttpEntity entity) throws ArangoException {
 		final HttpRequestEntity requestEntity = new HttpRequestEntity();
-		requestEntity.type = type;
-		requestEntity.url = url;
-		requestEntity.headers = headers;
-		requestEntity.parameters = params;
-		requestEntity.bodyText = bodyText;
-		requestEntity.entity = entity;
+		requestEntity.setType(type);
+		requestEntity.setUrl(url);
+		requestEntity.setHeaders(headers);
+		requestEntity.setParameters(params);
+		requestEntity.setBody(body);
+		requestEntity.setEntity(entity);
 		return execute(requestEntity);
 	}
 
@@ -407,8 +410,8 @@ public class HttpManager {
 		final HttpRequestBase request = buildHttpRequestBase(requestEntity, url);
 
 		// common-header
-		final String userAgent = "Mozilla/5.0 (compatible; ArangoDB-JavaDriver/1.1; +http://mt.orz.at/)";
-		request.setHeader("User-Agent", userAgent);
+		request.setHeader("User-Agent", USERAGENT);
+		request.setHeader("Accept", CONTENT_TYPE.getMimeType());
 
 		addOptionalHeaders(requestEntity, request);
 
@@ -474,23 +477,23 @@ public class HttpManager {
 
 		// http status
 		final StatusLine status = response.getStatusLine();
-		responseEntity.statusCode = status.getStatusCode();
-		responseEntity.statusPhrase = status.getReasonPhrase();
+		responseEntity.setStatusCode(status.getStatusCode());
+		responseEntity.setStatusPhrase(status.getReasonPhrase());
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("[RES]http-{}: statusCode={}", requestEntity.type, responseEntity.statusCode);
+			logger.debug("[RES]http-{}: statusCode={}", requestEntity.getType(), responseEntity.getStatusCode());
 		}
 
 		// ヘッダの処理
 		// // TODO etag特殊処理は削除する。
 		final Header etagHeader = response.getLastHeader("etag");
 		if (etagHeader != null) {
-			responseEntity.etag = Long.parseLong(etagHeader.getValue().replace("\"", ""));
+			responseEntity.setEtag(etagHeader.getValue().replace("\"", ""));
 		}
 		// ヘッダをMapに変換する
-		responseEntity.headers = new TreeMap<String, String>();
+		responseEntity.setHeaders(new TreeMap<String, String>());
 		for (final Header header : response.getAllHeaders()) {
-			responseEntity.headers.put(header.getName(), header.getValue());
+			responseEntity.getHeaders().put(header.getName(), header.getValue());
 		}
 
 		// レスポンスの取得
@@ -498,19 +501,21 @@ public class HttpManager {
 		if (entity != null) {
 			final Header contentType = entity.getContentType();
 			if (contentType != null) {
-				responseEntity.contentType = contentType.getValue();
+				responseEntity.setContentType(contentType.getValue());
 				if (responseEntity.isDumpResponse()) {
-					responseEntity.stream = entity.getContent();
+					responseEntity.setStream(entity.getContent());
 					if (logger.isDebugEnabled()) {
-						logger.debug("[RES]http-{}: stream, {}", requestEntity.type, contentType.getValue());
+						logger.debug("[RES]http-{}: stream, {}", requestEntity.getType(), contentType.getValue());
 					}
 				}
 			}
 			// Close stream in this method.
-			if (responseEntity.stream == null) {
-				responseEntity.text = IOUtils.toString(entity.getContent());
+			if (responseEntity.getStream() == null) {
+				final VPackSlice content = new VPackSlice(IOUtils.toByteArray(entity.getContent()));
+				responseEntity.setContent(content);
+				// responseEntity.setText(IOUtils.toString(entity.getContent()));
 				if (logger.isDebugEnabled()) {
-					logger.debug("[RES]http-{}: text={}", requestEntity.type, responseEntity.text);
+					logger.debug("[RES]http-{}: text={}", requestEntity.getType(), EntityFactory.toJson(content));
 				}
 			}
 		}
@@ -528,8 +533,8 @@ public class HttpManager {
 	private Credentials addCredentials(final HttpRequestEntity requestEntity, final HttpRequestBase request)
 			throws ArangoException {
 		Credentials credentials = null;
-		if (requestEntity.username != null && requestEntity.password != null) {
-			credentials = new UsernamePasswordCredentials(requestEntity.username, requestEntity.password);
+		if (requestEntity.getUsername() != null && requestEntity.getPassword() != null) {
+			credentials = new UsernamePasswordCredentials(requestEntity.getUsername(), requestEntity.getPassword());
 		} else if (configure.getUser() != null && configure.getPassword() != null) {
 			credentials = new UsernamePasswordCredentials(configure.getUser(), configure.getPassword());
 		}
@@ -545,8 +550,8 @@ public class HttpManager {
 	}
 
 	private void addOptionalHeaders(final HttpRequestEntity requestEntity, final HttpRequestBase request) {
-		if (requestEntity.headers != null) {
-			for (final Entry<String, Object> keyValue : requestEntity.headers.entrySet()) {
+		if (requestEntity.getHeaders() != null) {
+			for (final Entry<String, Object> keyValue : requestEntity.getHeaders().entrySet()) {
 				request.setHeader(keyValue.getKey(), keyValue.getValue().toString());
 			}
 		}
@@ -554,7 +559,7 @@ public class HttpManager {
 
 	private HttpRequestBase buildHttpRequestBase(final HttpRequestEntity requestEntity, final String url) {
 		HttpRequestBase request;
-		switch (requestEntity.type) {
+		switch (requestEntity.getType()) {
 		case POST:
 			final HttpPost post = new HttpPost(url);
 			configureBodyParams(requestEntity, post);
@@ -586,27 +591,28 @@ public class HttpManager {
 
 	private void logRequest(final HttpRequestEntity requestEntity, final String url) {
 		if (logger.isDebugEnabled()) {
-			if (requestEntity.type == RequestType.POST || requestEntity.type == RequestType.PUT
-					|| requestEntity.type == RequestType.PATCH) {
-				logger.debug("[REQ]http-{}: url={}, headers={}, body={}",
-					new Object[] { requestEntity.type, url, requestEntity.headers, requestEntity.bodyText });
+			if (requestEntity.getType() == RequestType.POST || requestEntity.getType() == RequestType.PUT
+					|| requestEntity.getType() == RequestType.PATCH) {
+				logger.debug("[REQ]http-{}: url={}, headers={}, body={}", new Object[] { requestEntity.getType(), url,
+						requestEntity.getHeaders(), EntityFactory.toJson(requestEntity.getBody()) });
+				// TODO toJson into EntityFactory
 			} else {
 				logger.debug("[REQ]http-{}: url={}, headers={}",
-					new Object[] { requestEntity.type, url, requestEntity.headers });
+					new Object[] { requestEntity.getType(), url, requestEntity.getHeaders() });
 			}
 		}
 	}
 
 	public static String buildUrl(final String baseUrl, final HttpRequestEntity requestEntity) {
-		if (requestEntity.parameters != null && !requestEntity.parameters.isEmpty()) {
-			final String paramString = URLEncodedUtils.format(toList(requestEntity.parameters), "utf-8");
-			if (requestEntity.url.contains("?")) {
-				return baseUrl + requestEntity.url + "&" + paramString;
+		if (requestEntity.getParameters() != null && !requestEntity.getParameters().isEmpty()) {
+			final String paramString = URLEncodedUtils.format(toList(requestEntity.getParameters()), "utf-8");
+			if (requestEntity.getUrl().contains("?")) {
+				return baseUrl + requestEntity.getUrl() + "&" + paramString;
 			} else {
-				return baseUrl + requestEntity.url + "?" + paramString;
+				return baseUrl + requestEntity.getUrl() + "?" + paramString;
 			}
 		}
-		return baseUrl + requestEntity.url;
+		return baseUrl + requestEntity.getUrl();
 	}
 
 	private static List<NameValuePair> toList(final Map<String, Object> parameters) {
@@ -623,10 +629,13 @@ public class HttpManager {
 		final HttpRequestEntity requestEntity,
 		final HttpEntityEnclosingRequestBase request) {
 
-		if (requestEntity.entity != null) {
-			request.setEntity(requestEntity.entity);
-		} else if (requestEntity.bodyText != null) {
-			request.setEntity(new StringEntity(requestEntity.bodyText, APPLICATION_JSON_UTF8));
+		if (requestEntity.getEntity() != null) {
+			request.setEntity(requestEntity.getEntity());
+		} else if (requestEntity.getBody() != null) {
+			final VPackSlice body = requestEntity.getBody();
+			request.setEntity(new ByteArrayEntity(body.getVpack(), body.getStart(), body.getByteSize(), CONTENT_TYPE));
+			// request.setEntity(new StringEntity(requestEntity.getBodyText(),
+			// APPLICATION_JSON_UTF8));
 		}
 
 	}

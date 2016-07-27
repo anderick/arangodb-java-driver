@@ -23,7 +23,7 @@ import java.util.NoSuchElementException;
 
 import com.arangodb.entity.CursorEntity;
 import com.arangodb.entity.WarningEntity;
-import com.google.gson.JsonObject;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -31,15 +31,15 @@ import com.google.gson.JsonObject;
  */
 public class CursorRawResult implements Iterable<String> {
 
-	private String database;
-	private InternalCursorDriver cursorDriver;
-	private CursorEntity<JsonObject> entity;
+	private final String database;
+	private final InternalCursorDriver cursorDriver;
+	private CursorEntity<VPackSlice> entity;
 	private int pos;
-	private int count;
+	private final int count;
 	private CursorIterator iter;
 
-	public CursorRawResult(String database, InternalCursorDriver cursorDriver, CursorEntity<JsonObject> entity,
-		Class<?>... clazz) {
+	public CursorRawResult(final String database, final InternalCursorDriver cursorDriver,
+		final CursorEntity<VPackSlice> entity, final Class<?>... clazz) {
 		this.database = database;
 		this.cursorDriver = cursorDriver;
 		this.entity = entity;
@@ -63,8 +63,8 @@ public class CursorRawResult implements Iterable<String> {
 	 * @return list of DocumentEntity objects
 	 */
 	public List<String> asList() {
-		List<String> result = new ArrayList<String>();
-		Iterator<String> iterator = iterator();
+		final List<String> result = new ArrayList<String>();
+		final Iterator<String> iterator = iterator();
 
 		while (iterator.hasNext()) {
 			result.add(iterator.next());
@@ -79,7 +79,7 @@ public class CursorRawResult implements Iterable<String> {
 	 * @throws ArangoException
 	 */
 	public void close() throws ArangoException {
-		long cursorId = entity.getCursorId();
+		final long cursorId = entity.getCursorId();
 		cursorDriver.finishQuery(database, cursorId);
 	}
 
@@ -120,8 +120,8 @@ public class CursorRawResult implements Iterable<String> {
 	 * @throws ArangoException
 	 */
 	private void updateEntity() throws ArangoException {
-		long cursorId = entity.getCursorId();
-		this.entity = cursorDriver.continueQuery(database, cursorId, JsonObject.class);
+		final long cursorId = entity.getCursorId();
+		this.entity = cursorDriver.continueQuery(database, cursorId, VPackSlice.class);
 		this.pos = 0;
 	}
 
@@ -150,7 +150,7 @@ public class CursorRawResult implements Iterable<String> {
 				if (pos >= entity.size()) {
 					try {
 						updateEntity();
-					} catch (ArangoException e) {
+					} catch (final ArangoException e) {
 						throw new IllegalStateException(e);
 					}
 				}

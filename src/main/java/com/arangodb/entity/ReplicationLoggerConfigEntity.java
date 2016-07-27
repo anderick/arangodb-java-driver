@@ -16,41 +16,47 @@
 
 package com.arangodb.entity;
 
-
 /**
  * @author tamtam180 - kirscheless at gmail.com
  *
  */
 public class ReplicationLoggerConfigEntity extends BaseEntity {
 
-  boolean autoStart;
-  boolean logRemoteChanges;
-  long maxEvents;
-  long maxEventsSize;
+	private boolean autoStart;
+	private boolean logRemoteChanges;
+	private long maxEvents;
+	private long maxEventsSize;
 
-  public boolean isAutoStart() {
-    return autoStart;
-  }
-  public boolean isLogRemoteChanges() {
-    return logRemoteChanges;
-  }
-  public long getMaxEvents() {
-    return maxEvents;
-  }
-  public long getMaxEventsSize() {
-    return maxEventsSize;
-  }
-  public void setAutoStart(boolean autoStart) {
-    this.autoStart = autoStart;
-  }
-  public void setLogRemoteChanges(boolean logRemoteChanges) {
-    this.logRemoteChanges = logRemoteChanges;
-  }
-  public void setMaxEvents(long maxEvents) {
-    this.maxEvents = maxEvents;
-  }
-  public void setMaxEventsSize(long maxEventsSize) {
-    this.maxEventsSize = maxEventsSize;
-  }
-  
+	public boolean isAutoStart() {
+		return autoStart;
+	}
+
+	public boolean isLogRemoteChanges() {
+		return logRemoteChanges;
+	}
+
+	public long getMaxEvents() {
+		return maxEvents;
+	}
+
+	public long getMaxEventsSize() {
+		return maxEventsSize;
+	}
+
+	public void setAutoStart(final boolean autoStart) {
+		this.autoStart = autoStart;
+	}
+
+	public void setLogRemoteChanges(final boolean logRemoteChanges) {
+		this.logRemoteChanges = logRemoteChanges;
+	}
+
+	public void setMaxEvents(final long maxEvents) {
+		this.maxEvents = maxEvents;
+	}
+
+	public void setMaxEventsSize(final long maxEventsSize) {
+		this.maxEventsSize = maxEventsSize;
+	}
+
 }

@@ -16,7 +16,6 @@
 
 package com.arangodb.entity;
 
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -29,8 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
@@ -48,20 +45,20 @@ import com.arangodb.entity.StatisticsDescriptionEntity.Group;
 import com.arangodb.entity.StatisticsEntity.FigureValue;
 import com.arangodb.entity.marker.VertexEntity;
 import com.arangodb.util.DateUtils;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.reflect.TypeToken;
+import com.arangodb.velocypack.VPackDeserializationContext;
+import com.arangodb.velocypack.VPackDeserializer;
+import com.arangodb.velocypack.VPackSlice;
+import com.arangodb.velocypack.exception.VPackException;
+import com.arangodb.velocypack.exception.VPackParserException;
 
 /**
  * Entity deserializer , internally used.
  *
  * @author tamtam180 - kirscheless at gmail.com
+ * @author mark - mark at arangodb.com
  * 
  */
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public class EntityDeserializers {
 
 	private static final String ADAPTIVE_POLLING = "adaptivePolling";
@@ -176,6 +173,8 @@ public class EntityDeserializers {
 	private static final String IGNORED = "ignored";
 	private static final String DETAILS = "details";
 
+	private static final String TIME = "time";
+
 	private static Logger logger = LoggerFactory.getLogger(EntityDeserializers.class);
 
 	private static class ClassHolder {
@@ -267,421 +266,363 @@ public class EntityDeserializers {
 		return holder.next();
 	}
 
-	private static <T extends BaseEntity> T deserializeBaseParameter(final JsonObject obj, final T entity) {
-		if (obj.has(ERROR) && obj.getAsJsonPrimitive(ERROR).isBoolean()) {
-			entity.error = obj.getAsJsonPrimitive(ERROR).getAsBoolean();
+	private static <T extends BaseEntity> T deserializeBaseParameter(final VPackSlice obj, final T entity)
+			throws VPackException {
+		final VPackSlice error = obj.get(ERROR);
+		if (error.isBoolean()) {
+			entity.setError(error.getAsBoolean());
 		}
-		if (obj.has(CODE) && obj.getAsJsonPrimitive(CODE).isNumber()) {
-			entity.code = obj.getAsJsonPrimitive(CODE).getAsInt();
+		final VPackSlice code = obj.get(CODE);
+		if (code.isNumber()) {
+			entity.setCode(code.getAsInt());
 		}
-		if (obj.has(ERROR_NUM) && obj.getAsJsonPrimitive(ERROR_NUM).isNumber()) {
-			entity.errorNumber = obj.getAsJsonPrimitive(ERROR_NUM).getAsInt();
+		final VPackSlice errorNum = obj.get(ERROR_NUM);
+		if (errorNum.isNumber()) {
+			entity.setErrorNumber(errorNum.getAsInt());
 		}
-		if (obj.has(ERROR_MESSAGE)) {
-			entity.errorMessage = obj.getAsJsonPrimitive(ERROR_MESSAGE).getAsString();
+		final VPackSlice errorMessage = obj.get(ERROR_MESSAGE);
+		if (errorMessage.isString()) {
+			entity.setErrorMessage(errorMessage.getAsString());
 		}
-		if (obj.has(ETAG) && obj.getAsJsonPrimitive(ERROR_NUM).isNumber()) {
-			entity.etag = obj.getAsJsonPrimitive(ETAG).getAsLong();
+		final VPackSlice etag = obj.get(ETAG);
+		if (etag.isString()) {
+			entity.setEtag(etag.getAsString());
 		}
-
 		return entity;
 	}
 
-	private static <T extends DocumentHolder> T deserializeDocumentParameter(final JsonObject obj, final T entity) {
-
-		if (obj.has("_rev")) {
-			entity.setDocumentRevision(obj.getAsJsonPrimitive("_rev").getAsLong());
+	private static <T extends DocumentHolder> T deserializeDocumentParameter(final VPackSlice obj, final T entity)
+			throws VPackException {
+		final VPackSlice rev = obj.get(BaseDocument.REV);
+		if (rev.isNumber()) {
+			entity.setDocumentRevision(rev.getAsLong());
 		}
-		if (obj.has("_id")) {
-			entity.setDocumentHandle(obj.getAsJsonPrimitive("_id").getAsString());
+		final VPackSlice id = obj.get(BaseDocument.ID);
+		if (id.isString()) {
+			entity.setDocumentHandle(id.getAsString());
 		}
-		if (obj.has("_key")) {
-			entity.setDocumentKey(obj.getAsJsonPrimitive("_key").getAsString());
+		final VPackSlice key = obj.get(BaseDocument.KEY);
+		if (key.isString()) {
+			entity.setDocumentKey(key.getAsString());
 		}
-
 		return entity;
 	}
 
-	public static class DefaultEntityDeserializer implements JsonDeserializer<DefaultEntity> {
+	public static class DefaultEntityDeserializer implements VPackDeserializer<DefaultEntity> {
+
 		@Override
-		public DefaultEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-			if (json.isJsonNull()) {
+		public DefaultEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-			return deserializeBaseParameter(json.getAsJsonObject(), new DefaultEntity());
+			return deserializeBaseParameter(vpack, new DefaultEntity());
 		}
 	}
 
-	public static class VersionDeserializer implements JsonDeserializer<ArangoVersion> {
+	public static class VersionDeserializer implements VPackDeserializer<ArangoVersion> {
 
 		@Override
-		public ArangoVersion deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public ArangoVersion deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final ArangoVersion entity = deserializeBaseParameter(obj, new ArangoVersion());
-
-			if (obj.has(SERVER)) {
-				entity.server = obj.getAsJsonPrimitive(SERVER).getAsString();
+			final ArangoVersion entity = deserializeBaseParameter(vpack, new ArangoVersion());
+			final VPackSlice server = vpack.get(SERVER);
+			if (server.isString()) {
+				entity.setServer(server.getAsString());
 			}
-
-			if (obj.has(VERSION)) {
-				entity.version = obj.getAsJsonPrimitive(VERSION).getAsString();
+			final VPackSlice version = vpack.get(VERSION);
+			if (version.isString()) {
+				entity.setVersion(version.getAsString());
 			}
-
 			return entity;
 		}
 	}
 
-	public static class ArangoUnixTimeDeserializer implements JsonDeserializer<ArangoUnixTime> {
-		@Override
-		public ArangoUnixTime deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
+	public static class ArangoUnixTimeDeserializer implements VPackDeserializer<ArangoUnixTime> {
 
-			if (json.isJsonNull()) {
+		@Override
+		public ArangoUnixTime deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final ArangoUnixTime entity = deserializeBaseParameter(obj, new ArangoUnixTime());
-
-			if (obj.has("time")) {
-				entity.time = obj.getAsJsonPrimitive("time").getAsDouble();
-				final String time = obj.getAsJsonPrimitive("time").getAsString(); // 実際はdoubleだけど精度の問題が心配なので文字列で処理する。
-				entity.second = (int) entity.time;
+			final ArangoUnixTime entity = deserializeBaseParameter(vpack, new ArangoUnixTime());
+			final VPackSlice vtime = vpack.get(TIME);
+			if (vtime.isNumber()) {
+				entity.setTime(vtime.getAsDouble());
+				final String time = String.valueOf(entity.getTime());
+				entity.setSecond((int) entity.getTime());
 
 				final int pos = time.indexOf('.');
-				entity.microsecond = (pos >= 0 && pos + 1 != time.length()) ? Integer.parseInt(time.substring(pos + 1))
-						: 0;
+				entity.setMicrosecond(
+					(pos >= 0 && pos + 1 != time.length()) ? Integer.parseInt(time.substring(pos + 1)) : 0);
 			}
-
 			return entity;
 		}
 	}
 
-	public static class FiguresDeserializer implements JsonDeserializer<Figures> {
+	public static class FiguresDeserializer implements VPackDeserializer<Figures> {
 
 		@Override
-		public Figures deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public Figures deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
 			final Figures entity = new Figures();
-
-			if (obj.has(ALIVE)) {
-				final JsonObject alive = obj.getAsJsonObject(ALIVE);
-				entity.aliveCount = alive.getAsJsonPrimitive(COUNT).getAsLong();
-				entity.aliveSize = alive.getAsJsonPrimitive(SIZE).getAsLong();
+			final VPackSlice alive = vpack.get(ALIVE);
+			if (alive.isObject()) {
+				entity.setAliveCount(alive.get(COUNT).getAsLong());
+				entity.setAliveSize(alive.get(SIZE).getAsLong());
 			}
-
-			if (obj.has("dead")) {
-				final JsonObject dead = obj.getAsJsonObject("dead");
-				entity.deadCount = dead.getAsJsonPrimitive(COUNT).getAsLong();
-				entity.deadSize = dead.getAsJsonPrimitive(SIZE).getAsLong();
-				entity.deadDeletion = dead.getAsJsonPrimitive("deletion").getAsLong();
+			final VPackSlice dead = vpack.get("dead");
+			if (dead.isObject()) {
+				entity.setDeadCount(dead.get(COUNT).getAsLong());
+				entity.setDeadSize(dead.get(SIZE).getAsLong());
+				entity.setDeadDeletion(dead.get("deletion").getAsLong());
 			}
-
-			if (obj.has("datafiles")) {
-				final JsonObject datafiles = obj.getAsJsonObject("datafiles");
-				entity.datafileCount = datafiles.getAsJsonPrimitive(COUNT).getAsLong();
-				entity.datafileFileSize = datafiles.getAsJsonPrimitive(FILE_SIZE).getAsLong();
+			final VPackSlice datafiles = vpack.get("datafiles");
+			if (datafiles.isObject()) {
+				entity.setDatafileCount(datafiles.get(COUNT).getAsLong());
+				entity.setDatafileFileSize(datafiles.get(FILE_SIZE).getAsLong());
 			}
-
-			if (obj.has("journals")) {
-				final JsonObject journals = obj.getAsJsonObject("journals");
-				entity.journalsCount = journals.getAsJsonPrimitive(COUNT).getAsLong();
-				entity.journalsFileSize = journals.getAsJsonPrimitive(FILE_SIZE).getAsLong();
+			final VPackSlice journals = vpack.get("journals");
+			if (journals.isObject()) {
+				entity.setJournalsCount(journals.get(COUNT).getAsLong());
+				entity.setJournalsFileSize(journals.get(FILE_SIZE).getAsLong());
 			}
-
-			if (obj.has("compactors")) {
-				final JsonObject compactors = obj.getAsJsonObject("compactors");
-				entity.compactorsCount = compactors.getAsJsonPrimitive(COUNT).getAsLong();
-				entity.compactorsFileSize = compactors.getAsJsonPrimitive(FILE_SIZE).getAsLong();
+			final VPackSlice compactors = vpack.get("compactors");
+			if (compactors.isObject()) {
+				entity.setCompactorsCount(compactors.get(COUNT).getAsLong());
+				entity.setCompactorsFileSize(compactors.get(FILE_SIZE).getAsLong());
 			}
-
-			if (obj.has(INDEXES)) {
-				final JsonObject indexes = obj.getAsJsonObject(INDEXES);
-				entity.indexesCount = indexes.getAsJsonPrimitive(COUNT).getAsLong();
-				entity.indexesSize = indexes.getAsJsonPrimitive(SIZE).getAsLong();
+			final VPackSlice indexes = vpack.get(INDEXES);
+			if (indexes.isObject()) {
+				entity.setIndexesCount(indexes.get(COUNT).getAsLong());
+				entity.setIndexesSize(indexes.get(SIZE).getAsLong());
 			}
-
-			if (obj.has("lastTick")) {
-				entity.lastTick = obj.getAsJsonPrimitive("lastTick").getAsLong();
+			final VPackSlice lastTick = vpack.get("lastTick");
+			if (lastTick.isNumber()) {
+				entity.setLastTick(lastTick.getAsLong());
 			}
-
-			if (obj.has("uncollectedLogfileEntries")) {
-				entity.uncollectedLogfileEntries = obj.getAsJsonPrimitive("uncollectedLogfileEntries").getAsLong();
+			final VPackSlice uncollectedLogfileEntries = vpack.get("uncollectedLogfileEntries");
+			if (uncollectedLogfileEntries.isNumber()) {
+				entity.setUncollectedLogfileEntries(uncollectedLogfileEntries.getAsLong());
 			}
-
 			return entity;
 		}
 	}
 
-	public static class CollectionKeyOptionDeserializer implements JsonDeserializer<CollectionKeyOption> {
-		@Override
-		public CollectionKeyOption deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
+	public static class CollectionKeyOptionDeserializer implements VPackDeserializer<CollectionKeyOption> {
 
-			if (json.isJsonNull()) {
+		@Override
+		public CollectionKeyOption deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
 			final CollectionKeyOption entity = new CollectionKeyOption();
-
-			if (obj.has("type")) {
-				entity.type = obj.getAsJsonPrimitive("type").getAsString();
+			final VPackSlice type = vpack.get("type");
+			if (type.isString()) {
+				entity.setType(type.getAsString());
 			}
-
-			if (obj.has("allowUserKeys")) {
-				entity.allowUserKeys = obj.getAsJsonPrimitive("allowUserKeys").getAsBoolean();
+			final VPackSlice allowUserKeys = vpack.get("allowUserKeys");
+			if (allowUserKeys.isBoolean()) {
+				entity.setAllowUserKeys(allowUserKeys.getAsBoolean());
 			}
-
-			if (obj.has("increment")) {
-				entity.increment = obj.getAsJsonPrimitive("increment").getAsLong();
+			final VPackSlice increment = vpack.get("increment");
+			if (increment.isNumber()) {
+				entity.setIncrement(increment.getAsLong());
 			}
-
-			if (obj.has("offset")) {
-				entity.offset = obj.getAsJsonPrimitive("offset").getAsLong();
+			final VPackSlice offset = vpack.get("offset");
+			if (offset.isNumber()) {
+				entity.setOffset(offset.getAsLong());
 			}
-
 			return entity;
 		}
 	}
 
-	public static class CollectionEntityDeserializer implements JsonDeserializer<CollectionEntity> {
+	public static class CollectionEntityDeserializer implements VPackDeserializer<CollectionEntity> {
 
 		@Override
-		public CollectionEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public CollectionEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final CollectionEntity entity = deserializeBaseParameter(obj, new CollectionEntity());
-
-			if (obj.has(NAME)) {
-				entity.name = obj.getAsJsonPrimitive(NAME).getAsString();
+			final CollectionEntity entity = deserializeBaseParameter(vpack, new CollectionEntity());
+			final VPackSlice name = vpack.get(NAME);
+			if (name.isString()) {
+				entity.setName(name.getAsString());
 			}
-
-			if (obj.has(ID)) {
-				entity.id = obj.getAsJsonPrimitive(ID).getAsLong();
+			final VPackSlice id = vpack.get(ID);
+			if (id.isNumber()) {
+				entity.setId(id.getAsLong());
 			}
-
-			if (obj.has(STATUS)) {
-				entity.status = context.deserialize(obj.get(STATUS), CollectionStatus.class);
+			final VPackSlice status = vpack.get(STATUS);
+			if (!status.isNone() && !status.isNull()) {
+				entity.setStatus(context.deserialize(status, CollectionStatus.class));
 			}
-
-			if (obj.has(WAIT_FOR_SYNC)) {
-				entity.waitForSync = obj.getAsJsonPrimitive(WAIT_FOR_SYNC).getAsBoolean();
+			final VPackSlice waitForSync = vpack.get(WAIT_FOR_SYNC);
+			if (waitForSync.isBoolean()) {
+				entity.setWaitForSync(waitForSync.getAsBoolean());
 			}
-
-			if (obj.has(IS_SYSTEM)) {
-				entity.isSystem = obj.getAsJsonPrimitive(IS_SYSTEM).getAsBoolean();
+			final VPackSlice isSystem = vpack.get(IS_SYSTEM);
+			if (isSystem.isBoolean()) {
+				entity.setIsSystem(isSystem.getAsBoolean());
 			}
-
-			if (obj.has(IS_VOLATILE)) {
-				entity.isVolatile = obj.getAsJsonPrimitive(IS_VOLATILE).getAsBoolean();
+			final VPackSlice isVolatile = vpack.get(IS_VOLATILE);
+			if (isVolatile.isBoolean()) {
+				entity.setIsVolatile(isVolatile.getAsBoolean());
 			}
-
-			if (obj.has(JOURNAL_SIZE)) {
-				entity.journalSize = obj.getAsJsonPrimitive(JOURNAL_SIZE).getAsLong();
+			final VPackSlice journalSize = vpack.get(JOURNAL_SIZE);
+			if (journalSize.isNumber()) {
+				entity.setJournalSize(journalSize.getAsLong());
 			}
-
-			if (obj.has(COUNT)) {
-				entity.count = obj.getAsJsonPrimitive(COUNT).getAsLong();
+			final VPackSlice count = vpack.get(COUNT);
+			if (count.isNumber()) {
+				entity.setCount(count.getAsLong());
 			}
-
-			if (obj.has(REVISION)) {
-				entity.revision = obj.getAsJsonPrimitive(REVISION).getAsLong();
+			final VPackSlice revision = vpack.get(REVISION);
+			if (revision.isNumber()) {
+				entity.setRevision(revision.getAsLong());
 			}
-
-			if (obj.has(FIGURES)) {
-				entity.figures = context.deserialize(obj.get(FIGURES), Figures.class);
+			final VPackSlice figures = vpack.get(FIGURES);
+			if (figures.isObject()) {
+				entity.setFigures(context.deserialize(figures, Figures.class));
 			}
-
-			if (obj.has(TYPE)) {
-				entity.type = CollectionType.valueOf(obj.getAsJsonPrimitive(TYPE).getAsInt());
+			final VPackSlice type = vpack.get(TYPE);
+			if (type.isNumber()) {
+				entity.setType(CollectionType.valueOf(type.getAsInt()));
 			}
-
-			if (obj.has(KEY_OPTIONS)) {
-				entity.keyOptions = context.deserialize(obj.get(KEY_OPTIONS), CollectionKeyOption.class);
+			final VPackSlice keyOptions = vpack.get(KEY_OPTIONS);
+			if (keyOptions.isObject()) {
+				entity.setKeyOptions(context.deserialize(keyOptions, CollectionKeyOption.class));
 			}
-
-			if (obj.has(CHECKSUM)) {
-				entity.checksum = obj.getAsJsonPrimitive(CHECKSUM).getAsLong();
+			final VPackSlice checksum = vpack.get(CHECKSUM);
+			if (checksum.isNumber()) {
+				entity.setChecksum(checksum.getAsLong());
 			}
-
-			if (obj.has(DO_COMPACT)) {
-				entity.doCompact = obj.getAsJsonPrimitive(DO_COMPACT).getAsBoolean();
+			final VPackSlice doCompact = vpack.get(DO_COMPACT);
+			if (doCompact.isBoolean()) {
+				entity.setDoCompact(doCompact.getAsBoolean());
 			}
-
 			return entity;
 		}
+
 	}
 
-	public static class CollectionsEntityDeserializer implements JsonDeserializer<CollectionsEntity> {
-		private final Type collectionsType = new TypeToken<List<CollectionEntity>>() {
-		}.getType();
+	public static class CollectionsEntityDeserializer implements VPackDeserializer<CollectionsEntity> {
 
-		@SuppressWarnings("unchecked")
 		@Override
-		public CollectionsEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public CollectionsEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final CollectionsEntity entity = deserializeBaseParameter(obj, new CollectionsEntity());
-
-			if (obj.has(RESULT)) {
-				entity.setCollections((List<CollectionEntity>) context.deserialize(obj.get(RESULT), collectionsType));
+			final CollectionsEntity entity = deserializeBaseParameter(vpack, new CollectionsEntity());
+			final VPackSlice result = vpack.get(RESULT);
+			if (result.isArray()) {
+				entity.setCollections(context.deserialize(result, List.class, CollectionEntity.class));
 			} else {
 				entity.setCollections(new ArrayList<CollectionEntity>());
 			}
-
 			return entity;
 		}
 	}
 
-	public static class AqlfunctionsEntityDeserializer implements JsonDeserializer<AqlFunctionsEntity> {
+	public static class AqlfunctionsEntityDeserializer implements VPackDeserializer<AqlFunctionsEntity> {
 
 		@Override
-		public AqlFunctionsEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public AqlFunctionsEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
 
-			final JsonArray obj = json.getAsJsonArray();
-			final Iterator<JsonElement> iterator = obj.iterator();
+			final Iterator<VPackSlice> iterator = vpack.iterator();
 			final Map<String, String> functions = new HashMap<String, String>();
 			while (iterator.hasNext()) {
-				final JsonElement e = iterator.next();
-				final JsonObject o = e.getAsJsonObject();
-				functions.put(o.get("name").getAsString(), o.get(CODE).getAsString());
+				final VPackSlice e = iterator.next();
+				functions.put(e.get("name").getAsString(), e.get(CODE).getAsString());
 			}
 			return new AqlFunctionsEntity(functions);
 		}
+
 	}
 
-	public static class JobsEntityDeserializer implements JsonDeserializer<JobsEntity> {
+	public static class JobsEntityDeserializer implements VPackDeserializer<JobsEntity> {
 
 		@Override
-		public JobsEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public JobsEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
 
-			final JsonArray obj = json.getAsJsonArray();
-			final Iterator<JsonElement> iterator = obj.iterator();
+			final Iterator<VPackSlice> iterator = vpack.iterator();
 			final List<String> jobs = new ArrayList<String>();
 			while (iterator.hasNext()) {
-				final JsonElement e = iterator.next();
+				final VPackSlice e = iterator.next();
 				jobs.add(e.getAsString());
 			}
 			return new JobsEntity(jobs);
 		}
+
 	}
 
-	public static class CursorEntityDeserializer implements JsonDeserializer<CursorEntity<?>> {
-
-		private final Type bindVarsType = new TypeToken<List<String>>() {
-		}.getType();
-
-		private final Type extraType = new TypeToken<Map<String, Object>>() {
-		}.getType();
+	public static class CursorEntityDeserializer implements VPackDeserializer<CursorEntity> {
 
 		@Override
-		public CursorEntity<?> deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public CursorEntity<?> deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final CursorEntity<Object> entity = deserializeBaseParameter(obj, new CursorEntity<Object>());
-
-			if (obj.has(RESULT)) {
-				final JsonArray array = obj.getAsJsonArray(RESULT);
-				if (array == null || array.isJsonNull() || array.size() == 0) {
-					entity.results = Collections.emptyList();
-				} else {
-					getResultObjects(context, entity, array);
-				}
+			final CursorEntity<Object> entity = deserializeBaseParameter(vpack, new CursorEntity<Object>());
+			final VPackSlice result = vpack.get(RESULT);
+			if (result.isArray() && result.getLength() > 0) {
+				getResultObjects(context, entity, result);
+			} else {
+				entity.setResults(Collections.emptyList());
 			}
-
-			if (obj.has("hasMore")) {
-				entity.hasMore = obj.getAsJsonPrimitive("hasMore").getAsBoolean();
+			final VPackSlice hasMore = vpack.get("hasMore");
+			if (hasMore.isBoolean()) {
+				entity.setHasMore(hasMore.getAsBoolean());
 			}
-
-			if (obj.has(COUNT)) {
-				entity.count = obj.getAsJsonPrimitive(COUNT).getAsInt();
+			final VPackSlice count = vpack.get(COUNT);
+			if (count.isNumber()) {
+				entity.setCount(count.getAsInt());
 			}
-
-			if (obj.has(ID)) {
-				entity.cursorId = obj.getAsJsonPrimitive(ID).getAsLong();
+			final VPackSlice id = vpack.get(ID);
+			if (id.isNumber()) {
+				entity.setCursorId(id.getAsLong());
 			}
-
-			if (obj.has("cached")) {
-				entity.cached = obj.getAsJsonPrimitive("cached").getAsBoolean();
+			final VPackSlice cached = vpack.get("cached");
+			if (cached.isBoolean()) {
+				entity.setCached(cached.getAsBoolean());
 			}
-
-			if (obj.has("bindVars")) {
-				entity.bindVars = context.deserialize(obj.get("bindVars"), bindVarsType);
+			final VPackSlice bindVars = vpack.get("bindVars");
+			if (bindVars.isArray()) {
+				entity.setBindVars(context.deserialize(bindVars, List.class, String.class));
 			}
-
-			entity.warnings = new ArrayList<WarningEntity>();
-			if (obj.has(EXTRA)) {
-				entity.extra = context.deserialize(obj.get(EXTRA), extraType);
+			entity.setWarnings(new ArrayList<WarningEntity>());
+			final VPackSlice extra = vpack.get(EXTRA);
+			if (extra.isArray()) {
+				entity.setExtra(context.deserialize(extra, Map.class, String.class, Object.class));
 				getFullCount(entity);
 				getWarnings(entity);
 			}
-
 			return entity;
 		}
 
 		private void getResultObjects(
-			final JsonDeserializationContext context,
+			final VPackDeserializationContext context,
 			final CursorEntity<Object> entity,
-			final JsonArray array) {
+			final VPackSlice array) throws VPackParserException {
 			final Class<?> clazz = getParameterized();
 			final boolean withDocument = DocumentEntity.class.isAssignableFrom(clazz);
 			if (withDocument) {
@@ -692,7 +633,7 @@ public class EntityDeserializers {
 				for (int i = 0, imax = array.size(); i < imax; i++) {
 					list.add(context.deserialize(array.get(i), clazz));
 				}
-				entity.results = list;
+				entity.setResults(list);
 			} finally {
 				if (withDocument) {
 					backParameterized();
@@ -701,10 +642,10 @@ public class EntityDeserializers {
 		}
 
 		private void getWarnings(final CursorEntity<Object> entity) {
-			if (entity.extra.containsKey(WARNINGS)) {
-				final Object object = entity.extra.get(WARNINGS);
+			if (entity.getExtra().containsKey(WARNINGS)) {
+				final Object object = entity.getExtra().get(WARNINGS);
 				if (object instanceof List<?>) {
-					final List<?> l = (List<?>) entity.extra.get(WARNINGS);
+					final List<?> l = (List<?>) entity.getExtra().get(WARNINGS);
 					getWarningsFromList(entity, l);
 				}
 			}
@@ -718,18 +659,19 @@ public class EntityDeserializers {
 							&& m.get(MESSAGE) instanceof String) {
 						final Long code = ((Double) m.get(CODE)).longValue();
 						final String message = (String) m.get(MESSAGE);
-						entity.warnings.add(new WarningEntity(code, message));
+						entity.getWarnings().add(new WarningEntity(code, message));
 					}
 				}
 			}
 		}
 
 		private void getFullCount(final CursorEntity<Object> entity) {
-			if (entity.extra.containsKey("stats") && entity.extra.get("stats") instanceof Map<?, ?>) {
-				final Map<?, ?> m = (Map<?, ?>) entity.extra.get("stats");
+			final Map<String, Object> extra = entity.getExtra();
+			if (extra.containsKey("stats") && extra.get("stats") instanceof Map<?, ?>) {
+				final Map<?, ?> m = (Map<?, ?>) extra.get("stats");
 				if (m.containsKey("fullCount") && m.get("fullCount") instanceof Double) {
 					final Double v = (Double) m.get("fullCount");
-					entity.fullCount = v.intValue();
+					entity.setFullCount(v.intValue());
 				}
 			}
 		}
@@ -744,41 +686,28 @@ public class EntityDeserializers {
 
 	}
 
-	public static class DocumentEntityDeserializer implements JsonDeserializer<DocumentEntity<?>> {
+	public static class DocumentEntityDeserializer implements VPackDeserializer<DocumentEntity> {
 
 		@Override
-		public DocumentEntity<?> deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public DocumentEntity<?> deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (!vpack.isObject()) {
 				return new DocumentEntity<Object>();
 			}
-
-			if (json.isJsonPrimitive()) {
-				return new DocumentEntity<Object>();
-			}
-
-			if (json.isJsonArray()) {
-				return new DocumentEntity<Object>();
-			}
-
-			final JsonObject obj = json.getAsJsonObject();
-
 			final DocumentEntity<Object> entity = new DocumentEntity<Object>();
-			deserializeDocumentParameter(obj, entity);
+			deserializeDocumentParameter(vpack, entity);
 
 			// 他のフィールドはリフレクションで。 (TODO: Annotationのサポートと上記パラメータを弾く)
 			final Class<?> clazz = getParameterized();
 			if (clazz != null) {
-				entity.entity = context.deserialize(obj, clazz);
+				entity.setEntity(context.deserialize(vpack, clazz));
 
 				if (clazz.getName().equalsIgnoreCase(BaseDocument.class.getName())) {
 					// iterate all key/value pairs of the jsonObject and
 					// determine its class(String, Number, Boolean, HashMap,
 					// List)
-					((BaseDocument) entity.entity).setProperties(DeserializeSingleEntry.deserializeJsonObject(obj));
+					((BaseDocument) entity.getEntity())
+							.setProperties(DeserializeSingleEntry.deserializeJsonObject(vpack));
 				}
 			}
 
@@ -797,41 +726,40 @@ public class EntityDeserializers {
 		/**
 		 * deserialize any jsonElement
 		 *
-		 * @param jsonElement
+		 * @param vpack
 		 * @return a object
 		 */
-		public static Object deserializeJsonElement(final JsonElement jsonElement) {
-			if (jsonElement.getClass() == JsonPrimitive.class) {
-				return deserializeJsonPrimitive((JsonPrimitive) jsonElement);
-			} else if (jsonElement.getClass() == JsonArray.class) {
-				return deserializeJsonArray((JsonArray) jsonElement);
-			} else if (jsonElement.getClass() == JsonObject.class) {
-				return deserializeJsonObject((JsonObject) jsonElement);
+		public static Object deserializeJsonElement(final VPackSlice vpack) {
+			if (vpack.isObject()) {
+				return deserializeJsonObject(vpack);
+			} else if (vpack.isArray()) {
+				return deserializeJsonArray(vpack);
+			} else {
+				return deserializeJsonPrimitive(vpack);
 			}
-			return null;
 		}
 
 		/**
 		 * deserializes a JsonObject into a Map<String, Object>
 		 *
-		 * @param jsonObject
+		 * @param vpack
 		 *            a jsonObject
 		 * @return the deserialized jsonObject
 		 */
-		private static Map<String, Object> deserializeJsonObject(final JsonObject jsonObject) {
+		private static Map<String, Object> deserializeJsonObject(final VPackSlice vpack) {
 			final Map<String, Object> result = new HashMap<String, Object>();
-			final Set<Entry<String, JsonElement>> entrySet = jsonObject.entrySet();
-			for (final Map.Entry<String, JsonElement> entry : entrySet) {
-				if (!nonProperties.contains(entry.getKey())) {
-					result.put(entry.getKey(), deserializeJsonElement(jsonObject.get(entry.getKey())));
+			for (int i = 0; i < vpack.getLength(); i++) {
+				final String key = vpack.keyAt(i).getAsString();
+				if (!nonProperties.contains(key)) {
+					result.put(key, deserializeJsonElement(vpack.valueAt(i)));
 				}
 			}
 			return result;
 		}
 
-		private static List<Object> deserializeJsonArray(final JsonArray jsonArray) {
+		private static List<Object> deserializeJsonArray(final VPackSlice vpack) {
 			final List<Object> tmpObjectList = new ArrayList<Object>();
-			final Iterator<JsonElement> iterator = jsonArray.iterator();
+			final Iterator<VPackSlice> iterator = vpack.iterator();
 			while (iterator.hasNext()) {
 				tmpObjectList.add(deserializeJsonElement(iterator.next()));
 			}
@@ -841,1400 +769,1222 @@ public class EntityDeserializers {
 		/**
 		 * deserializes a jsonPrimitiv into the equivalent java primitive
 		 *
-		 * @param jsonPrimitive
+		 * @param vpack
 		 * @return null|String|Double|Boolean
 		 */
-		private static Object deserializeJsonPrimitive(final JsonPrimitive jsonPrimitive) {
-			if (jsonPrimitive.isBoolean()) {
-				return jsonPrimitive.getAsBoolean();
-			} else if (jsonPrimitive.isNumber()) {
-				return jsonPrimitive.getAsDouble();
-			} else if (jsonPrimitive.isString()) {
-				return jsonPrimitive.getAsString();
+		private static Object deserializeJsonPrimitive(final VPackSlice vpack) {
+			if (vpack.isBoolean()) {
+				return vpack.getAsBoolean();
+			} else if (vpack.isNumber()) {
+				return vpack.getAsDouble();
+			} else if (vpack.isString()) {
+				return vpack.getAsString();
 			}
 			return null;
 		}
 
 	}
 
-	public static class DocumentsEntityDeserializer implements JsonDeserializer<DocumentsEntity> {
-		private final Type documentsType = new TypeToken<List<String>>() {
-		}.getType();
+	public static class DocumentsEntityDeserializer implements VPackDeserializer<DocumentsEntity> {
 
 		@Override
-		public DocumentsEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public DocumentsEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final DocumentsEntity entity = deserializeBaseParameter(obj, new DocumentsEntity());
-
-			if (obj.has("documents")) {
-				entity.documents = context.deserialize(obj.get("documents"), documentsType);
+			final DocumentsEntity entity = deserializeBaseParameter(vpack, new DocumentsEntity());
+			final VPackSlice documents = vpack.get("documents");
+			if (documents.isArray()) {
+				entity.setDocuments(context.deserialize(documents, List.class, String.class));
 			}
-
 			return entity;
 		}
 
 	}
 
-	public static class IndexEntityDeserializer implements JsonDeserializer<IndexEntity> {
-		private final Type fieldsType = new TypeToken<List<String>>() {
-		}.getType();
+	public static class IndexEntityDeserializer implements VPackDeserializer<IndexEntity> {
 
 		@Override
-		public IndexEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public IndexEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final IndexEntity entity = deserializeBaseParameter(obj, new IndexEntity());
-
-			if (obj.has(ID)) {
-				entity.id = obj.getAsJsonPrimitive(ID).getAsString();
+			final IndexEntity entity = deserializeBaseParameter(vpack, new IndexEntity());
+			final VPackSlice id = vpack.get(ID);
+			if (id.isString()) {
+				entity.setId(id.getAsString());
 			}
-
-			if (obj.has("type")) {
-				final String type = obj.getAsJsonPrimitive("type").getAsString().toUpperCase(Locale.US);
+			final VPackSlice vtype = vpack.get(TYPE);
+			if (vtype.isString()) {
+				final String type = vtype.getAsString().toUpperCase(Locale.US);
 				if (type.startsWith(IndexType.GEO.name())) {
-					entity.type = IndexType.GEO;
+					entity.setType(IndexType.GEO);
 				} else {
-					entity.type = IndexType.valueOf(type);
+					entity.setType(IndexType.valueOf(type));
 				}
 			}
-
-			if (obj.has("fields")) {
-				entity.fields = context.deserialize(obj.getAsJsonArray("fields"), fieldsType);
+			final VPackSlice fields = vpack.get("fields");
+			if (fields.isArray()) {
+				entity.setFields(context.deserialize(fields, List.class, String.class));
 			}
-
-			if (obj.has("geoJson")) {
-				entity.geoJson = obj.getAsJsonPrimitive("geoJson").getAsBoolean();
+			final VPackSlice geoJson = vpack.get("geoJson");
+			if (geoJson.isBoolean()) {
+				entity.setGeoJson(geoJson.getAsBoolean());
 			}
-
-			if (obj.has("isNewlyCreated")) {
-				entity.isNewlyCreated = obj.getAsJsonPrimitive("isNewlyCreated").getAsBoolean();
+			final VPackSlice isNewlyCreated = vpack.get("isNewlyCreated");
+			if (isNewlyCreated.isBoolean()) {
+				entity.setNewlyCreated(isNewlyCreated.getAsBoolean());
 			}
-
-			if (obj.has("unique")) {
-				entity.unique = obj.getAsJsonPrimitive("unique").getAsBoolean();
+			final VPackSlice unique = vpack.get("unique");
+			if (unique.isBoolean()) {
+				entity.setUnique(unique.getAsBoolean());
 			}
-
-			if (obj.has("sparse")) {
-				entity.sparse = obj.getAsJsonPrimitive("sparse").getAsBoolean();
+			final VPackSlice sparse = vpack.get("sparse");
+			if (sparse.isBoolean()) {
+				entity.setSparse(sparse.getAsBoolean());
 			}
-
-			if (obj.has("size")) {
-				entity.size = obj.getAsJsonPrimitive("size").getAsInt();
+			final VPackSlice size = vpack.get("size");
+			if (size.isNumber()) {
+				entity.setSize(size.getAsInt());
 			}
-
-			if (obj.has("minLength")) {
-				entity.minLength = obj.getAsJsonPrimitive("minLength").getAsInt();
+			final VPackSlice minLength = vpack.get("minLength");
+			if (minLength.isNumber()) {
+				entity.setMinLength(minLength.getAsInt());
 			}
-
-			if (obj.has("selectivityEstimate")) {
-				entity.selectivityEstimate = obj.getAsJsonPrimitive("selectivityEstimate").getAsDouble();
+			final VPackSlice selectivityEstimate = vpack.get("selectivityEstimate");
+			if (selectivityEstimate.isNumber()) {
+				entity.setSelectivityEstimate(selectivityEstimate.getAsDouble());
 			}
-
-			return entity;
-		}
-	}
-
-	public static class IndexesEntityDeserializer implements JsonDeserializer<IndexesEntity> {
-		private final Type indexesType = new TypeToken<List<IndexEntity>>() {
-		}.getType();
-		private final Type identifiersType = new TypeToken<Map<String, IndexEntity>>() {
-		}.getType();
-
-		@Override
-		public IndexesEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
-				return null;
-			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final IndexesEntity entity = deserializeBaseParameter(obj, new IndexesEntity());
-
-			if (obj.has(INDEXES)) {
-				entity.indexes = context.deserialize(obj.get(INDEXES), indexesType);
-			}
-
-			if (obj.has("identifiers")) {
-				entity.identifiers = context.deserialize(obj.get("identifiers"), identifiersType);
-			}
-
 			return entity;
 		}
 
 	}
 
-	public static class AdminLogEntryEntityDeserializer implements JsonDeserializer<AdminLogEntity> {
-		@Override
-		public AdminLogEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
+	public static class IndexesEntityDeserializer implements VPackDeserializer<IndexesEntity> {
 
-			if (json.isJsonNull()) {
+		@Override
+		public IndexesEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+
+			if (vpack.isNull()) {
+				return null;
+			}
+			final IndexesEntity entity = deserializeBaseParameter(vpack, new IndexesEntity());
+			final VPackSlice indexes = vpack.get(INDEXES);
+			if (indexes.isArray()) {
+				entity.setIndexes(context.deserialize(indexes, List.class, IndexEntity.class));
+			}
+			final VPackSlice identifiers = vpack.get("identifiers");
+			if (identifiers.isObject()) {
+				entity.setIdentifiers(context.deserialize(identifiers, Map.class, String.class, IndexEntity.class));
+			}
+			return entity;
+		}
+
+	}
+
+	public static class AdminLogEntryEntityDeserializer implements VPackDeserializer<AdminLogEntity> {
+
+		@Override
+		public AdminLogEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
 
-			final JsonObject obj = json.getAsJsonObject();
-			final AdminLogEntity entity = deserializeBaseParameter(obj, new AdminLogEntity());
+			final AdminLogEntity entity = deserializeBaseParameter(vpack, new AdminLogEntity());
 			// 全ての要素は必ずあることが前提なのでhasチェックはしない
-			final int[] lids = context.deserialize(obj.getAsJsonArray("lid"), int[].class);
-			final int[] levels = context.deserialize(obj.getAsJsonArray("level"), int[].class);
-			final long[] timestamps = context.deserialize(obj.getAsJsonArray("timestamp"), long[].class);
-			final String[] texts = context.deserialize(obj.getAsJsonArray("text"), String[].class);
+			final int[] lids = context.deserialize(vpack.get("lid"), int[].class);
+			final int[] levels = context.deserialize(vpack.get("level"), int[].class);
+			final long[] timestamps = context.deserialize(vpack.get("timestamp"), long[].class);
+			final String[] texts = context.deserialize(vpack.get("text"), String[].class);
 
 			// 配列のサイズが全て同じであること
 			if (lids.length != levels.length || lids.length != timestamps.length || lids.length != texts.length) {
 				throw new IllegalStateException("each parameters returns wrong length.");
 			}
 
-			entity.logs = new ArrayList<AdminLogEntity.LogEntry>(lids.length);
+			entity.setLogs(new ArrayList<AdminLogEntity.LogEntry>(lids.length));
 			for (int i = 0; i < lids.length; i++) {
 				final AdminLogEntity.LogEntry entry = new AdminLogEntity.LogEntry();
-				entry.lid = lids[i];
-				entry.level = levels[i];
-				entry.timestamp = new Date(timestamps[i] * 1000L);
-				entry.text = texts[i];
-				entity.logs.add(entry);
+				entry.setLid(lids[i]);
+				entry.setLevel(levels[i]);
+				entry.setTimestamp(new Date(timestamps[i] * 1000L));
+				entry.setText(texts[i]);
+				entity.getLogs().add(entry);
 			}
-
-			if (obj.has("totalAmount")) {
-				entity.totalAmount = obj.getAsJsonPrimitive("totalAmount").getAsInt();
+			final VPackSlice totalAmount = vpack.get("totalAmount");
+			if (totalAmount.isNumber()) {
+				entity.setTotalAmount(totalAmount.getAsInt());
 			}
-
 			return entity;
 		}
+
 	}
 
-	public static class StatisticsEntityDeserializer implements JsonDeserializer<StatisticsEntity> {
-		Type countsType = new TypeToken<long[]>() {
-		}.getType();
+	public static class StatisticsEntityDeserializer implements VPackDeserializer<StatisticsEntity> {
 
 		@Override
-		public StatisticsEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public StatisticsEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
 
-			final JsonObject obj = json.getAsJsonObject();
-			final StatisticsEntity entity = deserializeBaseParameter(obj, new StatisticsEntity());
+			final StatisticsEntity entity = deserializeBaseParameter(vpack, new StatisticsEntity());
 
-			deserializeSystem(obj, entity);
+			deserializeSystem(vpack, entity);
 
-			deserializeClient(context, obj, entity);
+			deserializeClient(context, vpack, entity);
 
-			deserializeServer(obj, entity);
+			deserializeServer(vpack, entity);
 
 			return entity;
-
 		}
 
-		private void deserializeServer(final JsonObject obj, final StatisticsEntity entity) {
-			if (obj.has(SERVER)) {
-				final JsonObject svr = obj.getAsJsonObject(SERVER);
-				entity.server = new StatisticsEntity.Server();
-
-				if (svr.has("uptime")) {
-					entity.server.uptime = svr.getAsJsonPrimitive("uptime").getAsDouble();
+		private void deserializeServer(final VPackSlice obj, final StatisticsEntity entity) throws VPackException {
+			final VPackSlice server = obj.get(SERVER);
+			if (server.isObject()) {
+				entity.setServer(new StatisticsEntity.Server());
+				final VPackSlice uptime = server.get("uptime");
+				if (uptime.isNumber()) {
+					entity.getServer().setUptime(uptime.getAsDouble());
 				}
 			}
 		}
 
 		private void deserializeClient(
-			final JsonDeserializationContext context,
-			final JsonObject obj,
-			final StatisticsEntity entity) {
-			if (obj.has("client")) {
+			final VPackDeserializationContext context,
+			final VPackSlice obj,
+			final StatisticsEntity entity) throws VPackException {
+			final VPackSlice client = obj.get("client");
+			if (client.isObject()) {
 				final StatisticsEntity.Client cli = new StatisticsEntity.Client();
-				cli.figures = new TreeMap<String, StatisticsEntity.FigureValue>();
-				entity.client = cli;
-
-				final JsonObject client = obj.getAsJsonObject("client");
-				if (client.has("httpConnections")) {
-					cli.httpConnections = client.getAsJsonPrimitive("httpConnections").getAsInt();
+				cli.setFigures(new TreeMap<String, StatisticsEntity.FigureValue>());
+				entity.setClient(cli);
+				final VPackSlice httpConnections = client.get("httpConnections");
+				if (httpConnections.isNumber()) {
+					cli.setHttpConnections(httpConnections.getAsInt());
 				}
-				for (final Entry<String, JsonElement> ent : client.entrySet()) {
-					if (!"httpConnections".equals(ent.getKey())) {
-						final JsonObject f = ent.getValue().getAsJsonObject();
+				for (int i = 0; i < client.getLength(); i++) {
+					final String key = client.keyAt(i).getAsString();
+					if (!"httpConnections".equals(key)) {
+						final VPackSlice f = client.valueAt(i);
 						final FigureValue fv = new FigureValue();
-						fv.sum = f.getAsJsonPrimitive("sum").getAsDouble();
-						fv.count = f.getAsJsonPrimitive(COUNT).getAsLong();
-						fv.counts = context.deserialize(f.getAsJsonArray("counts"), countsType);
-						cli.figures.put(ent.getKey(), fv);
+						fv.setSum(f.get("sum").getAsDouble());
+						fv.setCount(f.get(COUNT).getAsLong());
+						fv.setCounts(context.deserialize(f.get("counts"), long[].class));
+						cli.getFigures().put(key, fv);
 					}
 				}
 			}
 		}
 
-		private void deserializeSystem(final JsonObject obj, final StatisticsEntity entity) {
-			if (obj.has("system")) {
+		private void deserializeSystem(final VPackSlice obj, final StatisticsEntity entity) throws VPackException {
+			final VPackSlice system = obj.get("system");
+			if (system.isObject()) {
 				final StatisticsEntity.System sys = new StatisticsEntity.System();
-				entity.system = sys;
+				entity.setSystem(sys);
 
-				final JsonObject system = obj.getAsJsonObject("system");
-				if (system.has("minorPageFaults")) {
-					sys.minorPageFaults = system.getAsJsonPrimitive("minorPageFaults").getAsLong();
+				final VPackSlice minorPageFaults = system.get("minorPageFaults");
+				if (minorPageFaults.isNumber()) {
+					sys.setMinorPageFaults(minorPageFaults.getAsLong());
 				}
-				if (system.has("majorPageFaults")) {
-					sys.majorPageFaults = system.getAsJsonPrimitive("majorPageFaults").getAsLong();
+				final VPackSlice majorPageFaults = system.get("majorPageFaults");
+				if (majorPageFaults.isNumber()) {
+					sys.setMajorPageFaults(majorPageFaults.getAsLong());
 				}
-				if (system.has("userTime")) {
-					sys.userTime = system.getAsJsonPrimitive("userTime").getAsDouble();
+				final VPackSlice userTime = system.get("userTime");
+				if (userTime.isNumber()) {
+					sys.setUserTime(userTime.getAsDouble());
 				}
-				if (system.has("systemTime")) {
-					sys.systemTime = system.getAsJsonPrimitive("systemTime").getAsDouble();
+				final VPackSlice systemTime = system.get("systemTime");
+				if (systemTime.isNumber()) {
+					sys.setSystemTime(systemTime.getAsDouble());
 				}
-				if (system.has("numberOfThreads")) {
-					sys.numberOfThreads = system.getAsJsonPrimitive("numberOfThreads").getAsInt();
+				final VPackSlice numberOfThreads = system.get("numberOfThreads");
+				if (numberOfThreads.isNumber()) {
+					sys.setNumberOfThreads(numberOfThreads.getAsInt());
 				}
-				if (system.has("residentSize")) {
-					sys.residentSize = system.getAsJsonPrimitive("residentSize").getAsLong();
+				final VPackSlice residentSize = system.get("residentSize");
+				if (residentSize.isNumber()) {
+					sys.setResidentSize(residentSize.getAsLong());
 				}
-				if (system.has("virtualSize")) {
-					sys.virtualSize = system.getAsJsonPrimitive("virtualSize").getAsLong();
+				final VPackSlice virtualSize = system.get("virtualSize");
+				if (virtualSize.isNumber()) {
+					sys.setVirtualSize(virtualSize.getAsLong());
 				}
 			}
 		}
 	}
 
 	public static class StatisticsDescriptionEntityDeserializer
-			implements JsonDeserializer<StatisticsDescriptionEntity> {
-		Type cutsTypes = new TypeToken<BigDecimal[]>() {
-		}.getType();
+			implements VPackDeserializer<StatisticsDescriptionEntity> {
 
 		@Override
 		public StatisticsDescriptionEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+			final VPackSlice vpack,
+			final VPackDeserializationContext context) throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final StatisticsDescriptionEntity entity = deserializeBaseParameter(obj, new StatisticsDescriptionEntity());
-
-			if (obj.has("groups")) {
-				final JsonArray groups = obj.getAsJsonArray("groups");
-				entity.groups = new ArrayList<StatisticsDescriptionEntity.Group>(groups.size());
+			final StatisticsDescriptionEntity entity = deserializeBaseParameter(vpack,
+				new StatisticsDescriptionEntity());
+			final VPackSlice groups = vpack.get("groups");
+			if (groups.isArray()) {
+				entity.setGroups(new ArrayList<StatisticsDescriptionEntity.Group>(groups.size()));
 				for (int i = 0, imax = groups.size(); i < imax; i++) {
-					final JsonObject g = groups.get(i).getAsJsonObject();
-
+					final VPackSlice g = groups.get(i);
 					final Group group = new Group();
-					group.group = g.getAsJsonPrimitive("group").getAsString();
-					group.name = g.getAsJsonPrimitive("name").getAsString();
-					group.description = g.getAsJsonPrimitive("description").getAsString();
-
-					entity.groups.add(group);
+					group.setGroup(g.get("group").getAsString());
+					group.setName(g.get("name").getAsString());
+					group.setDescription(g.get("description").getAsString());
+					entity.getGroups().add(group);
 				}
 			}
-
-			if (obj.has(FIGURES)) {
-				final JsonArray figures = obj.getAsJsonArray(FIGURES);
-				entity.figures = new ArrayList<StatisticsDescriptionEntity.Figure>(figures.size());
+			final VPackSlice figures = vpack.get(FIGURES);
+			if (figures.isArray()) {
+				entity.setFigures(new ArrayList<StatisticsDescriptionEntity.Figure>(figures.size()));
 				for (int i = 0, imax = figures.size(); i < imax; i++) {
-					final JsonObject f = figures.get(i).getAsJsonObject();
-
+					final VPackSlice f = figures.get(i);
 					final Figure figure = new Figure();
-					figure.group = f.getAsJsonPrimitive("group").getAsString();
-					figure.identifier = f.getAsJsonPrimitive("identifier").getAsString();
-					figure.name = f.getAsJsonPrimitive("name").getAsString();
-					figure.description = f.getAsJsonPrimitive("description").getAsString();
-					figure.type = f.getAsJsonPrimitive("type").getAsString();
-					figure.units = f.getAsJsonPrimitive("units").getAsString();
-					if (f.has("cuts")) {
-						figure.cuts = context.deserialize(f.getAsJsonArray("cuts"), cutsTypes);
+					figure.setGroup(f.get("group").getAsString());
+					figure.setIdentifier(f.get("identifier").getAsString());
+					figure.setName(f.get("name").getAsString());
+					figure.setDescription(f.get("description").getAsString());
+					figure.setType(f.get("type").getAsString());
+					figure.setUnits(f.get("units").getAsString());
+					final VPackSlice cuts = f.get("cuts");
+					if (cuts.isArray()) {
+						figure.setCuts(context.deserialize(cuts, BigDecimal[].class));
 					}
-
-					entity.figures.add(figure);
-
+					entity.getFigures().add(figure);
 				}
 			}
-
 			return entity;
 		}
 	}
 
-	public static class ScalarExampleEntityDeserializer implements JsonDeserializer<ScalarExampleEntity<?>> {
+	public static class ScalarExampleEntityDeserializer implements VPackDeserializer<ScalarExampleEntity> {
 
 		@Override
-		public ScalarExampleEntity<?> deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public ScalarExampleEntity<?> deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final ScalarExampleEntity<?> entity = deserializeBaseParameter(obj, new ScalarExampleEntity<Object>());
-
-			if (obj.has("document")) {
-				entity.document = context.deserialize(obj.get("document"), DocumentEntity.class);
+			final ScalarExampleEntity<?> entity = deserializeBaseParameter(vpack, new ScalarExampleEntity<Object>());
+			final VPackSlice document = vpack.get("document");
+			if (document.isObject()) {
+				entity.setDocument(context.deserialize(document, DocumentEntity.class));
 			}
-
 			return entity;
 		}
 
 	}
 
-	public static class SimpleByResultEntityDeserializer implements JsonDeserializer<SimpleByResultEntity> {
+	public static class SimpleByResultEntityDeserializer implements VPackDeserializer<SimpleByResultEntity> {
 
 		@Override
-		public SimpleByResultEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public SimpleByResultEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final SimpleByResultEntity entity = deserializeBaseParameter(obj, new SimpleByResultEntity());
-
-			if (obj.has(DELETED)) {
-				entity.count = entity.deleted = obj.getAsJsonPrimitive(DELETED).getAsInt();
+			final SimpleByResultEntity entity = deserializeBaseParameter(vpack, new SimpleByResultEntity());
+			final VPackSlice deleted = vpack.get(DELETED);
+			if (deleted.isNumber()) {
+				entity.setCount(deleted.getAsInt());
+				entity.setDeleted(deleted.getAsInt());
 			}
-
-			if (obj.has(REPLACED)) {
-				entity.count = entity.replaced = obj.getAsJsonPrimitive(REPLACED).getAsInt();
+			final VPackSlice replaced = vpack.get(REPLACED);
+			if (replaced.isNumber()) {
+				entity.setCount(replaced.getAsInt());
+				entity.setDeleted(replaced.getAsInt());
 			}
-
-			if (obj.has(UPDATED)) {
-				entity.count = entity.updated = obj.getAsJsonPrimitive(UPDATED).getAsInt();
+			final VPackSlice updated = vpack.get(UPDATED);
+			if (updated.isNumber()) {
+				entity.setCount(updated.getAsInt());
+				entity.setUpdated(updated.getAsInt());
 			}
-
 			return entity;
 		}
 
 	}
 
-	public static class TransactionResultEntityDeserializer implements JsonDeserializer<TransactionResultEntity> {
+	public static class TransactionResultEntityDeserializer implements VPackDeserializer<TransactionResultEntity> {
 
 		@Override
-		public TransactionResultEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public TransactionResultEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final TransactionResultEntity entity = deserializeBaseParameter(obj, new TransactionResultEntity());
-
-			if (obj.has(RESULT)) { // MEMO:
-				if (obj.get(RESULT) instanceof JsonObject) {
-					entity.setResult(obj.get(RESULT));
-				} else if (obj.getAsJsonPrimitive(RESULT).isBoolean()) {
-					entity.setResult(obj.getAsJsonPrimitive(RESULT).getAsBoolean());
-				} else if (obj.getAsJsonPrimitive(RESULT).isNumber()) {
-					entity.setResult(obj.getAsJsonPrimitive(RESULT).getAsNumber());
-				} else if (obj.getAsJsonPrimitive(RESULT).isString()) {
-					entity.setResult(obj.getAsJsonPrimitive(RESULT).getAsString());
+			final TransactionResultEntity entity = deserializeBaseParameter(vpack, new TransactionResultEntity());
+			final VPackSlice result = vpack.get(RESULT);
+			if (!result.isNull()) {
+				if (result.isObject()) {
+					entity.setResult(result);
+				} else if (result.isBoolean()) {
+					entity.setResult(result.getAsBoolean());
+				} else if (result.isNumber()) {
+					entity.setResult(result.getAsNumber());
+				} else if (result.isString()) {
+					entity.setResult(result.getAsString());
 				}
 			}
-
 			return entity;
 		}
 
 	}
 
-	public static class UserEntityDeserializer implements JsonDeserializer<UserEntity> {
+	public static class UserEntityDeserializer implements VPackDeserializer<UserEntity> {
 
 		@Override
-		public UserEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public UserEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final UserEntity entity = deserializeBaseParameter(obj, new UserEntity());
-
-			if (obj.has("user")) { // MEMO:
+			final UserEntity entity = deserializeBaseParameter(vpack, new UserEntity());
+			final VPackSlice user = vpack.get("user");
+			if (user.isString()) { // MEMO:
 				// RequestはusernameなのにResponseは何故userなのか。。
-				entity.username = obj.getAsJsonPrimitive("user").getAsString();
+				entity.setUsername(user.getAsString());
 			}
-
-			if (obj.has(PASSWORD)) {
-				entity.password = obj.getAsJsonPrimitive(PASSWORD).getAsString();
+			final VPackSlice password = vpack.get(PASSWORD);
+			if (password.isString()) {
+				entity.setPassword(password.getAsString());
 			}
-
-			if (obj.has(ACTIVE)) {
-				entity.active = obj.getAsJsonPrimitive(ACTIVE).getAsBoolean();
-			} else if (obj.has("authData")) {
-				// for simple/all requsts
-				final JsonObject authData = obj.getAsJsonObject("authData");
-				if (authData.has(ACTIVE)) {
-					entity.active = authData.getAsJsonPrimitive(ACTIVE).getAsBoolean();
-				}
-			}
-
-			if (obj.has(EXTRA)) {
-				entity.extra = context.deserialize(obj.getAsJsonObject(EXTRA), Map.class);
-			} else if (obj.has("userData")) {
-				// for simple/all requsts
-				entity.extra = context.deserialize(obj.getAsJsonObject("userData"), Map.class);
+			final VPackSlice active = vpack.get(ACTIVE);
+			if (active.isBoolean()) {
+				entity.setActive(active.getAsBoolean());
 			} else {
-				entity.extra = new HashMap<String, Object>();
+				final VPackSlice authData = vpack.get("authData");
+				if (authData.isObject()) {
+					// for simple/all requsts
+					final VPackSlice authDataActive = authData.get(ACTIVE);
+					if (authDataActive.isBoolean()) {
+						entity.setActive(authDataActive.getAsBoolean());
+					}
+				}
 			}
-
+			final VPackSlice extra = vpack.get(EXTRA);
+			if (extra.isObject()) {
+				entity.setExtra(context.deserialize(extra, Map.class, String.class, Object.class));
+			} else {
+				final VPackSlice userData = vpack.get("userData");
+				// for simple/all requsts
+				entity.setExtra(
+					userData.isObject() ? context.deserialize(userData, Map.class, String.class, Object.class)
+							: new HashMap<String, Object>());
+			}
 			return entity;
 		}
 
 	}
 
-	public static class ImportResultEntityDeserializer implements JsonDeserializer<ImportResultEntity> {
+	public static class ImportResultEntityDeserializer implements VPackDeserializer<ImportResultEntity> {
 
 		@Override
-		public ImportResultEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public ImportResultEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final ImportResultEntity entity = deserializeBaseParameter(obj, new ImportResultEntity());
-
-			if (obj.has(CREATED)) {
-				entity.setCreated(obj.getAsJsonPrimitive(CREATED).getAsInt());
+			final ImportResultEntity entity = deserializeBaseParameter(vpack, new ImportResultEntity());
+			final VPackSlice created = vpack.get(CREATED);
+			if (created.isNumber()) {
+				entity.setCreated(created.getAsInt());
 			}
-
-			if (obj.has(ERRORS)) {
-				entity.setErrors(obj.getAsJsonPrimitive(ERRORS).getAsInt());
+			final VPackSlice errors = vpack.get(ERRORS);
+			if (errors.isNumber()) {
+				entity.setErrors(errors.getAsInt());
 			}
-
-			if (obj.has(EMPTY)) {
-				entity.setEmpty(obj.getAsJsonPrimitive(EMPTY).getAsInt());
+			final VPackSlice empty = vpack.get(EMPTY);
+			if (empty.isNumber()) {
+				entity.setEmpty(empty.getAsInt());
 			}
-
-			if (obj.has(UPDATED)) {
-				entity.setUpdated(obj.getAsJsonPrimitive(UPDATED).getAsInt());
+			final VPackSlice updated = vpack.get(UPDATED);
+			if (updated.isNumber()) {
+				entity.setUpdated(updated.getAsInt());
 			}
-
-			if (obj.has(IGNORED)) {
-				entity.setIgnored(obj.getAsJsonPrimitive(IGNORED).getAsInt());
+			final VPackSlice ignored = vpack.get(IGNORED);
+			if (ignored.isNumber()) {
+				entity.setIgnored(ignored.getAsInt());
 			}
-
-			if (obj.has(DETAILS)) {
-				final JsonArray asJsonArray = obj.getAsJsonArray(DETAILS);
-				for (JsonElement jsonElement : asJsonArray) {
-					entity.getDetails().add(jsonElement.getAsString());
+			final VPackSlice details = vpack.get(DETAILS);
+			if (details.isArray()) {
+				for (final Iterator<VPackSlice> iterator = details.iterator(); iterator.hasNext();) {
+					entity.getDetails().add(iterator.next().getAsString());
 				}
 			}
+			return entity;
+		}
 
+	}
+
+	public static class DatabaseEntityDeserializer implements VPackDeserializer<DatabaseEntity> {
+
+		@Override
+		public DatabaseEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
+				return null;
+			}
+			final DatabaseEntity entity = deserializeBaseParameter(vpack, new DatabaseEntity());
+			final VPackSlice result = vpack.get(RESULT);
+			if (result.isObject()) {
+				final VPackSlice name = result.get("name");
+				if (name.isString()) {
+					entity.setName(name.getAsString());
+				}
+				final VPackSlice id = result.get(ID);
+				if (id.isString()) {
+					entity.setId(id.getAsString());
+				}
+				final VPackSlice path = result.get("path");
+				if (path.isString()) {
+					entity.setPath(path.getAsString());
+				}
+				final VPackSlice isSystem = result.get(IS_SYSTEM);
+				if (isSystem.isBoolean()) {
+					entity.setSystem(isSystem.getAsBoolean());
+				}
+			}
 			return entity;
 		}
 	}
 
-	public static class DatabaseEntityDeserializer implements JsonDeserializer<DatabaseEntity> {
-		@Override
-		public DatabaseEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
+	public static class StringsResultEntityDeserializer implements VPackDeserializer<StringsResultEntity> {
 
-			if (json.isJsonNull()) {
+		@Override
+		public StringsResultEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final DatabaseEntity entity = deserializeBaseParameter(obj, new DatabaseEntity());
-
-			if (obj.has(RESULT)) {
-				final JsonObject result = obj.getAsJsonObject(RESULT);
-				if (result.has("name")) {
-					entity.name = result.getAsJsonPrimitive("name").getAsString();
-				}
-				if (result.has(ID)) {
-					entity.id = result.getAsJsonPrimitive(ID).getAsString();
-				}
-				if (result.has("path")) {
-					entity.path = result.getAsJsonPrimitive("path").getAsString();
-				}
-				if (result.has(IS_SYSTEM)) {
-					entity.isSystem = result.getAsJsonPrimitive(IS_SYSTEM).getAsBoolean();
-				}
+			final StringsResultEntity entity = deserializeBaseParameter(vpack, new StringsResultEntity());
+			final VPackSlice result = vpack.get(RESULT);
+			if (result.isArray()) {
+				entity.setResult(context.deserialize(result, List.class, String.class));
 			}
+			return entity;
+		}
 
+	}
+
+	public static class BooleanResultEntityDeserializer implements VPackDeserializer<BooleanResultEntity> {
+
+		@Override
+		public BooleanResultEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
+				return null;
+			}
+			final BooleanResultEntity entity = deserializeBaseParameter(vpack, new BooleanResultEntity());
+			final VPackSlice result = vpack.get(RESULT);
+			if (result.isBoolean()) {
+				entity.setResult(result.getAsBoolean());
+			}
 			return entity;
 		}
 	}
 
-	public static class StringsResultEntityDeserializer implements JsonDeserializer<StringsResultEntity> {
-		Type resultType = new TypeToken<ArrayList<String>>() {
-		}.getType();
+	public static class EndpointDeserializer implements VPackDeserializer<Endpoint> {
 
 		@Override
-		public StringsResultEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public Endpoint deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final StringsResultEntity entity = deserializeBaseParameter(obj, new StringsResultEntity());
-
-			if (obj.has(RESULT)) {
-				entity.result = context.deserialize(obj.get(RESULT), resultType);
-			}
-
-			return entity;
-		}
-	}
-
-	public static class BooleanResultEntityDeserializer implements JsonDeserializer<BooleanResultEntity> {
-		@Override
-		public BooleanResultEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
-				return null;
-			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final BooleanResultEntity entity = deserializeBaseParameter(obj, new BooleanResultEntity());
-
-			if (obj.has(RESULT)) {
-				entity.result = obj.getAsJsonPrimitive(RESULT).getAsBoolean();
-			}
-
-			return entity;
-		}
-	}
-
-	public static class EndpointDeserializer implements JsonDeserializer<Endpoint> {
-		Type databasesType = new TypeToken<List<String>>() {
-		}.getType();
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public Endpoint deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
-				return null;
-			}
-
-			final JsonObject obj = json.getAsJsonObject();
-
 			final Endpoint entity = new Endpoint();
-			entity.setDatabases((List<String>) context.deserialize(obj.getAsJsonArray("databases"), databasesType));
-			entity.setEndpoint(obj.getAsJsonPrimitive("endpoint").getAsString());
-
+			entity.setDatabases(context.deserialize(vpack.get("databases"), List.class, String.class));
+			entity.setEndpoint(vpack.get("endpoint").getAsString());
 			return entity;
 		}
 	}
 
-	public static class DocumentResultEntityDeserializer implements JsonDeserializer<DocumentResultEntity<?>> {
-		Type documentsType = new TypeToken<List<DocumentEntity<?>>>() {
-		}.getType();
+	public static class DocumentResultEntityDeserializer implements VPackDeserializer<DocumentResultEntity> {
 
 		@Override
-		public DocumentResultEntity<?> deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public DocumentResultEntity<?> deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final DocumentResultEntity<Object> entity = deserializeBaseParameter(obj,
+			final DocumentResultEntity<Object> entity = deserializeBaseParameter(vpack,
 				new DocumentResultEntity<Object>());
-
-			if (obj.has(RESULT)) {
-				final JsonElement resultElem = obj.get(RESULT);
-				if (resultElem.isJsonArray()) {
-					entity.result = context.deserialize(resultElem, documentsType);
-				} else if (resultElem.isJsonObject()) {
-					final DocumentEntity<Object> doc = context.deserialize(resultElem, DocumentEntity.class);
-					final List<DocumentEntity<Object>> list = new ArrayList<DocumentEntity<Object>>(1);
-					list.add(doc);
-					entity.result = list;
-				} else {
-					throw new IllegalStateException("result type is not array or object:" + resultElem);
-				}
+			final VPackSlice result = vpack.get(RESULT);
+			if (result.isArray()) {
+				entity.setResult(context.deserialize(result, List.class, DocumentEntity.class));
+			} else if (result.isObject()) {
+				final DocumentEntity<Object> doc = context.deserialize(result, DocumentEntity.class);
+				final List<DocumentEntity<Object>> list = new ArrayList<DocumentEntity<Object>>(1);
+				list.add(doc);
+				entity.setResult(list);
+			} else {
+				throw new IllegalStateException("result type is not array or object:" + result.head());
 			}
-
 			return entity;
 		}
 	}
 
-	public static class ReplicationStateDeserializer implements JsonDeserializer<ReplicationState> {
-		@Override
-		public ReplicationState deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
+	public static class ReplicationStateDeserializer implements VPackDeserializer<ReplicationState> {
 
-			if (json.isJsonNull()) {
+		@Override
+		public ReplicationState deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
 			final ReplicationState entity = new ReplicationState();
-
-			entity.running = obj.getAsJsonPrimitive("running").getAsBoolean();
-			entity.lastLogTick = obj.getAsJsonPrimitive("lastLogTick").getAsLong();
-			entity.totalEvents = obj.getAsJsonPrimitive("totalEvents").getAsLong();
-			entity.time = DateUtils.parse(obj.getAsJsonPrimitive("time").getAsString());
-
+			entity.setRunning(vpack.get("running").getAsBoolean());
+			entity.setLastLogTick(vpack.get("lastLogTick").getAsLong());
+			entity.setTotalEvents(vpack.get("totalEvents").getAsLong());
+			entity.setTime(DateUtils.parse(vpack.get(TIME)));
 			return entity;
 		}
 	}
 
-	public static class ReplicationInventoryEntityDeserializer implements JsonDeserializer<ReplicationInventoryEntity> {
-
-		private final Type indexesType = new TypeToken<List<IndexEntity>>() {
-		}.getType();
+	public static class ReplicationInventoryEntityDeserializer
+			implements VPackDeserializer<ReplicationInventoryEntity> {
 
 		@Override
-		public ReplicationInventoryEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public ReplicationInventoryEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final ReplicationInventoryEntity entity = deserializeBaseParameter(obj, new ReplicationInventoryEntity());
-
-			if (obj.has(COLLECTIONS)) {
-				final JsonArray collections = obj.getAsJsonArray(COLLECTIONS);
-				entity.collections = new ArrayList<ReplicationInventoryEntity.Collection>(collections.size());
+			final ReplicationInventoryEntity entity = deserializeBaseParameter(vpack, new ReplicationInventoryEntity());
+			final VPackSlice collections = vpack.get(COLLECTIONS);
+			if (collections.isArray()) {
+				entity.setCollections(new ArrayList<ReplicationInventoryEntity.Collection>(collections.size()));
 				for (int i = 0, imax = collections.size(); i < imax; i++) {
-					final JsonObject elem = collections.get(i).getAsJsonObject();
+					final VPackSlice elem = collections.get(i);
 					final Collection col = new Collection();
-
-					if (elem.has("parameters")) {
-						final JsonObject parameters = elem.getAsJsonObject("parameters");
+					final VPackSlice parameters = elem.get("parameters");
+					if (parameters.isObject()) {
 						addCollectionParameters(col, parameters);
 					}
-
-					if (elem.has(INDEXES)) {
-						col.indexes = context.deserialize(elem.getAsJsonArray(INDEXES), indexesType);
+					final VPackSlice indexes = elem.get(INDEXES);
+					if (indexes.isArray()) {
+						col.setIndexes(context.deserialize(indexes, List.class, IndexEntity.class));
 					}
-
-					entity.collections.add(col);
+					entity.getCollections().add(col);
 				}
 			}
-
-			if (obj.has(STATE)) {
-				entity.state = context.deserialize(obj.getAsJsonObject(STATE), ReplicationState.class);
+			final VPackSlice state = vpack.get(STATE);
+			if (state.isObject()) {
+				entity.setState(context.deserialize(state, ReplicationState.class));
 			}
-
-			if (obj.has("tick")) {
-				entity.tick = obj.getAsJsonPrimitive("tick").getAsLong();
+			final VPackSlice tick = vpack.get("tick");
+			if (tick.isNumber()) {
+				entity.setTick(tick.getAsLong());
 			}
-
 			return entity;
 		}
 
-		private void addCollectionParameters(final Collection col, final JsonObject parameters) {
-			col.parameter = new CollectionParameter();
-			if (parameters.has(VERSION)) {
-				col.parameter.version = parameters.getAsJsonPrimitive(VERSION).getAsInt();
+		private void addCollectionParameters(final Collection col, final VPackSlice parameters) throws VPackException {
+			col.setParameter(new CollectionParameter());
+			final VPackSlice version = parameters.get(VERSION);
+			if (version.isNumber()) {
+				col.getParameter().setVersion(version.getAsInt());
 			}
-			if (parameters.has("type")) {
-				col.parameter.type = CollectionType.valueOf(parameters.getAsJsonPrimitive("type").getAsInt());
+			final VPackSlice type = parameters.get(TYPE);
+			if (type.isNumber()) {
+				col.getParameter().setType(CollectionType.valueOf(type.getAsInt()));
 			}
-			if (parameters.has("cid")) {
-				col.parameter.cid = parameters.getAsJsonPrimitive("cid").getAsLong();
+			final VPackSlice cid = parameters.get("cid");
+			if (cid.isNumber()) {
+				col.getParameter().setCid(cid.getAsLong());
 			}
-			if (parameters.has(DELETED)) {
-				col.parameter.deleted = parameters.getAsJsonPrimitive(DELETED).getAsBoolean();
+			final VPackSlice deleted = parameters.get(DELETED);
+			if (deleted.isBoolean()) {
+				col.getParameter().setDeleted(deleted.getAsBoolean());
 			}
-			if (parameters.has(DO_COMPACT)) {
-				col.parameter.doCompact = parameters.getAsJsonPrimitive(DO_COMPACT).getAsBoolean();
+			final VPackSlice doCompact = parameters.get(DO_COMPACT);
+			if (doCompact.isBoolean()) {
+				col.getParameter().setDoCompact(doCompact.getAsBoolean());
 			}
-			if (parameters.has("maximalSize")) {
-				col.parameter.maximalSize = parameters.getAsJsonPrimitive("maximalSize").getAsLong();
+			final VPackSlice maximalSize = parameters.get("maximalSize");
+			if (maximalSize.isNumber()) {
+				col.getParameter().setMaximalSize(maximalSize.getAsLong());
 			}
-			if (parameters.has("name")) {
-				col.parameter.name = parameters.getAsJsonPrimitive("name").getAsString();
+			final VPackSlice name = parameters.get("name");
+			if (name.isString()) {
+				col.getParameter().setName(name.getAsString());
 			}
-			if (parameters.has(IS_VOLATILE)) {
-				col.parameter.isVolatile = parameters.getAsJsonPrimitive(IS_VOLATILE).getAsBoolean();
+			final VPackSlice isVolatile = parameters.get(IS_VOLATILE);
+			if (isVolatile.isBoolean()) {
+				col.getParameter().setVolatile(isVolatile.getAsBoolean());
 			}
-			if (parameters.has(WAIT_FOR_SYNC)) {
-				col.parameter.waitForSync = parameters.getAsJsonPrimitive(WAIT_FOR_SYNC).getAsBoolean();
+			final VPackSlice waitForSync = parameters.get(WAIT_FOR_SYNC);
+			if (waitForSync.isBoolean()) {
+				col.getParameter().setWaitForSync(waitForSync.getAsBoolean());
 			}
 		}
 	}
 
-	public static class ReplicationDumpRecordDeserializer implements JsonDeserializer<ReplicationDumpRecord<?>> {
-		Type documentsType = new TypeToken<List<DocumentEntity<?>>>() {
-		}.getType();
+	public static class ReplicationDumpRecordDeserializer implements VPackDeserializer<ReplicationDumpRecord> {
 
 		@Override
-		public ReplicationDumpRecord<?> deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public ReplicationDumpRecord<?> deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
 			final ReplicationDumpRecord<DocumentEntity<Object>> entity = new ReplicationDumpRecord<DocumentEntity<Object>>();
+			final VPackSlice tick = vpack.get("tick");
+			if (tick.isNumber()) {
+				entity.setTick(tick.getAsLong());
+			}
+			final VPackSlice type = vpack.get(TYPE);
+			if (type.isNumber()) {
+				entity.setType(ReplicationEventType.valueOf(type.getAsInt()));
+			}
+			final VPackSlice key = vpack.get("key");
+			if (key.isString()) {
+				entity.setKey(key.getAsString());
+			}
+			final VPackSlice rev = vpack.get("rev");
+			if (rev.isNumber()) {
+				entity.setRev(rev.getAsLong());
+			}
+			final VPackSlice data = vpack.get("data");
+			if (data.isObject()) {
+				entity.setData(context.deserialize(data, DocumentEntity.class));
+			}
+			return entity;
+		}
 
-			if (obj.has("tick")) {
-				entity.tick = obj.getAsJsonPrimitive("tick").getAsLong();
-			}
-			if (obj.has("type")) {
-				final int type = obj.getAsJsonPrimitive("type").getAsInt();
-				entity.type = ReplicationEventType.valueOf(type);
-			}
-			if (obj.has("key")) {
-				entity.key = obj.getAsJsonPrimitive("key").getAsString();
-			}
-			if (obj.has("rev")) {
-				entity.rev = obj.getAsJsonPrimitive("rev").getAsLong();
-			}
-			if (obj.has("data")) {
-				entity.data = context.deserialize(obj.getAsJsonObject("data"), DocumentEntity.class);
-			}
+	}
 
+	public static class ReplicationSyncEntityDeserializer implements VPackDeserializer<ReplicationSyncEntity> {
+
+		@Override
+		public ReplicationSyncEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
+				return null;
+			}
+			final ReplicationSyncEntity entity = deserializeBaseParameter(vpack, new ReplicationSyncEntity());
+			final VPackSlice collections = vpack.get(COLLECTIONS);
+			if (collections.isArray()) {
+				entity.setCollections(context.deserialize(collections, List.class, CollectionEntity.class));
+			}
+			final VPackSlice lastLogTick = vpack.get("lastLogTick");
+			if (lastLogTick.isNumber()) {
+				entity.setLastLogTick(lastLogTick.getAsLong());
+			}
 			return entity;
 		}
 	}
 
-	public static class ReplicationSyncEntityDeserializer implements JsonDeserializer<ReplicationSyncEntity> {
-		Type collectionsType = new TypeToken<List<CollectionEntity>>() {
-		}.getType();
+	public static class MapAsEntityDeserializer implements VPackDeserializer<MapAsEntity> {
 
 		@Override
-		public ReplicationSyncEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public MapAsEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final ReplicationSyncEntity entity = deserializeBaseParameter(obj, new ReplicationSyncEntity());
-
-			if (obj.has(COLLECTIONS)) {
-				entity.collections = context.deserialize(obj.getAsJsonArray(COLLECTIONS), collectionsType);
-			}
-			if (obj.has("lastLogTick")) {
-				entity.lastLogTick = obj.getAsJsonPrimitive("lastLogTick").getAsLong();
-			}
-
+			final MapAsEntity entity = deserializeBaseParameter(vpack, new MapAsEntity());
+			entity.setMap(context.deserialize(vpack, Map.class, String.class, Object.class));
 			return entity;
 		}
-	}
 
-	public static class MapAsEntityDeserializer implements JsonDeserializer<MapAsEntity> {
-		Type mapType = new TypeToken<Map<String, Object>>() {
-		}.getType();
-
-		@Override
-		public MapAsEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
-				return null;
-			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final MapAsEntity entity = deserializeBaseParameter(obj, new MapAsEntity());
-
-			entity.map = context.deserialize(obj, mapType);
-
-			return entity;
-		}
 	}
 
 	public static class ReplicationLoggerConfigEntityDeserializer
-			implements JsonDeserializer<ReplicationLoggerConfigEntity> {
+			implements VPackDeserializer<ReplicationLoggerConfigEntity> {
+
 		@Override
 		public ReplicationLoggerConfigEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+			final VPackSlice vpack,
+			final VPackDeserializationContext context) throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final ReplicationLoggerConfigEntity entity = deserializeBaseParameter(obj,
+			final ReplicationLoggerConfigEntity entity = deserializeBaseParameter(vpack,
 				new ReplicationLoggerConfigEntity());
-
-			if (obj.has(AUTO_START)) {
-				entity.autoStart = obj.getAsJsonPrimitive(AUTO_START).getAsBoolean();
+			final VPackSlice autoStart = vpack.get(AUTO_START);
+			if (autoStart.isBoolean()) {
+				entity.setAutoStart(autoStart.getAsBoolean());
 			}
-			if (obj.has("logRemoteChanges")) {
-				entity.logRemoteChanges = obj.getAsJsonPrimitive("logRemoteChanges").getAsBoolean();
+			final VPackSlice logRemoteChanges = vpack.get("logRemoteChanges");
+			if (logRemoteChanges.isBoolean()) {
+				entity.setLogRemoteChanges(logRemoteChanges.getAsBoolean());
 			}
-			if (obj.has("maxEvents")) {
-				entity.maxEvents = obj.getAsJsonPrimitive("maxEvents").getAsLong();
+			final VPackSlice maxEvents = vpack.get("maxEvents");
+			if (maxEvents.isNumber()) {
+				entity.setMaxEvents(maxEvents.getAsLong());
 			}
-			if (obj.has("maxEventsSize")) {
-				entity.maxEventsSize = obj.getAsJsonPrimitive("maxEventsSize").getAsLong();
+			final VPackSlice maxEventsSize = vpack.get("maxEventsSize");
+			if (maxEventsSize.isNumber()) {
+				entity.setMaxEventsSize(maxEventsSize.getAsLong());
 			}
-
 			return entity;
 		}
 	}
 
 	public static class ReplicationApplierConfigEntityDeserializer
-			implements JsonDeserializer<ReplicationApplierConfigEntity> {
+			implements VPackDeserializer<ReplicationApplierConfigEntity> {
 
 		@Override
 		public ReplicationApplierConfigEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+			final VPackSlice vpack,
+			final VPackDeserializationContext context) throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final ReplicationApplierConfigEntity entity = deserializeBaseParameter(obj,
+			final ReplicationApplierConfigEntity entity = deserializeBaseParameter(vpack,
 				new ReplicationApplierConfigEntity());
-
-			if (obj.has(ENDPOINT)) {
-				entity.endpoint = obj.getAsJsonPrimitive(ENDPOINT).getAsString();
+			final VPackSlice endpoint = vpack.get(ENDPOINT);
+			if (endpoint.isString()) {
+				entity.setEndpoint(endpoint.getAsString());
 			}
-
-			if (obj.has(DATABASE)) {
-				entity.database = obj.getAsJsonPrimitive(DATABASE).getAsString();
+			final VPackSlice database = vpack.get(DATABASE);
+			if (database.isString()) {
+				entity.setDatabase(database.getAsString());
 			}
-
-			if (obj.has(USERNAME)) {
-				entity.username = obj.getAsJsonPrimitive(USERNAME).getAsString();
+			final VPackSlice username = vpack.get(USERNAME);
+			if (username.isString()) {
+				entity.setUsername(username.getAsString());
 			}
-
-			if (obj.has(PASSWORD)) {
-				entity.password = obj.getAsJsonPrimitive(PASSWORD).getAsString();
+			final VPackSlice password = vpack.get(PASSWORD);
+			if (password.isString()) {
+				entity.setPassword(password.getAsString());
 			}
-
-			if (obj.has(MAX_CONNECT_RETRIES)) {
-				entity.maxConnectRetries = obj.getAsJsonPrimitive(MAX_CONNECT_RETRIES).getAsInt();
+			final VPackSlice maxConnectRetries = vpack.get(MAX_CONNECT_RETRIES);
+			if (maxConnectRetries.isNumber()) {
+				entity.setMaxConnectRetries(maxConnectRetries.getAsInt());
 			}
-
-			if (obj.has(CONNECT_TIMEOUT)) {
-				entity.connectTimeout = obj.getAsJsonPrimitive(CONNECT_TIMEOUT).getAsInt();
+			final VPackSlice connectTimeout = vpack.get(CONNECT_TIMEOUT);
+			if (connectTimeout.isNumber()) {
+				entity.setConnectTimeout(connectTimeout.getAsInt());
 			}
-
-			if (obj.has(REQUEST_TIMEOUT)) {
-				entity.requestTimeout = obj.getAsJsonPrimitive(REQUEST_TIMEOUT).getAsInt();
+			final VPackSlice requestTimeout = vpack.get(REQUEST_TIMEOUT);
+			if (requestTimeout.isNumber()) {
+				entity.setRequestTimeout(requestTimeout.getAsInt());
 			}
-
-			if (obj.has(CHUNK_SIZE)) {
-				entity.chunkSize = obj.getAsJsonPrimitive(CHUNK_SIZE).getAsInt();
+			final VPackSlice chunkSize = vpack.get(CHUNK_SIZE);
+			if (chunkSize.isNumber()) {
+				entity.setChunkSize(chunkSize.getAsInt());
 			}
-
-			if (obj.has(AUTO_START)) {
-				entity.autoStart = obj.getAsJsonPrimitive(AUTO_START).getAsBoolean();
+			final VPackSlice autoStart = vpack.get(AUTO_START);
+			if (autoStart.getAsBoolean()) {
+				entity.setAutoStart(autoStart.getAsBoolean());
 			}
-
-			if (obj.has(ADAPTIVE_POLLING)) {
-				entity.adaptivePolling = obj.getAsJsonPrimitive(ADAPTIVE_POLLING).getAsBoolean();
+			final VPackSlice adaptivePolling = vpack.get(ADAPTIVE_POLLING);
+			if (adaptivePolling.isBoolean()) {
+				entity.setAdaptivePolling(adaptivePolling.getAsBoolean());
 			}
-
 			return entity;
 		}
+
 	}
 
-	public static class ReplicationApplierStateDeserializer implements JsonDeserializer<ReplicationApplierState> {
+	public static class ReplicationApplierStateDeserializer implements VPackDeserializer<ReplicationApplierState> {
 
 		@Override
-		public ReplicationApplierState deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public ReplicationApplierState deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
 			final ReplicationApplierState state = new ReplicationApplierState();
-
-			if (obj.has("running")) {
-				state.running = obj.getAsJsonPrimitive("running").getAsBoolean();
+			final VPackSlice running = vpack.get("running");
+			if (running.isBoolean()) {
+				state.setRunning(running.getAsBoolean());
 			}
-
-			deserializeTicks(obj, state);
-
-			if (obj.has("time")) {
-				state.time = DateUtils.parse(obj.getAsJsonPrimitive("time").getAsString());
+			deserializeTicks(vpack, state);
+			final VPackSlice time = vpack.get(TIME);
+			state.setTime(DateUtils.parse(time));
+			final VPackSlice totalRequests = vpack.get("totalRequests");
+			if (totalRequests.isNumber()) {
+				state.setTotalRequests(totalRequests.getAsLong());
 			}
-			if (obj.has("totalRequests")) {
-				state.totalRequests = obj.getAsJsonPrimitive("totalRequests").getAsLong();
+			final VPackSlice totalFailedConnects = vpack.get("totalFailedConnects");
+			if (totalFailedConnects.isNumber()) {
+				state.setTotalFailedConnects(totalFailedConnects.getAsLong());
 			}
-			if (obj.has("totalFailedConnects")) {
-				state.totalFailedConnects = obj.getAsJsonPrimitive("totalFailedConnects").getAsLong();
+			final VPackSlice totalEvents = vpack.get("totalEvents");
+			if (totalEvents.isNumber()) {
+				state.setTotalEvents(totalEvents.getAsLong());
 			}
-			if (obj.has("totalEvents")) {
-				state.totalEvents = obj.getAsJsonPrimitive("totalEvents").getAsLong();
-			}
-
-			deserializeLastError(obj, state);
-
-			deserializeProgress(obj, state);
-
+			deserializeLastError(vpack, state);
+			deserializeProgress(vpack, state);
 			return state;
 		}
 
-		private void deserializeTicks(final JsonObject obj, final ReplicationApplierState state) {
-			if (obj.has(LAST_APPLIED_CONTINUOUS_TICK) && !obj.get(LAST_APPLIED_CONTINUOUS_TICK).isJsonNull()) {
-				state.lastAppliedContinuousTick = obj.getAsJsonPrimitive(LAST_APPLIED_CONTINUOUS_TICK).getAsLong();
+		private void deserializeTicks(final VPackSlice obj, final ReplicationApplierState state) throws VPackException {
+			final VPackSlice applied = obj.get(LAST_APPLIED_CONTINUOUS_TICK);
+			if (applied.isNumber()) {
+				state.setLastAppliedContinuousTick(applied.getAsLong());
 			}
-			if (obj.has(LAST_PROCESSED_CONTINUOUS_TICK) && !obj.get(LAST_PROCESSED_CONTINUOUS_TICK).isJsonNull()) {
-				state.lastProcessedContinuousTick = obj.getAsJsonPrimitive(LAST_PROCESSED_CONTINUOUS_TICK).getAsLong();
+			final VPackSlice processed = obj.get(LAST_PROCESSED_CONTINUOUS_TICK);
+			if (processed.isNumber()) {
+				state.setLastProcessedContinuousTick(processed.getAsLong());
 			}
-			if (obj.has(LAST_AVAILABLE_CONTINUOUS_TICK) && !obj.get(LAST_AVAILABLE_CONTINUOUS_TICK).isJsonNull()) {
-				state.lastAvailableContinuousTick = obj.getAsJsonPrimitive(LAST_AVAILABLE_CONTINUOUS_TICK).getAsLong();
-			}
-		}
-
-		private void deserializeProgress(final JsonObject obj, final ReplicationApplierState state) {
-			if (obj.has("progress")) {
-				final JsonObject progress = obj.getAsJsonObject("progress");
-				state.progress = new Progress();
-				if (progress.has("failedConnects")) {
-					state.progress.failedConnects = progress.getAsJsonPrimitive("failedConnects").getAsLong();
-				}
-				if (progress.has(MESSAGE)) {
-					state.progress.message = progress.getAsJsonPrimitive(MESSAGE).getAsString();
-				}
-				if (progress.has("time")) {
-					state.progress.time = DateUtils.parse(progress.getAsJsonPrimitive("time").getAsString());
-				}
+			final VPackSlice available = obj.get(LAST_AVAILABLE_CONTINUOUS_TICK);
+			if (available.isNumber()) {
+				state.setLastAvailableContinuousTick(available.getAsLong());
 			}
 		}
 
-		private void deserializeLastError(final JsonObject obj, final ReplicationApplierState state) {
-			if (obj.has(LAST_ERROR) && !obj.get(LAST_ERROR).isJsonNull()) {
-				final JsonObject lastError = obj.getAsJsonObject(LAST_ERROR);
-				state.lastError = new LastError();
-				if (lastError.has("time")) {
-					state.lastError.setTime(DateUtils.parse(lastError.getAsJsonPrimitive("time").getAsString()));
+		private void deserializeProgress(final VPackSlice obj, final ReplicationApplierState state)
+				throws VPackException {
+			final VPackSlice progress = obj.get("progress");
+			if (progress.isObject()) {
+				state.setProgress(new Progress());
+				final VPackSlice failedConnects = progress.get("failedConnects");
+				if (failedConnects.isNumber()) {
+					state.getProgress().setFailedConnects(failedConnects.getAsLong());
 				}
-				if (lastError.has(ERROR_NUM)) {
-					state.lastError.setErrorNum(lastError.getAsJsonPrimitive(ERROR_NUM).getAsInt());
+				final VPackSlice message = progress.get(MESSAGE);
+				if (message.isString()) {
+					state.getProgress().setMessage(message.getAsString());
 				}
-				if (lastError.has(ERROR_MESSAGE)) {
-					state.lastError.setErrorMessage(lastError.getAsJsonPrimitive(ERROR_MESSAGE).getAsString());
+				final VPackSlice time = progress.get(TIME);
+				state.getProgress().setTime(DateUtils.parse(time));
+			}
+		}
+
+		private void deserializeLastError(final VPackSlice obj, final ReplicationApplierState state)
+				throws VPackException {
+			final VPackSlice lastError = obj.get(LAST_ERROR);
+			if (lastError.isObject()) {
+				state.setLastError(new LastError());
+				final VPackSlice time = lastError.get(TIME);
+				state.getLastError().setTime(DateUtils.parse(time));
+				final VPackSlice errorNum = lastError.get(ERROR_NUM);
+				if (errorNum.isNumber()) {
+					state.getLastError().setErrorNum(errorNum.getAsInt());
+				}
+				final VPackSlice errorMessage = lastError.get(ERROR_MESSAGE);
+				if (errorMessage.isString()) {
+					state.getLastError().setErrorMessage(errorMessage.getAsString());
 				}
 			}
 		}
 	}
 
 	public static class ReplicationApplierStateEntityDeserializer
-			implements JsonDeserializer<ReplicationApplierStateEntity> {
+			implements VPackDeserializer<ReplicationApplierStateEntity> {
+
 		@Override
 		public ReplicationApplierStateEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+			final VPackSlice vpack,
+			final VPackDeserializationContext context) throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final ReplicationApplierStateEntity entity = deserializeBaseParameter(obj,
+			final ReplicationApplierStateEntity entity = deserializeBaseParameter(vpack,
 				new ReplicationApplierStateEntity());
-
-			if (obj.has(ENDPOINT)) {
-				entity.endpoint = obj.getAsJsonPrimitive(ENDPOINT).getAsString();
+			final VPackSlice endpoint = vpack.get(ENDPOINT);
+			if (endpoint.isString()) {
+				entity.setEndpoint(endpoint.getAsString());
 			}
-
-			if (obj.has(DATABASE)) {
-				entity.database = obj.getAsJsonPrimitive(DATABASE).getAsString();
+			final VPackSlice database = vpack.get(DATABASE);
+			if (database.isString()) {
+				entity.setDatabase(database.getAsString());
 			}
-
-			if (obj.has(SERVER)) {
-				final JsonObject server = obj.getAsJsonObject(SERVER);
-				entity.serverVersion = server.getAsJsonPrimitive(VERSION).getAsString();
-				entity.serverId = server.getAsJsonPrimitive("serverId").getAsString();
+			final VPackSlice server = vpack.get(SERVER);
+			if (server.isObject()) {
+				entity.setServerVersion(server.get(VERSION).getAsString());
+				entity.setServerId(server.get("serverId").getAsString());
 			}
-
-			if (obj.has(STATE)) {
-				entity.state = context.deserialize(obj.get(STATE), ReplicationApplierState.class);
+			final VPackSlice state = vpack.get(STATE);
+			if (state.isObject()) {
+				entity.setState(context.deserialize(state, ReplicationApplierState.class));
 			}
-
 			return entity;
 		}
 	}
 
 	public static class ReplicationLoggerStateEntityDeserializer
-			implements JsonDeserializer<ReplicationLoggerStateEntity> {
-		private final Type clientsType = new TypeToken<List<Client>>() {
-		}.getType();
+			implements VPackDeserializer<ReplicationLoggerStateEntity> {
 
 		@Override
 		public ReplicationLoggerStateEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+			final VPackSlice vpack,
+			final VPackDeserializationContext context) throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final ReplicationLoggerStateEntity entity = deserializeBaseParameter(obj,
+			final ReplicationLoggerStateEntity entity = deserializeBaseParameter(vpack,
 				new ReplicationLoggerStateEntity());
-
-			if (obj.has(STATE)) {
-				entity.state = context.deserialize(obj.get(STATE), ReplicationState.class);
+			final VPackSlice state = vpack.get(STATE);
+			if (state.isObject()) {
+				entity.setState(context.deserialize(state, ReplicationState.class));
 			}
-
-			if (obj.has(SERVER)) {
-				final JsonObject server = obj.getAsJsonObject(SERVER);
-				entity.serverVersion = server.getAsJsonPrimitive(VERSION).getAsString();
-				entity.serverId = server.getAsJsonPrimitive("serverId").getAsString();
+			final VPackSlice server = vpack.get(SERVER);
+			if (server.isObject()) {
+				entity.setServerVersion(server.get(VERSION).getAsString());
+				entity.setServerId(server.get("serverId").getAsString());
 			}
-
-			if (obj.has("clients")) {
-				entity.clients = context.deserialize(obj.getAsJsonArray("clients"), clientsType);
+			final VPackSlice clients = vpack.get("clients");
+			if (clients.isArray()) {
+				entity.setClients(context.deserialize(clients, List.class, Client.class));
 			}
-
 			return entity;
 		}
+
 	}
 
 	public static class ReplicationLoggerStateEntityClientDeserializer
-			implements JsonDeserializer<ReplicationLoggerStateEntity.Client> {
-		@Override
-		public ReplicationLoggerStateEntity.Client deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
+			implements VPackDeserializer<ReplicationLoggerStateEntity.Client> {
 
-			if (json.isJsonNull()) {
+		@Override
+		public Client deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
 			final Client client = new Client();
-
-			if (obj.has("serverId")) {
-				client.serverId = obj.getAsJsonPrimitive("serverId").getAsString();
+			final VPackSlice serverId = vpack.get("serverId");
+			if (serverId.isString()) {
+				client.setServerId(serverId.getAsString());
 			}
-
-			if (obj.has("lastServedTick")) {
-				client.lastServedTick = obj.getAsJsonPrimitive("lastServedTick").getAsLong();
+			final VPackSlice lastServedTick = vpack.get("lastServedTick");
+			if (lastServedTick.isNumber()) {
+				client.setLastServedTick(lastServedTick.getAsLong());
 			}
-
-			if (obj.has("time")) {
-				client.time = DateUtils.parse(obj.getAsJsonPrimitive("time").getAsString());
-			}
-
+			final VPackSlice time = vpack.get(TIME);
+			client.setTime(DateUtils.parse(time));
 			return client;
 		}
 	}
 
-	public static class GraphEntityDeserializer implements JsonDeserializer<GraphEntity> {
+	public static class GraphEntityDeserializer implements VPackDeserializer<GraphEntity> {
 
 		private static final String COLLECTION = "collection";
 
 		@Override
-		public GraphEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public GraphEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
 
-			final JsonObject obj = json.getAsJsonObject();
-			final GraphEntity entity = deserializeBaseParameter(obj, new GraphEntity());
+			final GraphEntity entity = deserializeBaseParameter(vpack, new GraphEntity());
 
-			final JsonObject graph = obj.has("graph") ? obj.getAsJsonObject("graph") : obj;
+			final VPackSlice tmpGraph = vpack.get("graph");
+			final VPackSlice graph = tmpGraph.isObject() ? tmpGraph : vpack;
 			deserializeDocumentParameter(graph, entity);
 
-			if (graph.has("name")) {
-				entity.name = graph.get("name").getAsString();
+			final VPackSlice name = graph.get("name");
+			if (name.isString()) {
+				entity.setName(name.getAsString());
 			}
-
-			if (graph.has("orphanCollections")) {
-				final JsonArray orphanCollections = graph.getAsJsonArray("orphanCollections");
-				entity.orphanCollections = new ArrayList<String>();
+			final VPackSlice orphanCollections = graph.get("orphanCollections");
+			if (orphanCollections.isArray()) {
+				entity.setOrphanCollections(new ArrayList<String>());
 				if (orphanCollections != null) {
-					entity.orphanCollections = new ArrayList<String>(orphanCollections.size());
+					entity.setOrphanCollections(new ArrayList<String>(orphanCollections.size()));
 					for (int i = 0, imax = orphanCollections.size(); i < imax; i++) {
 						final String orphanCollection = orphanCollections.get(i).getAsString();
-
-						entity.orphanCollections.add(orphanCollection);
+						entity.getOrphanCollections().add(orphanCollection);
 					}
 				}
 			}
-
-			if (graph.has("edgeDefinitions")) {
-				final JsonArray edgeDefinitions = graph.getAsJsonArray("edgeDefinitions");
-				entity.edgeDefinitionsEntity = new EdgeDefinitionsEntity();
+			final VPackSlice edgeDefinitions = graph.get("edgeDefinitions");
+			if (edgeDefinitions.isArray()) {
+				entity.setEdgeDefinitionsEntity(new EdgeDefinitionsEntity());
 				if (edgeDefinitions != null) {
 					addEdgeDefinitions(entity, edgeDefinitions);
 				}
 			}
-
 			return entity;
-
 		}
 
-		private void addEdgeDefinitions(final GraphEntity entity, final JsonArray edgeDefinitions) {
+		private void addEdgeDefinitions(final GraphEntity entity, final VPackSlice edgeDefinitions)
+				throws VPackException {
 			for (int i = 0, imax = edgeDefinitions.size(); i < imax; i++) {
 				final EdgeDefinitionEntity edgeDefinitionEntity = new EdgeDefinitionEntity();
-				final JsonObject edgeDefinition = edgeDefinitions.get(i).getAsJsonObject();
-				if (edgeDefinition.has(COLLECTION)) {
-					edgeDefinitionEntity.setCollection(edgeDefinition.get(COLLECTION).getAsString());
+				final VPackSlice edgeDefinition = edgeDefinitions.get(i);
+				final VPackSlice collection = edgeDefinition.get(COLLECTION);
+				if (collection.isString()) {
+					edgeDefinitionEntity.setCollection(collection.getAsString());
 				}
-				if (edgeDefinition.has("from")) {
+				final VPackSlice vfrom = edgeDefinition.get("from");
+				if (vfrom.isArray()) {
 					final List<String> from = new ArrayList<String>();
-					final JsonElement fromElem = edgeDefinition.get("from");
-					final JsonArray fromArray = fromElem.getAsJsonArray();
-					final Iterator<JsonElement> iterator = fromArray.iterator();
+					final Iterator<VPackSlice> iterator = vfrom.iterator();
 					while (iterator.hasNext()) {
-						final JsonElement e = iterator.next();
+						final VPackSlice e = iterator.next();
 						from.add(e.getAsString());
 					}
 
 					edgeDefinitionEntity.setFrom(from);
 				}
-				if (edgeDefinition.has("to")) {
+				final VPackSlice vto = edgeDefinition.get("to");
+				if (vto.isArray()) {
 					final List<String> to = new ArrayList<String>();
-					final JsonElement toElem = edgeDefinition.get("to");
-					final JsonArray toArray = toElem.getAsJsonArray();
-					final Iterator<JsonElement> iterator = toArray.iterator();
+					final Iterator<VPackSlice> iterator = vto.iterator();
 					while (iterator.hasNext()) {
-						final JsonElement e = iterator.next();
+						final VPackSlice e = iterator.next();
 						to.add(e.getAsString());
 					}
 					edgeDefinitionEntity.setTo(to);
 				}
-				entity.edgeDefinitionsEntity.addEdgeDefinition(edgeDefinitionEntity);
+				entity.getEdgeDefinitionsEntity().addEdgeDefinition(edgeDefinitionEntity);
 			}
 		}
 	}
 
-	public static class GraphsEntityDeserializer implements JsonDeserializer<GraphsEntity> {
-		private final Type graphsType = new TypeToken<List<GraphEntity>>() {
-		}.getType();
+	public static class GraphsEntityDeserializer implements VPackDeserializer<GraphsEntity> {
 
 		@Override
-		public GraphsEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public GraphsEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final GraphsEntity entity = deserializeBaseParameter(obj, new GraphsEntity());
-
-			if (obj.has("graphs")) {
-				entity.graphs = context.deserialize(obj.get("graphs"), graphsType);
+			final GraphsEntity entity = deserializeBaseParameter(vpack, new GraphsEntity());
+			final VPackSlice graphs = vpack.get("graphs");
+			if (graphs.isArray()) {
+				entity.setGraphs(context.deserialize(graphs, List.class, GraphEntity.class));
 			}
-
 			return entity;
-
 		}
+
 	}
 
-	public static class DeleteEntityDeserializer implements JsonDeserializer<DeletedEntity> {
-		@Override
-		public DeletedEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
+	public static class DeleteEntityDeserializer implements VPackDeserializer<DeletedEntity> {
 
-			if (json.isJsonNull()) {
+		@Override
+		public DeletedEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final DeletedEntity entity = deserializeBaseParameter(obj, new DeletedEntity());
-
-			if (obj.has(DELETED)) {
-				entity.deleted = obj.getAsJsonPrimitive(DELETED).getAsBoolean();
+			final DeletedEntity entity = deserializeBaseParameter(vpack, new DeletedEntity());
+			final VPackSlice deleted = vpack.get(DELETED);
+			if (deleted.isBoolean()) {
+				entity.setDeleted(deleted.getAsBoolean());
 			}
-			if (obj.has("removed")) {
-				entity.deleted = obj.getAsJsonPrimitive("removed").getAsBoolean();
+			final VPackSlice removed = vpack.get("removed");
+			if (removed.isBoolean()) {
+				entity.setDeleted(removed.getAsBoolean());
 			}
-
 			return entity;
-
 		}
 	}
 
-	public static class VertexEntityDeserializer implements JsonDeserializer<VertexEntity<?>> {
-		@Override
-		public VertexEntity<?> deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
+	public static class VertexEntityDeserializer implements VPackDeserializer<VertexEntity> {
 
-			if (json.isJsonNull()) {
+		@Override
+		public VertexEntity<?> deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
+			final VertexEntity<Object> entity = deserializeBaseParameter(vpack, new VertexEntity<Object>());
 
-			final JsonObject obj = json.getAsJsonObject();
-			final VertexEntity<Object> entity = deserializeBaseParameter(obj, new VertexEntity<Object>());
-
-			final JsonObject vertex = obj.has("vertex") ? obj.getAsJsonObject("vertex") : obj;
+			final VPackSlice tmpVertex = vpack.get("vertex");
+			final VPackSlice vertex = tmpVertex.isObject() ? tmpVertex : vpack;
 			deserializeDocumentParameter(vertex, entity);
 
 			final Class<?> clazz = getParameterized();
 			if (clazz != null) {
 				entity.setEntity(context.deserialize(vertex, clazz));
 			}
-
 			return entity;
 		}
 	}
 
-	public static class EdgeEntityDeserializer implements JsonDeserializer<EdgeEntity<?>> {
-		@Override
-		public EdgeEntity<?> deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
+	public static class EdgeEntityDeserializer implements VPackDeserializer<EdgeEntity> {
 
-			if (json.isJsonNull()) {
+		@Override
+		public EdgeEntity<?> deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
+			final EdgeEntity<Object> entity = deserializeBaseParameter(vpack, new EdgeEntity<Object>());
 
-			final JsonObject obj = json.getAsJsonObject();
-			final EdgeEntity<Object> entity = deserializeBaseParameter(obj, new EdgeEntity<Object>());
-
-			final JsonObject edge = obj.has("edge") ? obj.getAsJsonObject("edge") : obj;
+			final VPackSlice tmpEdge = vpack.get("edge");
+			final VPackSlice edge = tmpEdge.isObject() ? tmpEdge : vpack;
 			deserializeDocumentParameter(edge, entity);
 
-			if (edge.has("_from")) {
-				entity.fromVertexHandle = edge.getAsJsonPrimitive("_from").getAsString();
+			final VPackSlice from = edge.get("_from");
+			if (from.isString()) {
+				entity.setFromVertexHandle(from.getAsString());
 			}
-			if (edge.has("_to")) {
-				entity.toVertexHandle = edge.getAsJsonPrimitive("_to").getAsString();
+			final VPackSlice to = edge.get("_to");
+			if (to.isString()) {
+				entity.setToVertexHandle(to.getAsString());
 			}
-
 			// 他のフィールドはリフレクションで。 (TODO: Annotationのサポートと上記パラメータを弾く)
 			final Class<?> clazz = getParameterized();
 			if (clazz != null) {
-				entity.entity = context.deserialize(edge, clazz);
+				entity.setEntity(context.deserialize(edge, clazz));
 			}
-
 			return entity;
 		}
 
 	}
 
-	public static class TraversalEntityDeserializer implements JsonDeserializer<TraversalEntity<?, ?>> {
+	public static class TraversalEntityDeserializer implements VPackDeserializer<TraversalEntity> {
 
 		@Override
-		public TraversalEntity<?, ?> deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public TraversalEntity<?, ?> deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final TraversalEntity<Object, Object> entity = deserializeBaseParameter(obj,
+			final TraversalEntity<Object, Object> entity = deserializeBaseParameter(vpack,
 				new TraversalEntity<Object, Object>());
-			deserializeBaseParameter(obj, entity);
+			deserializeBaseParameter(vpack, entity);
 
-			final JsonObject result = getFirstResultAsJsonObject(obj);
-			if (result != null && result.getAsJsonObject().has("visited")) {
-				final JsonObject visited = result.getAsJsonObject().getAsJsonObject("visited");
+			final VPackSlice result = getFirstResultAsJsonObject(vpack);
+			if (result.isObject()) {
+				final VPackSlice visited = result.get("visited");
+				if (visited.isObject()) {
+					final Class<?> vertexClazz = getParameterized();
+					Class<?> edgeClazz = null;
 
-				final Class<?> vertexClazz = getParameterized();
-				Class<?> edgeClazz = null;
-
-				if (hasNextParameterized()) {
-					edgeClazz = nextParameterized();
+					if (hasNextParameterized()) {
+						edgeClazz = nextParameterized();
+					}
+					final VPackSlice vertices = visited.get(VERTICES);
+					if (vertices.isArray()) {
+						entity.setVertices(getVertices(vertexClazz, context, vertices));
+					}
+					final VPackSlice paths = visited.get(PATHS);
+					if (!paths.isNull() && !paths.isNone()) {
+						entity.setPaths(getPaths(context, visited, vertexClazz, edgeClazz));
+					}
 				}
 
-				if (visited.has(VERTICES)) {
-					entity.setVertices(getVertices(vertexClazz, context, visited.getAsJsonArray(VERTICES)));
-				}
-				if (visited.has(PATHS)) {
-					entity.setPaths(getPaths(context, visited, vertexClazz, edgeClazz));
-				}
 			}
-
 			return entity;
 		}
 
 		private List<PathEntity<Object, Object>> getPaths(
-			final JsonDeserializationContext context,
-			final JsonObject visited,
+			final VPackDeserializationContext context,
+			final VPackSlice visited,
 			final Class<?> vertexClazz,
-			final Class<?> edgeClazz) {
+			final Class<?> edgeClazz) throws VPackException {
 			final List<PathEntity<Object, Object>> pathEntities = new ArrayList<PathEntity<Object, Object>>();
-			final JsonArray paths = visited.getAsJsonArray(PATHS);
-			if (paths != null) {
+			final VPackSlice paths = visited.get(PATHS);
+			if (paths.isArray()) {
 				for (int i = 0, imax = paths.size(); i < imax; i++) {
-					final JsonObject path = paths.get(i).getAsJsonObject();
+					final VPackSlice path = paths.get(i);
 					final PathEntity<Object, Object> pathEntity = new PathEntity<Object, Object>();
-
-					if (path.has(EDGES)) {
-						pathEntity.setEdges(getEdges(edgeClazz, context, path.getAsJsonArray(EDGES)));
+					final VPackSlice edges = path.get(EDGES);
+					if (edges.isArray()) {
+						pathEntity.setEdges(getEdges(edgeClazz, context, edges));
 					}
-					if (path.has(VERTICES)) {
-						pathEntity.setVertices(getVertices(vertexClazz, context, path.getAsJsonArray(VERTICES)));
+					final VPackSlice vertices = path.get(VERTICES);
+					if (vertices.isArray()) {
+						pathEntity.setVertices(getVertices(vertexClazz, context, vertices));
 					}
-
 					pathEntities.add(pathEntity);
 				}
 			}
@@ -2243,136 +1993,123 @@ public class EntityDeserializers {
 
 	}
 
-	public static class ShortestPathEntityDeserializer implements JsonDeserializer<ShortestPathEntity<?, ?>> {
-		@Override
-		public ShortestPathEntity<?, ?> deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
+	public static class ShortestPathEntityDeserializer implements VPackDeserializer<ShortestPathEntity> {
 
-			if (json.isJsonNull()) {
+		@Override
+		public ShortestPathEntity<?, ?> deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final ShortestPathEntity<Object, Object> entity = deserializeBaseParameter(obj,
+			final ShortestPathEntity<Object, Object> entity = deserializeBaseParameter(vpack,
 				new ShortestPathEntity<Object, Object>());
-			deserializeBaseParameter(obj, entity);
+			deserializeBaseParameter(vpack, entity);
 
-			final JsonObject result = getFirstResultAsJsonObject(obj);
-			if (result != null) {
+			final VPackSlice result = getFirstResultAsJsonObject(vpack);
+			if (result.isObject()) {
 				final Class<?> vertexClazz = getParameterized();
 				Class<?> edgeClazz = null;
 
 				if (hasNextParameterized()) {
 					edgeClazz = nextParameterized();
 				}
-
-				if (result.has("distance")) {
-					entity.setDistance(result.get("distance").getAsLong());
+				final VPackSlice distance = result.get("distance");
+				if (distance.isNumber()) {
+					entity.setDistance(distance.getAsLong());
 				} else {
 					entity.setDistance(-1L);
 				}
-				if (result.has(EDGES)) {
+				final VPackSlice edges = result.get(EDGES);
+				if (edges.isArray()) {
 					// new version >= 2.6
-					entity.setEdges(getEdges(edgeClazz, context, result.getAsJsonArray(EDGES)));
+					entity.setEdges(getEdges(edgeClazz, context, edges));
 				}
-				if (result.has(VERTICES)) {
+				final VPackSlice vertices = result.get(VERTICES);
+				if (vertices.isArray()) {
 					// new version >= 2.6
-					entity.setVertices(getVertices(vertexClazz, context, result.getAsJsonArray(VERTICES)));
+					entity.setVertices(getVertices(vertexClazz, context, vertices));
 				}
-				if (result.has(PATHS)) {
+				final VPackSlice paths = result.get(PATHS);
+				if (!paths.isNull() && !paths.isNone()) {
 					// old version < 2.6
 					addOldPath(context, entity, result, vertexClazz, edgeClazz);
 				}
 			} else {
 				entity.setDistance(-1L);
 			}
-
 			return entity;
 		}
 
 		private void addOldPath(
-			final JsonDeserializationContext context,
+			final VPackDeserializationContext context,
 			final ShortestPathEntity<Object, Object> entity,
-			final JsonObject result,
+			final VPackSlice result,
 			final Class<?> vertexClazz,
-			final Class<?> edgeClazz) {
-			final JsonArray paths = result.getAsJsonArray(PATHS);
+			final Class<?> edgeClazz) throws VPackException {
+			final VPackSlice paths = result.get(PATHS);
 			if (paths != null && paths.size() > 0) {
-				final JsonObject path = paths.get(0).getAsJsonObject();
-
-				if (path.has(EDGES)) {
-					entity.setEdges(getEdges(edgeClazz, context, path.getAsJsonArray(EDGES)));
+				final VPackSlice path = paths.get(0);
+				final VPackSlice edges = path.get(EDGES);
+				if (edges.isArray()) {
+					entity.setEdges(getEdges(edgeClazz, context, edges));
 				}
-				if (path.has(VERTICES)) {
-					entity.setVertices(getVertices(vertexClazz, context, path.getAsJsonArray(VERTICES)));
+				final VPackSlice vertices = path.get(VERTICES);
+				if (vertices.isArray()) {
+					entity.setVertices(getVertices(vertexClazz, context, vertices));
 				}
 			}
 		}
 	}
 
-	public static class QueryCachePropertiesEntityDeserializer implements JsonDeserializer<QueryCachePropertiesEntity> {
+	public static class QueryCachePropertiesEntityDeserializer
+			implements VPackDeserializer<QueryCachePropertiesEntity> {
 
 		@Override
-		public QueryCachePropertiesEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public QueryCachePropertiesEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final QueryCachePropertiesEntity entity = deserializeBaseParameter(obj, new QueryCachePropertiesEntity());
-
-			if (obj.has("mode")) {
-				final String modeAsString = obj.getAsJsonPrimitive("mode").getAsString();
+			final QueryCachePropertiesEntity entity = deserializeBaseParameter(vpack, new QueryCachePropertiesEntity());
+			final VPackSlice mode = vpack.get("mode");
+			if (mode.isString()) {
+				final String modeAsString = mode.getAsString();
 				entity.setMode(CacheMode.valueOf(modeAsString));
 			}
-
-			if (obj.has("maxResults")) {
-				entity.setMaxResults(obj.getAsJsonPrimitive("maxResults").getAsLong());
+			final VPackSlice maxResults = vpack.get("maxResults");
+			if (maxResults.isNumber()) {
+				entity.setMaxResults(maxResults.getAsLong());
 			}
-
 			return entity;
 		}
 
 	}
 
-	public static class QueriesResultEntityDeserializer implements JsonDeserializer<QueriesResultEntity> {
+	public static class QueriesResultEntityDeserializer implements VPackDeserializer<QueriesResultEntity> {
 
 		@Override
-		public QueriesResultEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+		public QueriesResultEntity deserialize(final VPackSlice vpack, final VPackDeserializationContext context)
+				throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonArray array = json.getAsJsonArray();
-			final Iterator<JsonElement> iterator = array.iterator();
+			final Iterator<VPackSlice> iterator = vpack.iterator();
 			final List<QueryEntity> queries = new ArrayList<QueryEntity>();
 			while (iterator.hasNext()) {
-				final JsonElement element = iterator.next();
-				final JsonObject obj = element.getAsJsonObject();
+				final VPackSlice element = iterator.next();
 				final QueryEntity entity = new QueryEntity();
-
-				if (obj.has(ID)) {
-					entity.setId(obj.getAsJsonPrimitive(ID).getAsString());
+				final VPackSlice id = element.get(ID);
+				if (id.isString()) {
+					entity.setId(id.getAsString());
 					queries.add(entity);
 				}
-
-				if (obj.has("query")) {
-					entity.setQuery(obj.getAsJsonPrimitive("query").getAsString());
+				final VPackSlice query = element.get("query");
+				if (query.isString()) {
+					entity.setQuery(query.getAsString());
 				}
-
-				if (obj.has("started")) {
-					final String str = obj.getAsJsonPrimitive("started").getAsString();
-
+				final VPackSlice started = element.get("started");
+				if (started.isString()) {
+					final String str = started.getAsString();
 					final SimpleDateFormat sdf = new SimpleDateFormat(ALT_DATE_TIME_FORMAT);
 					try {
 						entity.setStarted(sdf.parse(str));
@@ -2380,75 +2117,68 @@ public class EntityDeserializers {
 						logger.debug("got ParseException for date string: " + str);
 					}
 				}
-
-				if (obj.has("runTime")) {
-					entity.setRunTime(obj.getAsJsonPrimitive("runTime").getAsDouble());
+				final VPackSlice runTime = element.get("runTime");
+				if (runTime.isNumber()) {
+					entity.setRunTime(runTime.getAsDouble());
 				}
-
 			}
-
 			return new QueriesResultEntity(queries);
 		}
+
 	}
 
 	public static class QueryTrackingPropertiesEntityDeserializer
-			implements JsonDeserializer<QueryTrackingPropertiesEntity> {
+			implements VPackDeserializer<QueryTrackingPropertiesEntity> {
 
 		@Override
 		public QueryTrackingPropertiesEntity deserialize(
-			final JsonElement json,
-			final Type typeOfT,
-			final JsonDeserializationContext context) {
-
-			if (json.isJsonNull()) {
+			final VPackSlice vpack,
+			final VPackDeserializationContext context) throws VPackException {
+			if (vpack.isNull()) {
 				return null;
 			}
-
-			final JsonObject obj = json.getAsJsonObject();
-			final QueryTrackingPropertiesEntity entity = deserializeBaseParameter(obj,
+			final QueryTrackingPropertiesEntity entity = deserializeBaseParameter(vpack,
 				new QueryTrackingPropertiesEntity());
-
-			if (obj.has("enabled")) {
-				entity.setEnabled(obj.getAsJsonPrimitive("enabled").getAsBoolean());
+			final VPackSlice enabled = vpack.get("enabled");
+			if (enabled.isBoolean()) {
+				entity.setEnabled(enabled.getAsBoolean());
 			}
-
-			if (obj.has("trackSlowQueries")) {
-				entity.setTrackSlowQueries(obj.getAsJsonPrimitive("trackSlowQueries").getAsBoolean());
+			final VPackSlice trackSlowQueries = vpack.get("trackSlowQueries");
+			if (trackSlowQueries.isBoolean()) {
+				entity.setTrackSlowQueries(trackSlowQueries.getAsBoolean());
 			}
-
-			if (obj.has("maxSlowQueries")) {
-				entity.setMaxSlowQueries(obj.getAsJsonPrimitive("maxSlowQueries").getAsLong());
+			final VPackSlice maxSlowQueries = vpack.get("maxSlowQueries");
+			if (maxSlowQueries.isNumber()) {
+				entity.setMaxSlowQueries(maxSlowQueries.getAsLong());
 			}
-
-			if (obj.has("slowQueryThreshold")) {
-				entity.setSlowQueryThreshold(obj.getAsJsonPrimitive("slowQueryThreshold").getAsLong());
+			final VPackSlice slowQueryThreshold = vpack.get("slowQueryThreshold");
+			if (slowQueryThreshold.isNumber()) {
+				entity.setSlowQueryThreshold(slowQueryThreshold.getAsLong());
 			}
-
-			if (obj.has("maxQueryStringLength")) {
-				entity.setMaxQueryStringLength(obj.getAsJsonPrimitive("maxQueryStringLength").getAsLong());
+			final VPackSlice maxQueryStringLength = vpack.get("maxQueryStringLength");
+			if (maxQueryStringLength.isNumber()) {
+				entity.setMaxQueryStringLength(maxQueryStringLength.getAsLong());
 			}
-
 			return entity;
 		}
 
 	}
 
-	private static JsonObject getFirstResultAsJsonObject(final JsonObject obj) {
-		if (obj.has(RESULT)) {
-			if (obj.get(RESULT).isJsonArray()) {
-				return getElementAsJsonObject(obj.getAsJsonArray(RESULT));
-			} else if (obj.get(RESULT).isJsonObject()) {
-				return obj.getAsJsonObject(RESULT);
-			}
+	private static VPackSlice getFirstResultAsJsonObject(final VPackSlice obj) throws VPackException {
+		final VPackSlice result = obj.get(RESULT);
+		if (result.isArray()) {
+			return getElementAsJsonObject(result);
+		} else if (result.isObject()) {
+			return result;
 		}
 		return null;
 	}
 
-	private static JsonObject getElementAsJsonObject(final JsonArray arr) {
+	private static VPackSlice getElementAsJsonObject(final VPackSlice arr) {
 		if (arr != null && arr.size() > 0) {
-			final JsonElement jsonElement = arr.get(0);
-			if (jsonElement.isJsonObject()) {
-				return jsonElement.getAsJsonObject();
+			final VPackSlice jsonElement = arr.get(0);
+			if (jsonElement.isObject()) {
+				return jsonElement;
 			}
 		}
 		return null;
@@ -2456,12 +2186,12 @@ public class EntityDeserializers {
 
 	private static List<VertexEntity<Object>> getVertices(
 		final Class<?> vertexClazz,
-		final JsonDeserializationContext context,
-		final JsonArray vertices) {
+		final VPackDeserializationContext context,
+		final VPackSlice vertices) throws VPackException {
 		final List<VertexEntity<Object>> list = new ArrayList<VertexEntity<Object>>();
 		if (vertices != null) {
 			for (int i = 0, imax = vertices.size(); i < imax; i++) {
-				final JsonObject vertex = vertices.get(i).getAsJsonObject();
+				final VPackSlice vertex = vertices.get(i);
 				final VertexEntity<Object> ve = getVertex(context, vertex, vertexClazz);
 				list.add(ve);
 			}
@@ -2470,9 +2200,9 @@ public class EntityDeserializers {
 	}
 
 	private static VertexEntity<Object> getVertex(
-		final JsonDeserializationContext context,
-		final JsonObject vertex,
-		final Class<?> vertexClazz) {
+		final VPackDeserializationContext context,
+		final VPackSlice vertex,
+		final Class<?> vertexClazz) throws VPackException {
 		final VertexEntity<Object> ve = deserializeBaseParameter(vertex, new VertexEntity<Object>());
 		deserializeDocumentParameter(vertex, ve);
 		if (vertexClazz != null) {
@@ -2485,12 +2215,12 @@ public class EntityDeserializers {
 
 	private static List<EdgeEntity<Object>> getEdges(
 		final Class<?> edgeClazz,
-		final JsonDeserializationContext context,
-		final JsonArray edges) {
+		final VPackDeserializationContext context,
+		final VPackSlice edges) throws VPackException {
 		final List<EdgeEntity<Object>> list = new ArrayList<EdgeEntity<Object>>();
 		if (edges != null) {
 			for (int i = 0, imax = edges.size(); i < imax; i++) {
-				final JsonObject edge = edges.get(i).getAsJsonObject();
+				final VPackSlice edge = edges.get(i);
 				final EdgeEntity<Object> ve = deserializeBaseParameter(edge, new EdgeEntity<Object>());
 				deserializeDocumentParameter(edge, ve);
 				if (edgeClazz != null) {

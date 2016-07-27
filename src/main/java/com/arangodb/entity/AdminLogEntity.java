@@ -29,76 +29,87 @@ import java.util.List;
  */
 public class AdminLogEntity extends BaseEntity {
 
-  /**
-   * The total amount of log entries
-   */
-  int totalAmount;
+	/**
+	 * The total amount of log entries
+	 */
+	private int totalAmount;
 
-  /**
-   * A list of log entries
-   * @see com.arangodb.entity.AdminLogEntity.LogEntry
-   */
-  List<LogEntry> logs;
+	/**
+	 * A list of log entries
+	 * 
+	 * @see com.arangodb.entity.AdminLogEntity.LogEntry
+	 */
+	private List<LogEntry> logs;
 
-  public int getTotalAmount() {
-    return totalAmount;
-  }
-  public List<LogEntry> getLogs() {
-    return logs;
-  }
-  public void setTotalAmount(int totalAmount) {
-    this.totalAmount = totalAmount;
-  }
-  public void setLogs(List<LogEntry> logs) {
-    this.logs = logs;
-  }
+	public int getTotalAmount() {
+		return totalAmount;
+	}
 
-  public static class LogEntry implements Serializable {
+	public List<LogEntry> getLogs() {
+		return logs;
+	}
 
-    /**
-     * The log id
-     */
-    int lid;
+	public void setTotalAmount(final int totalAmount) {
+		this.totalAmount = totalAmount;
+	}
 
-    /**
-     * The integer representation of a log level
-     */
-    int level;
+	public void setLogs(final List<LogEntry> logs) {
+		this.logs = logs;
+	}
 
-    /**
-     * The timestamp of the log entry
-     */
-    Date timestamp;
+	public static class LogEntry implements Serializable {
 
-    /**
-     * The log message
-     */
-    String text;
+		/**
+		 * The log id
+		 */
+		private int lid;
 
-    public int getLid() {
-      return lid;
-    }
-    public int getLevel() {
-      return level;
-    }
-    public Date getTimestamp() {
-      return timestamp;
-    }
-    public String getText() {
-      return text;
-    }
-    public void setLid(int lid) {
-      this.lid = lid;
-    }
-    public void setLevel(int level) {
-      this.level = level;
-    }
-    public void setTimestamp(Date timestamp) {
-      this.timestamp = timestamp;
-    }
-    public void setText(String text) {
-      this.text = text;
-    }
-  }
+		/**
+		 * The integer representation of a log level
+		 */
+		private int level;
+
+		/**
+		 * The timestamp of the log entry
+		 */
+		private Date timestamp;
+
+		/**
+		 * The log message
+		 */
+		private String text;
+
+		public int getLid() {
+			return lid;
+		}
+
+		public int getLevel() {
+			return level;
+		}
+
+		public Date getTimestamp() {
+			return timestamp;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		public void setLid(final int lid) {
+			this.lid = lid;
+		}
+
+		public void setLevel(final int level) {
+			this.level = level;
+		}
+
+		public void setTimestamp(final Date timestamp) {
+			this.timestamp = timestamp;
+		}
+
+		public void setText(final String text) {
+			this.text = text;
+		}
+	}
 
 }

@@ -16,7 +16,6 @@
 
 package com.arangodb.impl;
 
-import java.lang.reflect.Type;
 import java.util.List;
 
 import com.arangodb.ArangoConfigure;
@@ -28,7 +27,6 @@ import com.arangodb.http.HttpManager;
 import com.arangodb.http.HttpResponseEntity;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.util.StringUtils;
-import com.google.gson.reflect.TypeToken;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -38,51 +36,40 @@ public class InternalEndpointDriverImpl extends BaseArangoDriverImpl implements 
 
 	private static final String API_ENDPOINT = "/_api/endpoint";
 
-	InternalEndpointDriverImpl(ArangoConfigure configure, HttpManager httpManager) {
+	InternalEndpointDriverImpl(final ArangoConfigure configure, final HttpManager httpManager) {
 		super(configure, httpManager);
 	}
 
 	@Override
-	public BooleanResultEntity createEndpoint(String endpoint, String... databases) throws ArangoException {
-
+	public BooleanResultEntity createEndpoint(final String endpoint, final String... databases) throws ArangoException {
 		// TODO: validate endpoint
-
 		// validate databases
 		if (databases != null) {
-			for (String db : databases) {
+			for (final String db : databases) {
 				validateDatabaseName(db, false);
 			}
 		}
-
-		HttpResponseEntity res = httpManager.doPost(createEndpointUrl(null, API_ENDPOINT), null,
-			EntityFactory.toJsonString(new MapBuilder().put("endpoint", endpoint).put("databases", databases).get()));
-
+		final HttpResponseEntity res = httpManager.doPost(createEndpointUrl(null, API_ENDPOINT), null,
+			EntityFactory.toVPack(new MapBuilder().put("endpoint", endpoint).put("databases", databases).get()));
 		return createEntity(res, BooleanResultEntity.class);
 
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<Endpoint> getEndpoints() throws ArangoException {
-
-		Type type = new TypeToken<List<Endpoint>>() {
-		}.getType();
-		HttpResponseEntity res = httpManager.doGet(createEndpointUrl(null, API_ENDPOINT));
-
+		final HttpResponseEntity res = httpManager.doGet(createEndpointUrl(null, API_ENDPOINT));
 		// because it is not include common-attribute.
-		return EntityFactory.createEntity(res.getText(), type);
+		return EntityFactory.createEntity(res.getContent(), List.class, Endpoint.class);
 
 	}
 
 	@Override
-	public BooleanResultEntity deleteEndpoint(String endpoint) throws ArangoException {
-
+	public BooleanResultEntity deleteEndpoint(final String endpoint) throws ArangoException {
 		// TODO: validate endpoint
-
-		HttpResponseEntity res = httpManager.doDelete(
-			createEndpointUrl(null, API_ENDPOINT, StringUtils.encodeUrl(endpoint)), null);
-
+		final HttpResponseEntity res = httpManager
+				.doDelete(createEndpointUrl(null, API_ENDPOINT, StringUtils.encodeUrl(endpoint)), null);
 		return createEntity(res, BooleanResultEntity.class);
-
 	}
 
 }

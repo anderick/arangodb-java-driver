@@ -24,49 +24,56 @@ package com.arangodb.entity;
  */
 public class DatabaseEntity extends BaseEntity {
 
-  /**
-   * The name of the database
-   */
-  String name;
+	/**
+	 * The name of the database
+	 */
+	private String name;
 
-  /**
-   * The id of the database
-   */
-  String id;
+	/**
+	 * The id of the database
+	 */
+	private String id;
 
-  /**
-   * The path of the database
-   */
-  String path;
+	/**
+	 * The path of the database
+	 */
+	private String path;
 
-  /**
-   * If true the database is the system database
-   */
-  boolean isSystem;
-  
-  public String getName() {
-    return name;
-  }
-  public String getId() {
-    return id;
-  }
-  public String getPath() {
-    return path;
-  }
-  public boolean isSystem() {
-    return isSystem;
-  }
-  public void setName(String name) {
-    this.name = name;
-  }
-  public void setId(String id) {
-    this.id = id;
-  }
-  public void setPath(String path) {
-    this.path = path;
-  }
-  public void setSystem(boolean isSystem) {
-    this.isSystem = isSystem;
-  }
-  
+	/**
+	 * If true the database is the system database
+	 */
+	private boolean isSystem;
+
+	public String getName() {
+		return name;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public boolean isSystem() {
+		return isSystem;
+	}
+
+	public void setName(final String name) {
+		this.name = name;
+	}
+
+	public void setId(final String id) {
+		this.id = id;
+	}
+
+	public void setPath(final String path) {
+		this.path = path;
+	}
+
+	public void setSystem(final boolean isSystem) {
+		this.isSystem = isSystem;
+	}
+
 }

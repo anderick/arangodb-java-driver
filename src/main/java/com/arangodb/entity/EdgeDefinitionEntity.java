@@ -5,9 +5,9 @@ import java.util.List;
 
 public class EdgeDefinitionEntity {
 
-	String collection;
-	List<String> from;
-	List<String> to;
+	private String collection;
+	private List<String> from;
+	private List<String> to;
 
 	public EdgeDefinitionEntity() {
 		this.from = new ArrayList<String>();
@@ -18,7 +18,7 @@ public class EdgeDefinitionEntity {
 		return collection;
 	}
 
-	public EdgeDefinitionEntity setCollection(String collection) {
+	public EdgeDefinitionEntity setCollection(final String collection) {
 		this.collection = collection;
 		return this;
 	}
@@ -27,7 +27,7 @@ public class EdgeDefinitionEntity {
 		return from;
 	}
 
-	public EdgeDefinitionEntity setFrom(List<String> from) {
+	public EdgeDefinitionEntity setFrom(final List<String> from) {
 		this.from = from;
 		return this;
 	}
@@ -36,7 +36,7 @@ public class EdgeDefinitionEntity {
 		return to;
 	}
 
-	public EdgeDefinitionEntity setTo(List<String> to) {
+	public EdgeDefinitionEntity setTo(final List<String> to) {
 		this.to = to;
 		return this;
 	}

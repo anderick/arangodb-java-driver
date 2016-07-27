@@ -16,7 +16,7 @@
 
 package com.arangodb.entity;
 
-import com.google.gson.annotations.SerializedName;
+import com.arangodb.velocypack.annotations.SerializedName;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -26,9 +26,9 @@ import com.google.gson.annotations.SerializedName;
 public class EdgeEntity<T> extends DocumentEntity<T> {
 
 	@SerializedName(BaseDocument.FROM)
-	String fromVertexHandle;
+	private String fromVertexHandle;
 	@SerializedName(BaseDocument.TO)
-	String toVertexHandle;
+	private String toVertexHandle;
 
 	public String getFromVertexHandle() {
 		return fromVertexHandle;
@@ -38,11 +38,11 @@ public class EdgeEntity<T> extends DocumentEntity<T> {
 		return toVertexHandle;
 	}
 
-	public void setFromVertexHandle(String fromVertexHandle) {
+	public void setFromVertexHandle(final String fromVertexHandle) {
 		this.fromVertexHandle = fromVertexHandle;
 	}
 
-	public void setToVertexHandle(String toVertexHandle) {
+	public void setToVertexHandle(final String toVertexHandle) {
 		this.toVertexHandle = toVertexHandle;
 	}
 

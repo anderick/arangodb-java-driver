@@ -30,43 +30,43 @@ public abstract class BaseEntity implements Serializable {
 	 * If true an error occurred while creating this entity
 	 */
 	@Exclude(deserialize = false)
-	boolean error;
+	private boolean error;
 
 	/**
 	 * The http response code of the response
 	 */
 	@Exclude(deserialize = false)
-	int code;
+	private int code;
 
 	/**
 	 * The Arango error number of the error
 	 */
 	@Exclude(deserialize = false)
-	int errorNumber;
+	private int errorNumber;
 
 	/**
 	 * If an error occurred this is the error message
 	 */
 	@Exclude(deserialize = false)
-	String errorMessage;
+	private String errorMessage;
 
 	/**
 	 * The http status code of the response
 	 */
 	@Exclude(deserialize = false)
-	int statusCode;
+	private int statusCode;
 
 	/**
 	 * The check sum of the requested resource
 	 */
 	@Exclude(deserialize = false)
-	long etag;
+	private String etag;
 
 	/**
 	 * The requestId, this attribute is only used for batch requests.
 	 */
 	@Exclude(deserialize = false)
-	String requestId;
+	private String requestId;
 
 	/**
 	 * If the resource has been modified it returns true
@@ -99,7 +99,7 @@ public abstract class BaseEntity implements Serializable {
 		return error;
 	}
 
-	public void setError(boolean error) {
+	public void setError(final boolean error) {
 		this.error = error;
 	}
 
@@ -115,23 +115,23 @@ public abstract class BaseEntity implements Serializable {
 		return errorMessage;
 	}
 
-	public void setCode(int code) {
+	public void setCode(final int code) {
 		this.code = code;
 	}
 
-	public void setErrorNumber(int errorNumber) {
+	public void setErrorNumber(final int errorNumber) {
 		this.errorNumber = errorNumber;
 	}
 
-	public void setErrorMessage(String errorMessage) {
+	public void setErrorMessage(final String errorMessage) {
 		this.errorMessage = errorMessage;
 	}
 
-	public long getEtag() {
+	public String getEtag() {
 		return etag;
 	}
 
-	public void setEtag(long etag) {
+	public void setEtag(final String etag) {
 		this.etag = etag;
 	}
 
@@ -139,7 +139,7 @@ public abstract class BaseEntity implements Serializable {
 		return statusCode;
 	}
 
-	public void setStatusCode(int statusCode) {
+	public void setStatusCode(final int statusCode) {
 		this.statusCode = statusCode;
 	}
 
@@ -147,7 +147,7 @@ public abstract class BaseEntity implements Serializable {
 		return requestId;
 	}
 
-	public void setRequestId(String requestId) {
+	public void setRequestId(final String requestId) {
 		this.requestId = requestId;
 	}
 

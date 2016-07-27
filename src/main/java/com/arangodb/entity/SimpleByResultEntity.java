@@ -22,35 +22,41 @@ package com.arangodb.entity;
  */
 public class SimpleByResultEntity extends BaseEntity {
 
-  int count;
-  
-  int updated;
-  int replaced;
-  int deleted;
-  
-  public int getCount() {
-    return count;
-  }
-  public int getUpdated() {
-    return updated;
-  }
-  public int getReplaced() {
-    return replaced;
-  }
-  public int getDeleted() {
-    return deleted;
-  }
-  public void setCount(int count) {
-    this.count = count;
-  }
-  public void setUpdated(int updated) {
-    this.updated = updated;
-  }
-  public void setReplaced(int replaced) {
-    this.replaced = replaced;
-  }
-  public void setDeleted(int deleted) {
-    this.deleted = deleted;
-  }
-  
+	private int count;
+	private int updated;
+	private int replaced;
+	private int deleted;
+
+	public int getCount() {
+		return count;
+	}
+
+	public int getUpdated() {
+		return updated;
+	}
+
+	public int getReplaced() {
+		return replaced;
+	}
+
+	public int getDeleted() {
+		return deleted;
+	}
+
+	public void setCount(final int count) {
+		this.count = count;
+	}
+
+	public void setUpdated(final int updated) {
+		this.updated = updated;
+	}
+
+	public void setReplaced(final int replaced) {
+		this.replaced = replaced;
+	}
+
+	public void setDeleted(final int deleted) {
+		this.deleted = deleted;
+	}
+
 }

@@ -28,13 +28,13 @@ public class StreamEntity extends BaseEntity {
 	/**
 	 * Input stream.
 	 */
-	InputStream stream;
+	private InputStream stream;
 
 	public StreamEntity() {
 		// do nothing here
 	}
 
-	public StreamEntity(InputStream stream) {
+	public StreamEntity(final InputStream stream) {
 		this.stream = stream;
 	}
 
@@ -42,7 +42,7 @@ public class StreamEntity extends BaseEntity {
 		return stream;
 	}
 
-	public void setStream(InputStream stream) {
+	public void setStream(final InputStream stream) {
 		this.stream = stream;
 	}
 
