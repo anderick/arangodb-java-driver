@@ -57,7 +57,7 @@ public class ArangoDriverGraphEdgeCreateTest extends BaseGraphTest {
 		assertThat(edge.isError(), is(false));
 
 		assertThat(edge.getDocumentHandle(), is(notNullValue()));
-		assertThat(edge.getDocumentRevision(), is(not(0L)));
+		assertThat(edge.getDocumentRevision(), is(not("")));
 		assertThat(edge.getDocumentKey(), is(notNullValue()));
 		edge = driver.graphGetEdge(this.graphName, this.edgeCollectionName, edge.getDocumentKey(), null);
 		assertThat(edge.getFromVertexHandle(), is(v1.getDocumentHandle()));
@@ -81,7 +81,7 @@ public class ArangoDriverGraphEdgeCreateTest extends BaseGraphTest {
 		assertThat(edge.isError(), is(false));
 
 		assertThat(edge.getDocumentHandle(), is(notNullValue()));
-		assertThat(edge.getDocumentRevision(), is(not(0L)));
+		assertThat(edge.getDocumentRevision(), is(not("")));
 		assertThat(edge.getDocumentKey(), is("e1"));
 		edge = driver.graphGetEdge(this.graphName, this.edgeCollectionName, edge.getDocumentKey(), null);
 		assertThat(edge.getFromVertexHandle(), is(v1.getDocumentHandle()));
@@ -106,7 +106,7 @@ public class ArangoDriverGraphEdgeCreateTest extends BaseGraphTest {
 		assertThat(edge.isError(), is(false));
 
 		assertThat(edge.getDocumentHandle(), is(notNullValue()));
-		assertThat(edge.getDocumentRevision(), is(not(0L)));
+		assertThat(edge.getDocumentRevision(), is(not("")));
 		assertThat(edge.getDocumentKey(), is("e1"));
 		edge = driver.graphGetEdge(this.graphName, this.edgeCollectionName, edge.getDocumentKey(),
 			TestComplexEntity02.class);
@@ -138,7 +138,7 @@ public class ArangoDriverGraphEdgeCreateTest extends BaseGraphTest {
 		assertThat(edge.isError(), is(false));
 
 		assertThat(edge.getDocumentHandle(), is(notNullValue()));
-		assertThat(edge.getDocumentRevision(), is(not(0L)));
+		assertThat(edge.getDocumentRevision(), is(not("")));
 		assertThat(edge.getDocumentKey(), is("e1"));
 		edge = driver.graphGetEdge(this.graphName, this.edgeCollectionName, edge.getDocumentKey(),
 			TestComplexEntity02.class);
@@ -201,7 +201,7 @@ public class ArangoDriverGraphEdgeCreateTest extends BaseGraphTest {
 		assertThat(edge.isError(), is(false));
 
 		assertThat(edge.getDocumentHandle(), is(notNullValue()));
-		assertThat(edge.getDocumentRevision(), is(not(0L)));
+		assertThat(edge.getDocumentRevision(), is(not("")));
 		assertThat(edge.getDocumentKey(), is(notNullValue()));
 		edge = driver.graphGetEdge(this.graphName, this.edgeCollectionName, edge.getDocumentKey(), null);
 		assertThat(edge.getFromVertexHandle(), is(v1.getDocumentHandle()));

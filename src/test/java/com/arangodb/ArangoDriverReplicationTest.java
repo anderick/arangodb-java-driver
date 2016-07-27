@@ -37,13 +37,10 @@ import com.arangodb.entity.ReplicationApplierStateEntity;
 import com.arangodb.entity.ReplicationDumpHeader;
 import com.arangodb.entity.ReplicationDumpRecord;
 import com.arangodb.entity.ReplicationInventoryEntity;
-import com.arangodb.entity.ReplicationInventoryEntity.Collection;
 import com.arangodb.entity.ReplicationLoggerConfigEntity;
 import com.arangodb.entity.ReplicationLoggerStateEntity;
 import com.arangodb.util.DumpHandler;
 import com.arangodb.util.DumpHandlerAdapter;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -84,11 +81,11 @@ public class ArangoDriverReplicationTest extends BaseTest {
 		assertThat(entity.getCode(), is(0));
 		assertThat(entity.getStatusCode(), is(200));
 
-		final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		for (final Collection col : entity.getCollections()) {
-			logger.debug(gson.toJson(col.getParameter()));
-			logger.debug(gson.toJson(col.getIndexes()));
-		}
+		// final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		// for (final Collection col : entity.getCollections()) {
+		// logger.debug(gson.toJson(col.getParameter()));
+		// logger.debug(gson.toJson(col.getIndexes()));
+		// }
 
 	}
 
@@ -160,7 +157,7 @@ public class ArangoDriverReplicationTest extends BaseTest {
 						assertThat(entity.getRev(), is(not(0L)));
 						assertThat(entity.getData(), is(notNullValue()));
 						assertThat(entity.getData().getDocumentKey(), is(notNullValue()));
-						assertThat(entity.getData().getDocumentRevision(), is(not(0L)));
+						assertThat(entity.getData().getDocumentRevision(), is(not("")));
 						assertThat(entity.getData().getDocumentHandle(), is(nullValue()));
 						assertThat(entity.getData().getEntity().getAge(), is(not(0)));
 						break;
@@ -226,7 +223,7 @@ public class ArangoDriverReplicationTest extends BaseTest {
 						assertThat(entity.getRev(), is(not(0L)));
 						assertThat(entity.getData(), is(notNullValue()));
 						assertThat(entity.getData().getDocumentKey(), is(notNullValue()));
-						assertThat(entity.getData().getDocumentRevision(), is(not(0L)));
+						assertThat(entity.getData().getDocumentRevision(), is(not("")));
 						assertThat(entity.getData().getDocumentHandle(), is(nullValue()));
 						assertThat(entity.getData().getEntity().getAge(), is(not(0)));
 						break;

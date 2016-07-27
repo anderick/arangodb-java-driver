@@ -16,20 +16,17 @@
 
 package com.arangodb;
 
-import java.lang.reflect.Type;
-
-import com.google.gson.InstanceCreator;
+import com.arangodb.velocypack.VPackInstanceCreator;
 
 /**
  * @author tporadowski - tomasz at poradowski.com
  */
-public class TestInterfaceInstanceCreator implements
-		InstanceCreator<TestInterface> {
+public class TestInterfaceInstanceCreator implements VPackInstanceCreator<TestInterface> {
 
 	private int counter;
-	
+
 	@Override
-	public TestInterface createInstance(Type type) {
+	public TestInterface createInstance() {
 		return new TestInterfaceImpl("name " + counter++);
 	}
 
@@ -39,4 +36,5 @@ public class TestInterfaceInstanceCreator implements
 	public int getCounter() {
 		return counter;
 	}
+
 }

@@ -54,7 +54,7 @@ public class NegativeTest extends BaseTest {
 				+ configure.getArangoHost().getPort() + "/_api/collections",
 			null);
 
-		final DefaultEntity entity = EntityFactory.createEntity(res.getText(), DefaultEntity.class);
+		final DefaultEntity entity = EntityFactory.createEntity(res.getContent(), DefaultEntity.class);
 		assertThat(entity.isError(), is(true));
 		assertThat(entity.getCode(), is(501));
 		assertThat(entity.getErrorNumber(), is(9));

@@ -38,7 +38,7 @@ import com.arangodb.util.AqlQueryOptions;
 import com.arangodb.util.GraphQueryUtil;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.util.ShortestPathOptions;
-import com.google.gson.JsonObject;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -157,9 +157,8 @@ public class InternalCursorDriverImpl extends BaseArangoDriverImpl implements co
 		final Map<String, Object> bindVars,
 		final AqlQueryOptions aqlQueryOptions) throws ArangoException {
 
-		final CursorEntity<JsonObject> entity = executeCursorEntityQuery(database, query, bindVars, aqlQueryOptions,
-			JsonObject.class);
-
+		final CursorEntity<VPackSlice> entity = executeCursorEntityQuery(database, query, bindVars, aqlQueryOptions,
+			VPackSlice.class);
 		return new CursorRawResult(database, this, entity);
 	}
 

@@ -60,7 +60,7 @@ public class ArangoDriverGraphVertexUpdateTest extends BaseGraphTest {
 
 		assertThat(updatedVertex.getDocumentHandle(), is(v1.getDocumentHandle()));
 		assertThat(updatedVertex.getDocumentRevision(), is(not(v1.getDocumentRevision())));
-		assertThat(updatedVertex.getDocumentRevision(), is(not(0L)));
+		assertThat(updatedVertex.getDocumentRevision(), is(not("")));
 		assertThat(updatedVertex.getDocumentKey(), is(v1.getDocumentKey()));
 
 		updatedVertex = driver.graphGetVertex(this.graphName, this.collectionName, vertex.getDocumentKey(),
@@ -98,7 +98,7 @@ public class ArangoDriverGraphVertexUpdateTest extends BaseGraphTest {
 
 		assertThat(updatedVertex.getDocumentHandle(), is(v1.getDocumentHandle()));
 		assertThat(updatedVertex.getDocumentRevision(), is(not(v1.getDocumentRevision())));
-		assertThat(updatedVertex.getDocumentRevision(), is(not(0L)));
+		assertThat(updatedVertex.getDocumentRevision(), is(not("")));
 		assertThat(updatedVertex.getDocumentKey(), is(v1.getDocumentKey()));
 
 		updatedVertex = driver.graphGetVertex(this.graphName, this.collectionName, vertex.getDocumentKey(),
@@ -162,7 +162,7 @@ public class ArangoDriverGraphVertexUpdateTest extends BaseGraphTest {
 		assertThat(vertex.getCode(), is(200));
 
 		// update
-		final Long rev = vertex.getDocumentRevision();
+		final String rev = vertex.getDocumentRevision();
 		DocumentEntity<TestComplexEntity01> updatedVertex = driver.graphUpdateVertex(this.graphName,
 			this.collectionName, vertex.getDocumentKey(), new TestComplexEntity01("zzz", null, 99), null, true, rev,
 			null);
@@ -171,7 +171,7 @@ public class ArangoDriverGraphVertexUpdateTest extends BaseGraphTest {
 
 		assertThat(updatedVertex.getDocumentHandle(), is(v1.getDocumentHandle()));
 		assertThat(updatedVertex.getDocumentRevision(), is(not(v1.getDocumentRevision())));
-		assertThat(updatedVertex.getDocumentRevision(), is(not(0L)));
+		assertThat(updatedVertex.getDocumentRevision(), is(not("")));
 		assertThat(updatedVertex.getDocumentKey(), is(v1.getDocumentKey()));
 
 		updatedVertex = driver.graphGetVertex(this.graphName, this.collectionName, vertex.getDocumentKey(),
@@ -203,7 +203,7 @@ public class ArangoDriverGraphVertexUpdateTest extends BaseGraphTest {
 
 		// update
 		try {
-			final Long rev = vertex.getDocumentRevision() + 1;
+			final String rev = vertex.getDocumentRevision() + 1;
 			driver.graphUpdateVertex(this.graphName, this.collectionName, vertex.getDocumentKey(),
 				new TestComplexEntity01("zzz", null, 99), null, true, rev, null);
 			fail();
@@ -231,7 +231,7 @@ public class ArangoDriverGraphVertexUpdateTest extends BaseGraphTest {
 		assertThat(vertex.getCode(), is(200));
 
 		// update
-		final Long rev = vertex.getDocumentRevision();
+		final String rev = vertex.getDocumentRevision();
 		VertexEntity<TestComplexEntity01> updatedVertex = driver.graphUpdateVertex(this.graphName, this.collectionName,
 			vertex.getDocumentKey(), new TestComplexEntity01("zzz", null, 99), null, true, rev, null);
 		assertThat(updatedVertex.getCode(), is(200));
@@ -239,7 +239,7 @@ public class ArangoDriverGraphVertexUpdateTest extends BaseGraphTest {
 
 		assertThat(updatedVertex.getDocumentHandle(), is(v1.getDocumentHandle()));
 		assertThat(updatedVertex.getDocumentRevision(), is(not(v1.getDocumentRevision())));
-		assertThat(updatedVertex.getDocumentRevision(), is(not(0L)));
+		assertThat(updatedVertex.getDocumentRevision(), is(not("")));
 		assertThat(updatedVertex.getDocumentKey(), is(v1.getDocumentKey()));
 
 		updatedVertex = driver.graphGetVertex(this.graphName, this.collectionName, vertex.getDocumentKey(),
@@ -271,7 +271,7 @@ public class ArangoDriverGraphVertexUpdateTest extends BaseGraphTest {
 
 		// update
 		try {
-			final Long rev = vertex.getDocumentRevision() + 1;
+			final String rev = vertex.getDocumentRevision() + 1;
 			driver.graphUpdateVertex(this.graphName, this.collectionName, vertex.getDocumentKey(),
 				new TestComplexEntity01("zzz", null, 99), null, true, rev, null);
 			fail();

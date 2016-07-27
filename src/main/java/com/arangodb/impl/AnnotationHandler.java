@@ -38,7 +38,7 @@ public class AnnotationHandler {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public synchronized void updateDocumentAttributes(
 		final Object o,
-		final long rev,
+		final String rev,
 		final String id,
 		final String key) {
 		if (o != null) {
@@ -72,7 +72,7 @@ public class AnnotationHandler {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public synchronized void updateEdgeAttributes(
 		final Object o,
-		final long rev,
+		final String rev,
 		final String id,
 		final String key,
 		final String from,

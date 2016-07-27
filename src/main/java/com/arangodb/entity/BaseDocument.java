@@ -21,10 +21,10 @@ public class BaseDocument extends BaseEntity implements DocumentHolder {
 	public static final String TO = "_to";
 
 	/**
-	 * the documents revision number
+	 * the documents revision
 	 */
 	@SerializedName(REV)
-	private long documentRevision;
+	private String documentRevision;
 
 	/**
 	 * the document handle
@@ -85,7 +85,7 @@ public class BaseDocument extends BaseEntity implements DocumentHolder {
 			this.documentKey = documentKey;
 		}
 		if (properties.containsKey(REV)) {
-			this.documentRevision = (Long) properties.get(REV);
+			this.documentRevision = (String) properties.get(REV);
 			properties.remove(REV);
 		}
 		if (properties.containsKey(KEY)) {
@@ -102,7 +102,7 @@ public class BaseDocument extends BaseEntity implements DocumentHolder {
 	}
 
 	@Override
-	public long getDocumentRevision() {
+	public String getDocumentRevision() {
 		return this.documentRevision;
 	}
 
@@ -117,7 +117,7 @@ public class BaseDocument extends BaseEntity implements DocumentHolder {
 	}
 
 	@Override
-	public void setDocumentRevision(final long documentRevision) {
+	public void setDocumentRevision(final String documentRevision) {
 		this.documentRevision = documentRevision;
 	}
 

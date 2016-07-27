@@ -196,7 +196,7 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 	}
 
 	@Override
-	public long checkDocument(final String database, final String documentHandle) throws ArangoException {
+	public String checkDocument(final String database, final String documentHandle) throws ArangoException {
 		validateDocumentHandle(documentHandle);
 		final HttpResponseEntity res = httpManager.doHead(createDocumentEndpointUrl(database, documentHandle), null);
 

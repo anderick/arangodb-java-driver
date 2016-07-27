@@ -27,7 +27,10 @@ import com.arangodb.entity.StatisticsEntity;
 import com.arangodb.http.HttpManager;
 import com.arangodb.http.HttpResponseEntity;
 import com.arangodb.util.MapBuilder;
+import com.arangodb.velocypack.VPackBuilder;
 import com.arangodb.velocypack.VPackSlice;
+import com.arangodb.velocypack.Value;
+import com.arangodb.velocypack.exception.VPackBuilderException;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -126,8 +129,14 @@ public class InternalAdminDriverImpl extends BaseArangoDriverImpl implements com
 	@Override
 	public DefaultEntity executeScript(final String database, final String jsCode) throws ArangoException {
 
-		final HttpResponseEntity res = httpManager.doPost(createEndpointUrl(database, "/_admin/execute"), null, jsCode);
-
+		final VPackBuilder builder = new VPackBuilder();
+		try {
+			builder.add(new Value(jsCode));
+		} catch (final VPackBuilderException e) {
+			throw new ArangoException(e);
+		}
+		final HttpResponseEntity res = httpManager.doPost(createEndpointUrl(database, "/_admin/execute"), null,
+			builder.slice());
 		return createEntity(res, DefaultEntity.class);
 	}
 

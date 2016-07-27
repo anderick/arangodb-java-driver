@@ -19,8 +19,6 @@ package com.arangodb.example.document;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.json.JSONML;
-import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -64,7 +62,7 @@ public class RawDocumentExample extends BaseExample {
 
 		String documentHandle1 = null;
 		String documentHandle2 = null;
-		String documentHandle3 = null;
+		final String documentHandle3 = null;
 
 		String x = "{\"test\":123}";
 		try {
@@ -166,18 +164,19 @@ public class RawDocumentExample extends BaseExample {
 		//
 		final String string = "<recipe name=\"bread\" prep_time=\"5 mins\" cook_time=\"3 hours\"> <title>Basic bread</title> <ingredient amount=\"8\" unit=\"dL\">Flour</ingredient> <ingredient amount=\"10\" unit=\"grams\">Yeast</ingredient> <ingredient amount=\"4\" unit=\"dL\" state=\"warm\">Water</ingredient> <ingredient amount=\"1\" unit=\"teaspoon\">Salt</ingredient> <instructions> <step>Mix all ingredients together.</step> <step>Knead thoroughly.</step> <step>Cover with a cloth, and leave for one hour in warm room.</step> <step>Knead again.</step> <step>Place in a bread baking tin.</step> <step>Cover with a cloth, and leave for one hour in warm room.</step> <step>Bake in the oven at 180(degrees)C for 30 minutes.</step> </instructions> </recipe> ";
 		System.out.println("Orig XML value: " + string);
-		final JSONObject jsonObject = JSONML.toJSONObject(string);
-		try {
-			final DocumentEntity<String> entity = driver.createDocumentRaw(COLLECTION_NAME, jsonObject.toString(),
-				false);
-			// the DocumentEntity contains the key, document handle and revision
-			System.out.println("Key: " + entity.getDocumentKey());
-			System.out.println("Id: " + entity.getDocumentHandle());
-			System.out.println("Revision: " + entity.getDocumentRevision());
-			documentHandle3 = entity.getDocumentHandle();
-		} catch (final ArangoException e) {
-			Assert.fail("Failed to create document. " + e.getMessage());
-		}
+		// final JSONObject jsonObject = JSONML.toJSONObject(string);
+		// try {
+		// final DocumentEntity<String> entity =
+		// driver.createDocumentRaw(COLLECTION_NAME, jsonObject.toString(),
+		// false);
+		// // the DocumentEntity contains the key, document handle and revision
+		// System.out.println("Key: " + entity.getDocumentKey());
+		// System.out.println("Id: " + entity.getDocumentHandle());
+		// System.out.println("Revision: " + entity.getDocumentRevision());
+		// documentHandle3 = entity.getDocumentHandle();
+		// } catch (final ArangoException e) {
+		// Assert.fail("Failed to create document. " + e.getMessage());
+		// }
 
 		//
 		printHeadline("read example and convert it back to XML");
@@ -186,8 +185,8 @@ public class RawDocumentExample extends BaseExample {
 		try {
 			final String str = driver.getDocumentRaw(documentHandle3, null, null);
 			System.out.println("JSON value: " + str);
-			final JSONObject jsonObject2 = new JSONObject(str);
-			System.out.println("XML value: " + JSONML.toString(jsonObject2));
+			// final JSONObject jsonObject2 = new JSONObject(str);
+			// System.out.println("XML value: " + JSONML.toString(jsonObject2));
 		} catch (final ArangoException e) {
 			Assert.fail("Failed to read document. " + e.getMessage());
 		}
@@ -204,10 +203,10 @@ public class RawDocumentExample extends BaseExample {
 			final CursorRawResult cursor = driver.executeAqlQueryRaw(queryString, bindVars, null);
 			Assert.assertNotNull(cursor);
 			final Iterator<String> iter = cursor.iterator();
-			while (iter.hasNext()) {
-				final JSONObject jsonObject2 = new JSONObject(iter.next());
-				System.out.println("XML value: " + JSONML.toString(jsonObject2));
-			}
+			// while (iter.hasNext()) {
+			// final JSONObject jsonObject2 = new JSONObject(iter.next());
+			// System.out.println("XML value: " + JSONML.toString(jsonObject2));
+			// }
 		} catch (final ArangoException e) {
 			Assert.fail("Failed to query documents. " + e.getMessage());
 		}

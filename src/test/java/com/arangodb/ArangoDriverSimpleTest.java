@@ -124,7 +124,7 @@ public class ArangoDriverSimpleTest extends BaseTest {
 		final DocumentEntity<TestComplexEntity01> doc = entity.getDocument();
 
 		assertThat(entity.getStatusCode(), is(200));
-		assertThat(doc.getDocumentRevision(), is(not(0L)));
+		assertThat(doc.getDocumentRevision(), is(not("")));
 		assertThat(doc.getDocumentHandle(), is(COLLECTION_NAME + "/" + doc.getDocumentKey()));
 		assertThat(doc.getDocumentKey(), is(notNullValue()));
 		assertThat(doc.getEntity(), is(notNullValue()));
@@ -143,7 +143,7 @@ public class ArangoDriverSimpleTest extends BaseTest {
 			final DocumentEntity<TestComplexEntity01> doc = entity.getDocument();
 
 			assertThat(entity.getStatusCode(), is(200));
-			assertThat(doc.getDocumentRevision(), is(not(0L)));
+			assertThat(doc.getDocumentRevision(), is(not("")));
 			assertThat(doc.getDocumentHandle(), is(COLLECTION_NAME + "/" + doc.getDocumentKey()));
 			assertThat(doc.getDocumentKey(), is(notNullValue()));
 			assertThat(doc.getEntity(), is(notNullValue()));
@@ -414,14 +414,14 @@ public class ArangoDriverSimpleTest extends BaseTest {
 		assertThat(list.size(), is(2));
 		assertThat(list.get(0).getDocumentHandle(), startsWith(COLLECTION_NAME));
 		assertThat(list.get(0).getDocumentKey(), is(notNullValue()));
-		assertThat(list.get(0).getDocumentRevision(), is(not(0L)));
+		assertThat(list.get(0).getDocumentRevision(), is(not("")));
 		assertThat(list.get(0).getEntity().getUser(), is("xxx1"));
 		assertThat(list.get(0).getEntity().getDesc(), is("this text contains a word"));
 		assertThat(list.get(0).getEntity().getAge(), is(10));
 
 		assertThat(list.get(1).getDocumentHandle(), startsWith(COLLECTION_NAME));
 		assertThat(list.get(1).getDocumentKey(), is(notNullValue()));
-		assertThat(list.get(1).getDocumentRevision(), is(not(0L)));
+		assertThat(list.get(1).getDocumentRevision(), is(not("")));
 		assertThat(list.get(1).getEntity().getUser(), is("xxx2"));
 		assertThat(list.get(1).getEntity().getDesc(), is("this text also contains a word"));
 		assertThat(list.get(1).getEntity().getAge(), is(10));

@@ -20,13 +20,18 @@ package com.arangodb.entity;
  * @author tamtam180 - kirscheless at gmail.com
  *
  */
-public interface DocumentHolder {
+interface DocumentHolder {
 
-  public long getDocumentRevision();
-  public String getDocumentHandle();
-  public String getDocumentKey();
-  public void setDocumentRevision(long documentRevision);
-  public void setDocumentHandle(String documentHandle);
-  public void setDocumentKey(String documentKey);
-  
+	String getDocumentRevision();
+
+	String getDocumentHandle();
+
+	String getDocumentKey();
+
+	void setDocumentRevision(String documentRevision);
+
+	void setDocumentHandle(String documentHandle);
+
+	void setDocumentKey(String documentKey);
+
 }

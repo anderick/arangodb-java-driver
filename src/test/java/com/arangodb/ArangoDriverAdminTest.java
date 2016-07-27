@@ -36,7 +36,6 @@ import com.arangodb.entity.ArangoVersion;
 import com.arangodb.entity.DefaultEntity;
 import com.arangodb.entity.StatisticsDescriptionEntity;
 import com.arangodb.entity.StatisticsEntity;
-import com.google.gson.Gson;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -105,11 +104,10 @@ public class ArangoDriverAdminTest extends BaseTest {
 		final StatisticsEntity stat = driver.getStatistics();
 
 		// debug
-		final Gson gson = new Gson();
-		assertNotNull(gson.toJson(stat));
-		assertNotNull(gson.toJson(stat.getSystem()));
-		assertNotNull(gson.toJson(stat.getClient()));
-		assertNotNull(gson.toJson(stat.getServer()));
+		assertNotNull(stat);
+		assertNotNull(stat.getSystem());
+		assertNotNull(stat.getClient());
+		assertNotNull(stat.getServer());
 
 	}
 
@@ -119,10 +117,9 @@ public class ArangoDriverAdminTest extends BaseTest {
 		final StatisticsDescriptionEntity desc = driver.getStatisticsDescription();
 
 		// debug
-		final Gson gson = new Gson();
-		assertNotNull(gson.toJson(desc));
-		assertNotNull(gson.toJson(desc.getGroups()));
-		assertNotNull(gson.toJson(desc.getFigures()));
+		assertNotNull(desc);
+		assertNotNull(desc.getGroups());
+		assertNotNull(desc.getFigures());
 	}
 
 	@Test

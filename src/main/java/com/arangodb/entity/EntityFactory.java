@@ -23,7 +23,10 @@ import com.arangodb.ArangoException;
 import com.arangodb.entity.CollectionEntity.Figures;
 import com.arangodb.entity.marker.VertexEntity;
 import com.arangodb.velocypack.VPack;
+import com.arangodb.velocypack.VPackDeserializer;
+import com.arangodb.velocypack.VPackInstanceCreator;
 import com.arangodb.velocypack.VPackParser;
+import com.arangodb.velocypack.VPackSerializer;
 import com.arangodb.velocypack.VPackSlice;
 import com.arangodb.velocypack.exception.VPackParserException;
 
@@ -126,6 +129,18 @@ public class EntityFactory {
 		// .registerTypeAdapter(CollectionStatus.class, new
 		// CollectionStatusTypeAdapter())
 		// .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+	}
+
+	public static <T> VPack registerSerializer(final Class<T> clazz, final VPackSerializer<T> serializer) {
+		return vpack.registerSerializer(clazz, serializer);
+	}
+
+	public static <T> VPack registerDeserializer(final Class<T> clazz, final VPackDeserializer<T> deserializer) {
+		return vpack.registerDeserializer(clazz, deserializer);
+	}
+
+	public static <T> VPack regitserInstanceCreator(final Class<T> clazz, final VPackInstanceCreator<T> creator) {
+		return vpack.regitserInstanceCreator(clazz, creator);
 	}
 
 	public static <T> T createEntity(final VPackSlice vpack, final Class<T> type) throws ArangoException {

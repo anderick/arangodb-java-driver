@@ -17,7 +17,7 @@
 package com.arangodb.example.graph;
 
 import com.arangodb.entity.BaseDocument;
-import com.google.gson.annotations.SerializedName;
+import com.arangodb.velocypack.annotations.SerializedName;
 
 /**
  * A person class.
@@ -45,7 +45,7 @@ public class Circle {
 
 	}
 
-	public Circle(String documentKey, String label) {
+	public Circle(final String documentKey, final String label) {
 		this.documentKey = documentKey;
 		this.label = label;
 	}
@@ -54,7 +54,7 @@ public class Circle {
 		return label;
 	}
 
-	public void setLabel(String label) {
+	public void setLabel(final String label) {
 		this.label = label;
 	}
 
@@ -62,7 +62,7 @@ public class Circle {
 		return documentHandle;
 	}
 
-	public void setDocumentHandle(String documentHandle) {
+	public void setDocumentHandle(final String documentHandle) {
 		this.documentHandle = documentHandle;
 	}
 
@@ -70,7 +70,7 @@ public class Circle {
 		return documentKey;
 	}
 
-	public void setDocumentKey(String documentKey) {
+	public void setDocumentKey(final String documentKey) {
 		this.documentKey = documentKey;
 	}
 
@@ -78,7 +78,7 @@ public class Circle {
 		return documentRevision;
 	}
 
-	public void setDocumentRevision(Long documentRevision) {
+	public void setDocumentRevision(final Long documentRevision) {
 		this.documentRevision = documentRevision;
 	}
 

@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.arangodb.entity.DocumentEntity;
-import com.google.gson.Gson;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -88,7 +87,7 @@ public class PrimitiveDocumentTest extends BaseTest {
 	public void test_string_multibyte2() throws ArangoException {
 
 		final TestComplexEntity01 value = new TestComplexEntity01("寿司", "", 10);
-		logger.debug(new Gson().toJson(value));
+		// logger.debug(new Gson().toJson(value));
 
 		final DocumentEntity<?> res = driver.createDocument("unit_test_primitive", value, true);
 		final String documentHandle = res.getDocumentHandle();
