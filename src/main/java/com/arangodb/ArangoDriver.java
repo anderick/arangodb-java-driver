@@ -1363,21 +1363,26 @@ public class ArangoDriver extends BaseArangoDriver {
 		return deleteDocument(createDocumentHandle(collectionName, documentKey), rev);
 	}
 
-	/**
-	 * Deletes a document from the database. This method offers a parameter rev
-	 * (revision). If the revision of the document on the server does not match
-	 * the given revision an error is thrown.
-	 *
-	 * @param documentHandle
-	 *            The document handle.
-	 * @param rev
-	 *            The desired revision
-	 * @return a DocumentEntity object
-	 * @throws ArangoException
-	 */
-	public DocumentEntity<?> deleteDocument(final String documentHandle, final String rev) throws ArangoException {
-		return documentDriver.deleteDocument(getDefaultDatabase(), documentHandle, rev);
-	}
+	// TODO duplicate method
+	// /**
+	// * Deletes a document from the database. This method offers a parameter
+	// rev
+	// * (revision). If the revision of the document on the server does not
+	// match
+	// * the given revision an error is thrown.
+	// *
+	// * @param documentHandle
+	// * The document handle.
+	// * @param rev
+	// * The desired revision
+	// * @return a DocumentEntity object
+	// * @throws ArangoException
+	// */
+	// public DocumentEntity<?> deleteDocument(final String documentHandle,
+	// final String rev) throws ArangoException {
+	// return documentDriver.deleteDocument(getDefaultDatabase(),
+	// documentHandle, rev);
+	// }
 
 	/**
 	 * This method validates a given AQL query string and returns a CursorEntity
