@@ -478,7 +478,7 @@ public class InternalGraphDriverImpl extends BaseArangoDriverWithCursorImpl
 				StringUtils.encodeUrl(collectionName), StringUtils.encodeUrl(key)),
 			new MapBuilder().put(IF_MATCH, ifMatchRevision, true).put(IF_NONE_MATCH, ifNoneMatchRevision, true).get(),
 			new MapBuilder().put("keepNull", keepNull).put(WAIT_FOR_SYNC, waitForSync).get(),
-			EntityFactory.toVPack(vertex/* , keepNull != null && !keepNull */));
+			EntityFactory.toVPack(vertex, keepNull != null && !keepNull));
 
 		VertexEntity<T> result;
 		if (vertex != null) {

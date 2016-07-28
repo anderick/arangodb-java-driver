@@ -294,8 +294,8 @@ public class EntityDeserializers {
 	private static <T extends DocumentHolder> T deserializeDocumentParameter(final VPackSlice obj, final T entity)
 			throws VPackException {
 		final VPackSlice rev = obj.get(BaseDocument.REV);
-		if (rev.isNumber()) {
-			entity.setDocumentRevision(rev.getAsLong());
+		if (rev.isString()) {
+			entity.setDocumentRevision(rev.getAsString());
 		}
 		final VPackSlice id = obj.get(BaseDocument.ID);
 		if (id.isString()) {

@@ -57,10 +57,10 @@ public class AnnotationHandler {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public synchronized void updateDocumentRev(final Object o, final long rev) {
+	public synchronized void updateDocumentRev(final Object o, final String rev) {
 		if (o != null) {
 			if (o instanceof java.util.Map) {
-				final java.util.Map m = (java.util.Map) o;
+				final Map m = (Map) o;
 				m.put(BaseDocument.REV, rev);
 			} else {
 				final DocumentAttributes documentAttributes = getDocumentAttributes(o);

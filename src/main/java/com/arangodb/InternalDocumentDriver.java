@@ -64,10 +64,10 @@ public interface InternalDocumentDriver extends BaseDriverInterface {
 		String ifNoneMatchRevision,
 		String ifMatchRevision) throws ArangoException;
 
-	String getDocumentRaw(String database, String documentHandle, Long ifNoneMatchRevision, Long ifMatchRevision)
+	String getDocumentRaw(String database, String documentHandle, String ifNoneMatchRevision, String ifMatchRevision)
 			throws ArangoException;
 
-	DocumentEntity<?> deleteDocument(String database, String documentHandle, Long rev) throws ArangoException;
+	DocumentEntity<?> deleteDocument(String database, String documentHandle, String rev) throws ArangoException;
 
 	<T> EdgeEntity<T> createEdge(
 		String database,

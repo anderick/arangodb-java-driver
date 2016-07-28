@@ -30,7 +30,7 @@ public class GraphEntity extends BaseEntity implements DocumentHolder {
 	 * Revision of graph.
 	 */
 	@SerializedName("_rev")
-	private long documentRevision;
+	private String documentRevision;
 
 	/**
 	 * Id of graph.
@@ -61,7 +61,7 @@ public class GraphEntity extends BaseEntity implements DocumentHolder {
 	private String name;
 
 	@Override
-	public long getDocumentRevision() {
+	public String getDocumentRevision() {
 		return documentRevision;
 	}
 
@@ -76,7 +76,7 @@ public class GraphEntity extends BaseEntity implements DocumentHolder {
 	}
 
 	@Override
-	public void setDocumentRevision(final long documentRevision) {
+	public void setDocumentRevision(final String documentRevision) {
 		this.documentRevision = documentRevision;
 	}
 

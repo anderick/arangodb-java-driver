@@ -37,17 +37,22 @@ import com.arangodb.velocypack.exception.VPackParserException;
  */
 public class EntityFactory {
 
+	private static final boolean INCLUDE_NULL_VALUE_DEFAULT = false;
+
 	private static VPack vpack = new VPack();
+	private static VPack vpackNull = new VPack();
 
 	private EntityFactory() {
 		// this is a helper class
 	}
 
 	static {
-		configure();
+		vpackNull.getOptions().setSerializeNullValues(true);
+		configure(vpack);
+		configure(vpackNull);
 	}
 
-	public static void configure() {
+	public static void configure(final VPack vpack) {
 		vpack.registerSerializer(CollectionStatus.class, new CollectionStatusTypeAdapter())
 				.registerDeserializer(CollectionStatus.class, new CollectionStatusTypeAdapter())
 				.registerDeserializer(CollectionEntity.class, new EntityDeserializers.CollectionEntityDeserializer())
@@ -131,16 +136,19 @@ public class EntityFactory {
 		// .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 	}
 
-	public static <T> VPack registerSerializer(final Class<T> clazz, final VPackSerializer<T> serializer) {
-		return vpack.registerSerializer(clazz, serializer);
+	public static <T> void registerSerializer(final Class<T> clazz, final VPackSerializer<T> serializer) {
+		vpack.registerSerializer(clazz, serializer);
+		vpackNull.registerSerializer(clazz, serializer);
 	}
 
-	public static <T> VPack registerDeserializer(final Class<T> clazz, final VPackDeserializer<T> deserializer) {
-		return vpack.registerDeserializer(clazz, deserializer);
+	public static <T> void registerDeserializer(final Class<T> clazz, final VPackDeserializer<T> deserializer) {
+		vpack.registerDeserializer(clazz, deserializer);
+		vpackNull.registerDeserializer(clazz, deserializer);
 	}
 
-	public static <T> VPack regitserInstanceCreator(final Class<T> clazz, final VPackInstanceCreator<T> creator) {
-		return vpack.regitserInstanceCreator(clazz, creator);
+	public static <T> void regitserInstanceCreator(final Class<T> clazz, final VPackInstanceCreator<T> creator) {
+		vpack.regitserInstanceCreator(clazz, creator);
+		vpackNull.regitserInstanceCreator(clazz, creator);
 	}
 
 	public static <T> T createEntity(final VPackSlice vpack, final Class<T> type) throws ArangoException {
@@ -175,27 +183,44 @@ public class EntityFactory {
 	}
 
 	public static <T> VPackSlice toVPack(final T obj) throws ArangoException {
+		return toVPack(obj, INCLUDE_NULL_VALUE_DEFAULT);
+	}
+
+	public static <T> VPackSlice toVPack(final T obj, final boolean includeNullValue) throws ArangoException {
 		try {
-			return EntityFactory.vpack.serialize(obj);
+			return includeNullValue ? EntityFactory.vpackNull.serialize(obj) : EntityFactory.vpack.serialize(obj);
 		} catch (final VPackParserException e) {
 			throw new ArangoException(e);
 		}
 	}
 
 	public static <T extends Map<?, ?>> VPackSlice toVPack(final T obj) throws ArangoException {
+		return toVPack(obj, INCLUDE_NULL_VALUE_DEFAULT);
+	}
+
+	public static <T extends Map<?, ?>> VPackSlice toVPack(final T obj, final boolean includeNullValue)
+			throws ArangoException {
 		return toVPack(obj, String.class);
 	}
 
 	public static <T extends Map<?, ?>> VPackSlice toVPack(final T obj, final Class<?> keyType) throws ArangoException {
+		return toVPack(obj, keyType, INCLUDE_NULL_VALUE_DEFAULT);
+	}
+
+	public static <T extends Map<?, ?>> VPackSlice toVPack(
+		final T obj,
+		final Class<?> keyType,
+		final boolean includeNullValue) throws ArangoException {
 		try {
-			return EntityFactory.vpack.serialize(obj, keyType);
+			return includeNullValue ? EntityFactory.vpackNull.serialize(obj, keyType)
+					: EntityFactory.vpack.serialize(obj, keyType);
 		} catch (final VPackParserException e) {
 			throw new ArangoException(e);
 		}
 	}
 
 	public static String toJson(final VPackSlice vpack) {
-		return VPackParser.toJson(vpack, false);
+		return VPackParser.toJson(vpack, INCLUDE_NULL_VALUE_DEFAULT);
 	}
 
 	public static String toJson(final VPackSlice vpack, final boolean includeNullValue) {

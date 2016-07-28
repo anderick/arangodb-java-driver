@@ -1932,7 +1932,7 @@ public class ArangoDriver extends BaseArangoDriver {
 	 * @return a DocumentEntity object
 	 * @throws ArangoException
 	 */
-	public DocumentEntity<?> deleteDocument(final long collectionId, final long documentId, final Long rev)
+	public DocumentEntity<?> deleteDocument(final long collectionId, final long documentId, final String rev)
 			throws ArangoException {
 		return deleteDocument(createDocumentHandle(collectionId, String.valueOf(documentId)), rev);
 	}
@@ -1951,7 +1951,7 @@ public class ArangoDriver extends BaseArangoDriver {
 	 * @return a DocumentEntity object
 	 * @throws ArangoException
 	 */
-	public DocumentEntity<?> deleteDocument(final String collectionName, final long documentId, final Long rev)
+	public DocumentEntity<?> deleteDocument(final String collectionName, final long documentId, final String rev)
 			throws ArangoException {
 		return deleteDocument(createDocumentHandle(collectionName, String.valueOf(documentId)), rev);
 	}
@@ -1970,7 +1970,7 @@ public class ArangoDriver extends BaseArangoDriver {
 	 * @return a DocumentEntity object
 	 * @throws ArangoException
 	 */
-	public DocumentEntity<?> deleteDocument(final long collectionId, final String documentKey, final Long rev)
+	public DocumentEntity<?> deleteDocument(final long collectionId, final String documentKey, final String rev)
 			throws ArangoException {
 		return deleteDocument(createDocumentHandle(collectionId, documentKey), rev);
 	}
@@ -1989,7 +1989,7 @@ public class ArangoDriver extends BaseArangoDriver {
 	 * @return a DocumentEntity object
 	 * @throws ArangoException
 	 */
-	public DocumentEntity<?> deleteDocument(final String collectionName, final String documentKey, final Long rev)
+	public DocumentEntity<?> deleteDocument(final String collectionName, final String documentKey, final String rev)
 			throws ArangoException {
 		return deleteDocument(createDocumentHandle(collectionName, documentKey), rev);
 	}
@@ -2006,7 +2006,7 @@ public class ArangoDriver extends BaseArangoDriver {
 	 * @return a DocumentEntity object
 	 * @throws ArangoException
 	 */
-	public DocumentEntity<?> deleteDocument(final String documentHandle, final Long rev) throws ArangoException {
+	public DocumentEntity<?> deleteDocument(final String documentHandle, final String rev) throws ArangoException {
 		return documentDriver.deleteDocument(getDefaultDatabase(), documentHandle, rev);
 	}
 
@@ -4927,8 +4927,8 @@ public class ArangoDriver extends BaseArangoDriver {
 	 */
 	public String getDocumentRaw(
 		final String documentHandle,
-		final Long ifNoneMatchRevision,
-		final Long ifMatchRevision) throws ArangoException {
+		final String ifNoneMatchRevision,
+		final String ifMatchRevision) throws ArangoException {
 		return documentDriver.getDocumentRaw(getDefaultDatabase(), documentHandle, ifNoneMatchRevision,
 			ifMatchRevision);
 	}

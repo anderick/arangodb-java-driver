@@ -32,8 +32,6 @@ import com.arangodb.http.HttpResponseEntity;
 import com.arangodb.util.EdgeUtils;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -108,7 +106,7 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 		final String database,
 		final String documentHandle,
 		final T value,
-		final Long rev,
+		final String rev,
 		final Boolean waitForSync) throws ArangoException {
 
 		validateDocumentHandle(documentHandle);
@@ -128,7 +126,7 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 		final String database,
 		final String documentHandle,
 		final String rawJsonString,
-		final Long rev,
+		final String rev,
 		final Boolean waitForSync) throws ArangoException {
 
 		validateDocumentHandle(documentHandle);
@@ -146,7 +144,7 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 		final String database,
 		final String documentHandle,
 		final T value,
-		final Long rev,
+		final String rev,
 		final Boolean waitForSync,
 		final Boolean keepNull) throws ArangoException {
 
@@ -169,7 +167,7 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 		final String database,
 		final String documentHandle,
 		final String rawJsonString,
-		final Long rev,
+		final String rev,
 		final Boolean waitForSync,
 		final Boolean keepNull) throws ArangoException {
 
@@ -210,8 +208,8 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 		final String database,
 		final String documentHandle,
 		final Class<T> clazz,
-		final Long ifNoneMatchRevision,
-		final Long ifMatchRevision) throws ArangoException {
+		final String ifNoneMatchRevision,
+		final String ifMatchRevision) throws ArangoException {
 
 		validateDocumentHandle(documentHandle);
 		final HttpResponseEntity res = httpManager.doGet(createDocumentEndpointUrl(database, documentHandle),
@@ -229,8 +227,8 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 	public String getDocumentRaw(
 		final String database,
 		final String documentHandle,
-		final Long ifNoneMatchRevision,
-		final Long ifMatchRevision) throws ArangoException {
+		final String ifNoneMatchRevision,
+		final String ifMatchRevision) throws ArangoException {
 
 		validateDocumentHandle(documentHandle);
 		final HttpResponseEntity res = httpManager.doGet(createDocumentEndpointUrl(database, documentHandle),
@@ -249,7 +247,7 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 	}
 
 	@Override
-	public DocumentEntity<?> deleteDocument(final String database, final String documentHandle, final Long rev)
+	public DocumentEntity<?> deleteDocument(final String database, final String documentHandle, final String rev)
 			throws ArangoException {
 
 		validateDocumentHandle(documentHandle);
@@ -258,7 +256,7 @@ public class InternalDocumentDriverImpl extends BaseArangoDriverImpl implements 
 		return createEntity(res, DocumentEntity.class);
 	}
 
-	private Map<String, Object> createRevisionCheckHeader(final Long rev) {
+	private Map<String, Object> createRevisionCheckHeader(final String rev) {
 		Map<String, Object> header = null;
 		if (rev != null) {
 			final MapBuilder mapBuilder = new MapBuilder().put("If-Match", rev);

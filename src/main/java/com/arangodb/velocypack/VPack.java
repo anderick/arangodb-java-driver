@@ -356,14 +356,17 @@ public class VPack {
 		}
 	}
 
-	public VPackSlice serialize(final Map entity, final Class<?> keyType) throws VPackParserException {
+	public VPackSlice serialize(final Map<?, ?> entity, final Class<?> keyType) throws VPackParserException {
 		final VPackBuilder builder = new VPackBuilder(options);
 		serialize(null, entity, keyType, builder);
 		return builder.slice();
 	}
 
-	private void serialize(final String name, final Map entity, final Class<?> keyType, final VPackBuilder builder)
-			throws VPackParserException {
+	private void serialize(
+		final String name,
+		final Map<?, ?> entity,
+		final Class<?> keyType,
+		final VPackBuilder builder) throws VPackParserException {
 		try {
 			serializeMap(name, entity, builder, keyType);
 		} catch (final Exception e) {
