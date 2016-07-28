@@ -17,9 +17,11 @@
 package com.arangodb.impl;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Iterator;
 import java.util.Locale;
 
 import com.arangodb.ArangoConfigure;
@@ -41,6 +43,7 @@ import com.arangodb.http.HttpResponseEntity;
 import com.arangodb.util.DumpHandler;
 import com.arangodb.util.IOUtils;
 import com.arangodb.util.MapBuilder;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -84,15 +87,22 @@ public class InternalReplicationDriverImpl extends BaseArangoDriverImpl
 		boolean cont = handler.head(header);
 
 		final StreamEntity entity = createEntity(res, StreamEntity.class);
-		BufferedReader reader = null;
+		final BufferedReader reader = null;
 		try {
-			reader = new BufferedReader(new InputStreamReader(entity.getStream(), "utf-8"));
-			String line = null;
-			while (cont && (line = reader.readLine()) != null) {
-				if (line.length() == 0) {
-					continue;
+			final InputStream in = entity.getStream();
+			final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+			int nRead;
+			final byte[] data = new byte[8192];
+			while ((nRead = in.read(data, 0, data.length)) != -1) {
+				buffer.write(data, 0, nRead);
+			}
+			buffer.flush();
+			final VPackSlice slice = new VPackSlice(buffer.toByteArray());
+			if (slice.isArray()) {
+				for (final Iterator<VPackSlice> iterator = slice.iterator(); iterator.hasNext() && cont;) {
+					final VPackSlice next = iterator.next();
+					cont = handler.handle(createEntity(next, ReplicationDumpRecord.class, clazz));
 				}
-				cont = handler.handle(createEntity(line, ReplicationDumpRecord.class, clazz));
 			}
 		} catch (final UnsupportedEncodingException e) {
 			throw new ArangoException("got UnsupportedEncodingException for utf-8", e);

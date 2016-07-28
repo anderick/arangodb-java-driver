@@ -27,7 +27,7 @@ public class ReplicationDumpRecord<T> implements Serializable {
 	private long tick;
 	private ReplicationEventType type;
 	private String key;
-	private long rev;
+	private String rev;
 	private DocumentEntity<T> data;
 
 	public long getTick() {
@@ -42,7 +42,7 @@ public class ReplicationDumpRecord<T> implements Serializable {
 		return key;
 	}
 
-	public long getRev() {
+	public String getRev() {
 		return rev;
 	}
 
@@ -62,7 +62,7 @@ public class ReplicationDumpRecord<T> implements Serializable {
 		this.key = key;
 	}
 
-	public void setRev(final long rev) {
+	public void setRev(final String rev) {
 		this.rev = rev;
 	}
 

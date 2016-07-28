@@ -1451,8 +1451,8 @@ public class EntityDeserializers {
 				entity.setKey(key.getAsString());
 			}
 			final VPackSlice rev = vpack.get("rev");
-			if (rev.isNumber()) {
-				entity.setRev(rev.getAsLong());
+			if (rev.isString()) {
+				entity.setRev(rev.getAsString());
 			}
 			final VPackSlice data = vpack.get("data");
 			if (data.isObject()) {
