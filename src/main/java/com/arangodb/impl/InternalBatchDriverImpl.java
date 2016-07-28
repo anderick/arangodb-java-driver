@@ -28,10 +28,12 @@ import com.arangodb.ArangoException;
 import com.arangodb.entity.BatchResponseEntity;
 import com.arangodb.entity.BatchResponseListEntity;
 import com.arangodb.entity.DefaultEntity;
+import com.arangodb.entity.EntityFactory;
 import com.arangodb.http.BatchPart;
 import com.arangodb.http.HttpManager;
 import com.arangodb.http.HttpResponseEntity;
 import com.arangodb.http.InvocationObject;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author Florian Bartels
@@ -69,11 +71,12 @@ public class InternalBatchDriverImpl extends BaseArangoDriverImpl {
 		headers.put("Content-Type", "multipart/form-data; boundary=" + BOUNDARY);
 
 		final HttpResponseEntity res = httpManager.doPostWithHeaders(createEndpointUrl(defaultDataBase, "/_api/batch"),
-			null, null, headers, sb.toString());
+			null, null, headers, EntityFactory.toVPack(sb.toString()));
 
-		final String data = res.getText();
-		res.setContentType("application/json");
-		res.setText("");
+		final VPackSlice data = res.getContent();
+
+		res.setContentType(HttpManager.CONTENT_TYPE.getMimeType());
+		res.setContent(null);
 		final List<BatchResponseEntity> batchResponseEntityList = handleResponse(resolver, data);
 		batchResponseListEntity = new BatchResponseListEntity();
 		batchResponseListEntity.setBatchResponseEntities(batchResponseEntityList);
@@ -84,13 +87,16 @@ public class InternalBatchDriverImpl extends BaseArangoDriverImpl {
 		return batchResponseListEntity;
 	}
 
-	private List<BatchResponseEntity> handleResponse(final Map<String, InvocationObject> resolver, final String data) {
+	private List<BatchResponseEntity> handleResponse(
+		final Map<String, InvocationObject> resolver,
+		final VPackSlice data) throws ArangoException {
 		String currentId = null;
 		Boolean fetchText = false;
 		final List<BatchResponseEntity> batchResponseEntityList = new ArrayList<BatchResponseEntity>();
 		BatchResponseEntity batchResponseEntity = new BatchResponseEntity(null);
 		final StringBuilder sb = new StringBuilder();
-		for (final String line : data.split(newline)) {
+		final String stringData = data.getAsString();
+		for (final String line : stringData.split(newline)) {
 			line.trim();
 			line.replaceAll("\r", "");
 			if (line.indexOf("Content-Id") != -1) {
@@ -122,9 +128,10 @@ public class InternalBatchDriverImpl extends BaseArangoDriverImpl {
 		return batchResponseEntityList;
 	}
 
-	private void copyResponseToEntity(final BatchResponseEntity batchResponseEntity, final StringBuilder sb) {
+	private void copyResponseToEntity(final BatchResponseEntity batchResponseEntity, final StringBuilder sb)
+			throws ArangoException {
 		if (!batchResponseEntity.getHttpResponseEntity().isDumpResponse()) {
-			batchResponseEntity.getHttpResponseEntity().setText(sb.toString());
+			batchResponseEntity.getHttpResponseEntity().setContent(EntityFactory.toVPack(sb.toString()));
 		} else {
 			final InputStream is = new ByteArrayInputStream(sb.toString().getBytes());
 			batchResponseEntity.getHttpResponseEntity().setStream(is);

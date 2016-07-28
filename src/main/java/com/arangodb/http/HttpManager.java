@@ -87,7 +87,7 @@ import com.arangodb.velocypack.VPackSlice;
 public class HttpManager {
 
 	private static final String USERAGENT = "Mozilla/5.0 (compatible; ArangoDB-JavaDriver/1.1; +http://mt.orz.at/)";
-	private static final ContentType CONTENT_TYPE = ContentType.create("application/x-velocypack");
+	public static final ContentType CONTENT_TYPE = ContentType.create("application/x-velocypack");
 
 	private static Logger logger = LoggerFactory.getLogger(HttpManager.class);
 

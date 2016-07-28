@@ -17,6 +17,7 @@
 package com.arangodb.entity;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.arangodb.ArangoException;
@@ -183,10 +184,22 @@ public class EntityFactory {
 	}
 
 	public static <T> VPackSlice toVPack(final T obj) throws ArangoException {
+		return toVPack(obj, new HashMap<String, Object>());
+	}
+
+	public static <T> VPackSlice toVPack(final T obj, final Map<String, Object> additionalFields)
+			throws ArangoException {
 		return toVPack(obj, INCLUDE_NULL_VALUE_DEFAULT);
 	}
 
 	public static <T> VPackSlice toVPack(final T obj, final boolean includeNullValue) throws ArangoException {
+		return toVPack(obj, includeNullValue, new HashMap<String, Object>());
+	}
+
+	public static <T> VPackSlice toVPack(
+		final T obj,
+		final boolean includeNullValue,
+		final Map<String, Object> additionalFields) throws ArangoException {
 		try {
 			return includeNullValue ? EntityFactory.vpackNull.serialize(obj) : EntityFactory.vpack.serialize(obj);
 		} catch (final VPackParserException e) {
@@ -217,6 +230,40 @@ public class EntityFactory {
 		} catch (final VPackParserException e) {
 			throw new ArangoException(e);
 		}
+	}
+
+	public static <T> VPackSlice toEdgeVPack(
+		final String key,
+		final String fromHandle,
+		final String toHandle,
+		final T value) throws ArangoException {
+		final Map<String, Object> additionalFields = new HashMap<String, Object>();
+		if (key != null) {
+			additionalFields.put(BaseDocument.KEY, key);
+		}
+		if (fromHandle != null) {
+			additionalFields.put(BaseDocument.FROM, fromHandle);
+		}
+		if (toHandle != null) {
+			additionalFields.put(BaseDocument.TO, toHandle);
+		}
+		final VPackSlice vpack = EntityFactory.toVPack(value, additionalFields);
+		if (!vpack.isObject()) {
+			throw new ArangoException("edge need object type(not support array, primitive, etc..).");
+		}
+		return vpack;
+	}
+
+	public static <T> VPackSlice toDocumentVPack(final String key, final T value) throws ArangoException {
+		final Map<String, Object> additionalFields = new HashMap<String, Object>();
+		if (key != null) {
+			additionalFields.put(BaseDocument.KEY, key);
+		}
+		final VPackSlice vpack = EntityFactory.toVPack(value, additionalFields);
+		if (!vpack.isObject()) {
+			throw new ArangoException("vertex need object type(not support array, primitive, etc..).");
+		}
+		return vpack;
 	}
 
 	public static String toJson(final VPackSlice vpack) {

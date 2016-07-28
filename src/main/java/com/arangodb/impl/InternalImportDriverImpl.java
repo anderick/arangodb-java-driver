@@ -28,6 +28,7 @@ import com.arangodb.http.HttpResponseEntity;
 import com.arangodb.util.ImportOptions;
 import com.arangodb.util.ImportOptionsJson;
 import com.arangodb.util.ImportOptionsRaw;
+import com.arangodb.velocypack.VPackSlice;
 
 /**
  * @author tamtam180 - kirscheless at gmail.com
@@ -37,39 +38,40 @@ import com.arangodb.util.ImportOptionsRaw;
  */
 public class InternalImportDriverImpl extends BaseArangoDriverImpl implements com.arangodb.InternalImportDriver {
 
-	InternalImportDriverImpl(ArangoConfigure configure, HttpManager httpManager) {
+	InternalImportDriverImpl(final ArangoConfigure configure, final HttpManager httpManager) {
 		super(configure, httpManager);
 	}
 
 	@Override
 	public ImportResultEntity importDocuments(
-		String database,
-		String collection,
-		Collection<?> values,
-		ImportOptionsJson importOptionsJson) throws ArangoException {
+		final String database,
+		final String collection,
+		final Collection<?> values,
+		final ImportOptionsJson importOptionsJson) throws ArangoException {
 
-		Map<String, Object> map = importOptionsJson.toMap();
+		final Map<String, Object> map = importOptionsJson.toMap();
 		map.put("type", "list");
-
-		return importDocumentsInternal(database, collection, EntityFactory.toJsonString(values), map);
+		final VPackSlice obj = EntityFactory.toVPack(values);
+		return importDocumentsInternal(database, collection, obj, map);
 	}
 
 	@Override
 	public ImportResultEntity importDocumentsRaw(
-		String database,
-		String collection,
-		String values,
-		ImportOptionsRaw importOptionsRaw) throws ArangoException {
+		final String database,
+		final String collection,
+		final String values,
+		final ImportOptionsRaw importOptionsRaw) throws ArangoException {
 
-		return importDocumentsInternal(database, collection, values, importOptionsRaw.toMap());
+		final VPackSlice obj = EntityFactory.toVPack(values);
+		return importDocumentsInternal(database, collection, obj, importOptionsRaw.toMap());
 	}
 
 	@Override
 	public ImportResultEntity importDocumentsByHeaderValues(
-		String database,
-		String collection,
-		Collection<? extends Collection<?>> headerValues,
-		ImportOptions importOptions) throws ArangoException {
+		final String database,
+		final String collection,
+		final Collection<? extends Collection<?>> headerValues,
+		final ImportOptions importOptions) throws ArangoException {
 
 		return importDocumentsByHeaderValuesInternal(database, collection,
 			EntityFactory.toImportHeaderValues(headerValues), importOptions);
@@ -77,37 +79,40 @@ public class InternalImportDriverImpl extends BaseArangoDriverImpl implements co
 
 	@Override
 	public ImportResultEntity importDocumentsByHeaderValuesRaw(
-		String database,
-		String collection,
-		String headerValues,
-		ImportOptions importOptions) throws ArangoException {
+		final String database,
+		final String collection,
+		final String headerValues,
+		final ImportOptions importOptions) throws ArangoException {
 
-		return importDocumentsByHeaderValuesInternal(database, collection, headerValues, importOptions);
+		final VPackSlice obj = EntityFactory.toVPack(headerValues);
+		return importDocumentsByHeaderValuesInternal(database, collection, obj, importOptions);
 	}
 
 	private ImportResultEntity importDocumentsInternal(
-		String database,
-		String collection,
-		String values,
-		Map<String, Object> importOptions) throws ArangoException {
+		final String database,
+		final String collection,
+		final VPackSlice values,
+		final Map<String, Object> importOptions) throws ArangoException {
 
 		importOptions.put(COLLECTION, collection);
 
-		HttpResponseEntity res = httpManager.doPost(createEndpointUrl(database, "/_api/import"), importOptions, values);
+		final HttpResponseEntity res = httpManager.doPost(createEndpointUrl(database, "/_api/import"), importOptions,
+			values);
 
 		return createEntity(res, ImportResultEntity.class);
 	}
 
 	private ImportResultEntity importDocumentsByHeaderValuesInternal(
-		String database,
-		String collection,
-		String headerValues,
-		ImportOptions importOptions) throws ArangoException {
+		final String database,
+		final String collection,
+		final VPackSlice headerValues,
+		final ImportOptions importOptions) throws ArangoException {
 
-		Map<String, Object> map = importOptions.toMap();
+		final Map<String, Object> map = importOptions.toMap();
 		map.put(COLLECTION, collection);
 
-		HttpResponseEntity res = httpManager.doPost(createEndpointUrl(database, "/_api/import"), map, headerValues);
+		final HttpResponseEntity res = httpManager.doPost(createEndpointUrl(database, "/_api/import"), map,
+			headerValues);
 
 		return createEntity(res, ImportResultEntity.class);
 

@@ -2880,4 +2880,80 @@ public class VPackSerializeDeserializeTest {
 		Assert.assertNotNull(entity.c2);
 	}
 
+	@Test
+	public void additionalFields() throws VPackException {
+		final TestEntityString entity = new TestEntityString();
+		final Map<String, Object> additionalFields = new HashMap<String, Object>();
+		additionalFields.put("a", "test");
+		final VPackSlice vpack = new VPack().serialize(entity, additionalFields);
+		Assert.assertNotNull(vpack);
+		Assert.assertEquals(4, vpack.getLength());
+		final VPackSlice s = vpack.get("s");
+		Assert.assertTrue(s.isString());
+		Assert.assertEquals("test", s.getAsString());
+		final VPackSlice a = vpack.get("a");
+		Assert.assertTrue(a.isString());
+		Assert.assertEquals("test", a.getAsString());
+	}
+
+	@Test
+	public void additionalDuplicatedFields() throws VPackException {
+		final TestEntityString entity = new TestEntityString();
+		final Map<String, Object> additionalFields = new HashMap<String, Object>();
+		additionalFields.put("s", "test1");
+		final VPackSlice vpack = new VPack().serialize(entity, additionalFields);
+		Assert.assertNotNull(vpack);
+		Assert.assertEquals(3, vpack.getLength());
+		final VPackSlice s = vpack.get("s");
+		Assert.assertTrue(s.isString());
+		Assert.assertEquals("test", s.getAsString());
+	}
+
+	@Test
+	public void additionalNullFieldsExcludeNull() throws VPackException {
+		final TestEntityString entity = new TestEntityString();
+		final Map<String, Object> additionalFields = new HashMap<String, Object>();
+		additionalFields.put("a", null);
+		final VPackSlice vpack = new VPack().serialize(entity, additionalFields);
+		Assert.assertNotNull(vpack);
+		Assert.assertEquals(3, vpack.getLength());
+		final VPackSlice s = vpack.get("s");
+		Assert.assertTrue(s.isString());
+		Assert.assertEquals("test", s.getAsString());
+	}
+
+	@Test
+	public void additionalNullFieldsIncludeNull() throws VPackException {
+		final TestEntityString entity = new TestEntityString();
+		final Map<String, Object> additionalFields = new HashMap<String, Object>();
+		additionalFields.put("a", null);
+		final VPack serializer = new VPack();
+		serializer.getOptions().setSerializeNullValues(true);
+		final VPackSlice vpack = serializer.serialize(entity, additionalFields);
+		Assert.assertNotNull(vpack);
+		Assert.assertEquals(4, vpack.getLength());
+		final VPackSlice s = vpack.get("s");
+		Assert.assertTrue(s.isString());
+		Assert.assertEquals("test", s.getAsString());
+		final VPackSlice a = vpack.get("a");
+		Assert.assertTrue(a.isNull());
+	}
+
+	@Test
+	public void toSimpleString() throws VPackException {
+		final VPackBuilder builder = new VPackBuilder();
+		builder.add(new Value("test"));
+		final String s = new VPack().deserialize(builder.slice(), String.class);
+		Assert.assertNotNull(s);
+		Assert.assertEquals("test", s);
+	}
+
+	@Test
+	public void fromSimpleString() throws VPackException {
+		final VPackSlice vpack = new VPack().serialize("test");
+		Assert.assertNotNull(vpack);
+		Assert.assertTrue(vpack.isString());
+		Assert.assertEquals("test", vpack.getAsString());
+	}
+
 }
