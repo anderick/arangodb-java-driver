@@ -29,6 +29,7 @@ import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -410,8 +411,9 @@ public class HttpManager {
 		final HttpRequestBase request = buildHttpRequestBase(requestEntity, url);
 
 		// common-header
-		request.setHeader("User-Agent", USERAGENT);
-		request.setHeader("Accept", CONTENT_TYPE.getMimeType());
+		request.setHeader(HttpHeaders.USER_AGENT, USERAGENT);
+		request.setHeader(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE.getMimeType());
+		request.setHeader(HttpHeaders.ACCEPT, CONTENT_TYPE.getMimeType());
 
 		addOptionalHeaders(requestEntity, request);
 
@@ -511,7 +513,8 @@ public class HttpManager {
 			}
 			// Close stream in this method.
 			if (responseEntity.getStream() == null) {
-				final VPackSlice content = new VPackSlice(IOUtils.toByteArray(entity.getContent()));
+				final byte[] byteArray = IOUtils.toByteArray(entity.getContent());
+				final VPackSlice content = new VPackSlice(byteArray);
 				responseEntity.setContent(content);
 				// responseEntity.setText(IOUtils.toString(entity.getContent()));
 				if (logger.isDebugEnabled()) {
